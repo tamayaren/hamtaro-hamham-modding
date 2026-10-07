@@ -5,7 +5,34 @@ Addresses refer to the verified USA AH3E ROM, SHA1
 
 ## EWRAM (0x02000000–0x0203FFFF)
 
+### Entities (characters)
+
+Characters live in an array of 0x68-byte [Entity](structs.md#entity-size-0x68) structs.
+The array is reached through the pointer `gEntityArray` (`0x03002d88`); Hamtaro's slot is
+`gPlayerEntityIndex` (`0x03002bfc`). Entity address = `*gEntityArray + index * 0x68`.
+
+Observed in the clubhouse bedroom (`states/walking.ss0`, local): array `0x0202280c`,
+Hamtaro index 10 → entity `0x02022c1c`, so:
+
+| Address (this scene) | Field | Meaning | Confidence |
+|---|---|---|---|
+| `0x02022c34` | Entity+0x18 | Hamtaro X, s32 16.16 fixed point (pixels in the high half) | confirmed |
+| `0x02022c3c` | Entity+0x20 | Hamtaro Y, s32 16.16 | confirmed |
+| `0x02022c40` | Entity+0x24 | X velocity, zeroed after each update | confirmed |
+| `0x02022c48` | Entity+0x2c | Y velocity | confirmed |
+
+Don't hard-code the `0x0202xxxx` addresses in mods — the array pointer may differ per
+scene; go through `gEntityArray` / `gPlayerEntityIndex`. Copies of the position also exist
+(`0x02022c6a`, `0x02023636`, `0x0202363e` tracked it during the search) — unexplained.
+
 ## IWRAM (0x03000000–0x03007FFF)
+
+### Entity bookkeeping
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x03002bfc` | u8 | `gPlayerEntityIndex` | Hamtaro's index in the entity array | confirmed |
+| `0x03002d88` | u32 ptr | `gEntityArray` | Pointer to the Entity array | confirmed |
 
 ### Input
 

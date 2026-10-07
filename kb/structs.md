@@ -1,5 +1,28 @@
 # Structs
 
+## Entity (size 0x68)
+
+Element of the array at `*gEntityArray` (`0x03002d88`). Positions are 3D (x, height, y),
+all s32 16.16 fixed point. Updated by `Entity_ApplyPhysics` (`0x0800b2f0`) and, for the
+player, `Player_Update` (`0x0800631c`).
+
+| Offset | Size | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `+0x04` | 4 | anim? | compared against the wanted animation before `FUN_0800af54(index, anim)` is called | guess |
+| `+0x18` | 4 | x | X position | confirmed (poke moved Hamtaro) |
+| `+0x1c` | 4 | z | height axis (between x and y; integrated like them) | likely |
+| `+0x20` | 4 | y | Y position (screen down = +) | confirmed (poke moved Hamtaro, camera followed) |
+| `+0x24` | 4 | vx | X velocity; added to x each update, then zeroed for the player | confirmed |
+| `+0x28` | 4 | vz | height velocity | likely |
+| `+0x2c` | 4 | vy | Y velocity | confirmed |
+| `+0x30` / `+0x34` / `+0x38` | 4 each | ax / az / ay | acceleration added to velocity by `Entity_ApplyPhysics` | likely |
+| `+0x3c` / `+0x3e` / `+0x40` | 2 each | ? | accumulate `+0x44` / `+0x46` / `+0x48`; first two clamp to 0x200 (scale?) | guess |
+
+Player velocity comes from `kPlayerMoveVelocityTable` (`0x08467af0`): 2 speed modes
+(walk, run while B held) × 4 directions (Up, Down, Left, Right) × (vx, vy) s32 16.16.
+Walk = 1 px/frame, run = 2 px/frame, measured against the frame counter. Only one direction
+applies at a time (Up > Down > Left > Right priority), so there is no diagonal movement.
+
 ## InputState (minimum covered size 0x14)
 
 Base: `0x03000820`. Updated by `Input_Update` at `0x08009614` (Thumb).

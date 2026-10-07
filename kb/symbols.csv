@@ -9,10 +9,17 @@ address,name,kind,size,mode,confidence,notes
 0x03000830,gInputRepeatCountdown,ram,0x2,,confirmed,InputState+0x10; u16 countdown; initial load then decrement; interval reload at repeat
 0x03000832,gInputUnchangedMaskFrames,ram,0x2,,likely,InputState+0x12; static unchanged-mask count; resets at 0xffff rather than saturating; limit untested
 0x03000838,gKeysPrevious,ram,0x2,,confirmed,u16 previous held mask on Input_Update entry; overwritten with current at end; store 0x08009680
+0x03002bfc,gPlayerEntityIndex,ram,0x1,,confirmed,u8 index of Hamtaro in gEntityArray; 10 in clubhouse bedroom
+0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x0800631c,Player_Update,func,,thumb,likely,calls Player_HandleMovementInput then adds velocity to position; writes pos at 0x080063c8/0x080063d0
+0x08006508,Player_HandleMovementInput,func,,thumb,confirmed,D-pad -> direction 1-4; B held -> run; velocity from kPlayerMoveVelocityTable
 0x08009614,Input_Update,func,,thumb,confirmed,polls KEYINPUT and writes InputState; caller 0x080001a4; lr 0x08000231; 128 code bytes with internal literals
+0x0800af1c,Entity_SetVelocity,func,,thumb,confirmed,(index vx vz vy) -> Entity +0x24/+0x28/+0x2c
+0x0800b2f0,Entity_ApplyPhysics,func,,thumb,likely,pos += vel; vel += accel; +0x3c..+0x48 shorts clamp at 0x200
+0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
 0x086ca1e0,kSaveTypeTag,data,0xc,,confirmed,SRAM_F_V103 save-type tag

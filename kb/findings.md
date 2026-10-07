@@ -2,6 +2,23 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-08 — Hamtaro's position, movement code, and walk/run speed table (Claude)
+- RAM search (u16 and u32, walk right/down/left/up + idle filters) from savestate
+  `walking.ss0` (clubhouse bedroom) → X `0x02022c34`, Y `0x02022c3c`, s32 16.16.
+  **Confirmed** by poking: X+40 moved Hamtaro 40 px right; Y+30 moved him down and the
+  camera followed. Values persist (not overwritten from a copy).
+- Change-watchpoints: position written in `Player_Update` (`0x0800631c`; stores at
+  `0x080063c8`/`0x080063d0`) as `pos += vel; vel = 0`. Velocity written by
+  `Entity_SetVelocity` (`0x0800af1c`), called from `Player_HandleMovementInput` (`0x08006508`).
+- Entities: 0x68-byte array via `gEntityArray` (`0x03002d88`), player slot
+  `gPlayerEntityIndex` (`0x03002bfc`) = 10 here; 10 × 0x68 + `0x0202280c` = `0x02022c1c` ✓.
+- Speed: `Player_HandleMovementInput` picks `kPlayerMoveVelocityTable[run][dir]`
+  (`0x08467af0`): walk 1.0, run (B held) 2.0 px/frame. Measured over 26–28 frames:
+  +26 px walking, +52 px running. (A first measurement of "3 px/frame" was an artifact —
+  each Python round trip spans ~3 frames; measure against `frame`, not per request.)
+- Next: a "faster walking" mod is now an edit of 8 table entries; scaling the walk entries
+  needs no code. Check collisions still behave at higher speeds.
+
 ## 2026-10-08 — Input RAM masks and repeat layout verified (re-analyst)
 
 - Independently verified USA AH3E ROM with `uv run hamtools rom verify`; SHA1

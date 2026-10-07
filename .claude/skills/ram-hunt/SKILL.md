@@ -37,3 +37,9 @@ addresses that changed the same way, repeat until a handful remain.
 - Values in a struct: once one field is found, `emu_read` the surrounding 0x40 bytes —
   neighbours are often related (x, y, direction, animation frame).
 - Movement input is read every frame; filter on what *changes on screen*, not key state.
+- **Measuring rates (speed, timers):** each bridge request takes real time, so one
+  `wait(1)` + read loop iteration spans ~3 game frames. Measure over a long window and
+  divide by the difference of `frame` values (`emu.wait()` returns the frame), never by
+  the number of requests.
+- Characters are in the entity array (`gEntityArray`, 0x68-byte `Entity`, see
+  `kb/structs.md`) — for any NPC, look there before running a fresh search.
