@@ -52,6 +52,12 @@ IO_REGISTERS = {
 }
 
 
+# Analyzers that crawl for an hour+ on a raw cartridge image full of data-that-looks-like-code.
+DISABLED_ANALYZERS = {
+    "Non-Returning Functions - Discovered": False,
+}
+
+
 class GhidraError(Exception):
     pass
 
@@ -268,7 +274,12 @@ def _analyze(program, monitor) -> None:
     from ghidra.app.plugin.core.analysis import AutoAnalysisManager
     from ghidra.program.util import GhidraProgramUtilities
 
+    from ghidra.program.model.listing import Program
+
     with pyghidra.transaction(program, "Analyze"):
+        opts = program.getOptions(Program.ANALYSIS_PROPERTIES)
+        for name, value in DISABLED_ANALYZERS.items():
+            opts.setBoolean(name, value)
         mgr = AutoAnalysisManager.getAnalysisManager(program)
         mgr.initializeOptions()
         mgr.reAnalyzeAll(None)
