@@ -79,6 +79,8 @@ class Emu:
 
     def launch(self, rom_file: Path | None = None, savestate: Path | None = None, wait: float = 20.0) -> dict:
         """Start mGBA with the bridge, or reuse a running one."""
+        if savestate and not Path(savestate).exists():
+            raise EmuError(f"savestate not found: {savestate}")
         if self.connect():
             return {"reused": True, **self.call("ping")}
         exe = paths.mgba_exe()

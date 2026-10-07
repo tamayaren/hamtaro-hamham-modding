@@ -51,12 +51,18 @@ emu_unwatch()
 - Confirm the exact instruction in Ghidra (`ghidra-analyze` skill) before naming things.
 - `emu_break(address)` records executions of one instruction (with registers) without pausing.
 
-Probes cost speed; remove them when done (`emu_unwatch()`).
+Probes cost speed; remove them when done (`emu_unwatch()`). Bridge reads/writes pause
+the watchpoints for that instant, so poking a watched address is safe and does not show
+up as a hit — only the game's own accesses are recorded.
 
 ## Known reference points
 
-- Input is polled from `0x0800961c` (main code, Thumb) and `0x080004a8` (IRQ handler).
-  Useful to sanity-check that watchpoints work.
+- `Input_Update` (`0x08009614`, Thumb) reads KEYINPUT once per frame (reported pc
+  `0x0800961c`); the IRQ handler also reads it (reported pc `0x080004a8`). Useful to
+  sanity-check that watchpoints work.
+- Button state in RAM: `gKeysHeld` `0x03000820`, `gKeysPressed` `0x03000822`,
+  `gKeysPressedRepeat` `0x03000824`, `gKeysReleased` `0x03000826` (u16, active high) —
+  see `kb/ram.md`. Watching these is a fast way to find code that reacts to a button.
 
 ## Troubleshooting
 

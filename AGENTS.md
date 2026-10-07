@@ -55,6 +55,9 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
 | text / gfx tools | planned (Phase 2) | |
 
+In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`
+(gitignored) before `uv run`.
+
 External tools are found automatically; override with `HAMTARO_MGBA` (mGBA.exe 0.11+),
 `GHIDRA_INSTALL_DIR`, `ARM_TOOLCHAIN_BIN`, `HAMTARO_ROM`.
 

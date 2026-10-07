@@ -166,9 +166,9 @@ end
 
 local WATCH_TYPES = { write = 1, read = 2, rw = 3, change = 5 }
 
-local function addProbe(kind, addr, len, wtype)
-  local probe = { kind = kind, address = addr, length = len, type = wtype,
-                  sites = {}, siteCount = 0, total = 0, dropped = 0 }
+local nextProbe = 1
+
+local function armProbe(probe)
   local cb = function(...)
     -- mGBA passes an info table (access details); flatten it to plain values
     local extra = nil
@@ -186,17 +186,47 @@ local function addProbe(kind, addr, len, wtype)
     recordHit(probe, extra)
   end
   local cbid
-  if kind == 'break' then
-    cbid = emu:setBreakpoint(cb, addr)
-  elseif len > 1 then
-    cbid = emu:setRangeWatchpoint(cb, addr, addr + len, WATCH_TYPES[wtype])
+  if probe.kind == 'break' then
+    cbid = emu:setBreakpoint(cb, probe.address)
+  elseif probe.length > 1 then
+    cbid = emu:setRangeWatchpoint(cb, probe.address, probe.address + probe.length, WATCH_TYPES[probe.type])
   else
-    cbid = emu:setWatchpoint(cb, addr, WATCH_TYPES[wtype])
+    cbid = emu:setWatchpoint(cb, probe.address, WATCH_TYPES[probe.type])
   end
-  if cbid == nil or cbid < 0 then error('mGBA refused the ' .. kind .. 'point') end
+  if cbid == nil or cbid < 0 then error('mGBA refused the ' .. probe.kind .. 'point') end
   probe.cbid = cbid
-  probes[cbid] = probe
-  return cbid
+end
+
+local function disarmProbe(probe)
+  if probe.cbid then emu:clearBreakpoint(probe.cbid) end
+  probe.cbid = nil
+end
+
+local function addProbe(kind, addr, len, wtype)
+  local probe = { kind = kind, address = addr, length = len, type = wtype,
+                  sites = {}, siteCount = 0, total = 0, dropped = 0 }
+  armProbe(probe)
+  local id = nextProbe
+  nextProbe = nextProbe + 1
+  probes[id] = probe
+  return id
+end
+
+-- A script-initiated memory access that hits one of our own watchpoints makes mGBA call back
+-- into the script while it is already running, which hangs the bridge. Disarm all probes
+-- around bridge reads/writes and re-arm them afterwards.
+local function withProbesSuspended(fn)
+  local suspended = {}
+  for _, probe in pairs(probes) do
+    if probe.cbid and probe.kind ~= 'break' then
+      disarmProbe(probe)
+      suspended[#suspended + 1] = probe
+    end
+  end
+  local ok, result = pcall(fn)
+  for _, probe in ipairs(suspended) do armProbe(probe) end
+  if not ok then error(result, 0) end
+  return result
 end
 
 local function probeReport(id, probe, clear)
@@ -223,8 +253,7 @@ end
 
 function commands.frame() return emu:currentFrame() end
 
-function commands.read(args)
-  local addr, len = num(args[1], 'address'), num(args[2] or '4', 'length')
+local function readMemory(addr, len)
   if addr >= 0x04000000 and addr < 0x05000000 then
     -- readRange can stall on I/O registers in mGBA 0.11-dev; read them 16 bits at a time
     local parts = {}
@@ -247,14 +276,28 @@ function commands.read(args)
   return toHex(emu:readRange(addr, len))
 end
 
-function commands.write(args)
-  local addr, bytes = num(args[1], 'address'), fromHex(args[2] or '')
-  for i = 1, #bytes do emu:write8(addr + i - 1, bytes:byte(i)) end
-  return #bytes
+function commands.read(args)
+  local addr, len = num(args[1], 'address'), num(args[2] or '4', 'length')
+  return withProbesSuspended(function() return readMemory(addr, len) end)
 end
 
-function commands.write16(args) emu:write16(num(args[1], 'address'), num(args[2], 'value')); return true end
-function commands.write32(args) emu:write32(num(args[1], 'address'), num(args[2], 'value')); return true end
+function commands.write(args)
+  local addr, bytes = num(args[1], 'address'), fromHex(args[2] or '')
+  return withProbesSuspended(function()
+    for i = 1, #bytes do emu:write8(addr + i - 1, bytes:byte(i)) end
+    return #bytes
+  end)
+end
+
+function commands.write16(args)
+  local addr, value = num(args[1], 'address'), num(args[2], 'value')
+  return withProbesSuspended(function() emu:write16(addr, value); return true end)
+end
+
+function commands.write32(args)
+  local addr, value = num(args[1], 'address'), num(args[2], 'value')
+  return withProbesSuspended(function() emu:write32(addr, value); return true end)
+end
 
 function commands.regs() return readRegs() end
 
@@ -331,9 +374,9 @@ end
 
 function commands.unprobe(args)
   local removed = {}
-  for id, _ in pairs(probes) do
+  for id, probe in pairs(probes) do
     if args[1] == nil or args[1] == 'all' or id == num(args[1], 'probe id') then
-      emu:clearBreakpoint(id)
+      disarmProbe(probe)
       removed[#removed + 1] = id
     end
   end
