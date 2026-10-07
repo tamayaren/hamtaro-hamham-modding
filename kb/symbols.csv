@@ -1,0 +1,7 @@
+address,name,kind,size,mode,confidence,notes
+0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
+0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
+0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
+0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
+0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x086ca1e0,kSaveTypeTag,data,0xc,,confirmed,SRAM_F_V103 save-type tag

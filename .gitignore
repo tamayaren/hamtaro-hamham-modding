@@ -1,0 +1,43 @@
+# --- Copyrighted game data: NEVER commit -------------------------------------
+# This repo is public. Only tools, docs, and source patches belong in git.
+*.gba
+*.GBA
+*.sav
+*.srm
+*.ss[0-9]
+*.ss
+*.state
+*.mgba-state
+gba/
+states/
+# Anything extracted from the ROM (text dumps, graphics, raw blobs)
+extracted/
+dumps/
+
+# --- Build output -------------------------------------------------------------
+build/
+*.bps
+*.ips
+*.o
+*.elf
+*.map
+
+# --- Tool working dirs --------------------------------------------------------
+ghidra/projects/
+ghidra/*.rep/
+*.gpr
+*.lock~
+screenshots/
+.cache/
+
+# --- Python -------------------------------------------------------------------
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# --- Editors / OS -------------------------------------------------------------
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
