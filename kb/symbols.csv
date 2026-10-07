@@ -1,7 +1,18 @@
 address,name,kind,size,mode,confidence,notes
+0x03000820,gKeysHeld,ram,0x2,,confirmed,InputState base; u16 active-high held keys; store 0x08009638
+0x03000822,gKeysPressed,ram,0x2,,confirmed,InputState+0x2; u16 newly pressed this poll; excludes repeat; store 0x08009630
+0x03000824,gKeysPressedRepeat,ram,0x2,,confirmed,InputState+0x4; u16 new presses plus held mask on repeat; stores 0x08009632 and 0x08009652
+0x03000826,gKeysReleased,ram,0x2,,confirmed,InputState+0x6; u16 released this poll; store 0x08009636
+0x03000828,gInputDpadPacked,ram,0x2,,likely,InputState+0x8; packed D-pad table bytes; static semantics only
+0x0300082c,gInputRepeatInitialDelay,ram,0x2,,confirmed,InputState+0xc; u16 initial repeat delay; title 90 gives first repeat at press+89
+0x0300082e,gInputRepeatInterval,ram,0x2,,confirmed,InputState+0xe; u16 repeat interval; title 4 matches observed pulses
+0x03000830,gInputRepeatCountdown,ram,0x2,,confirmed,InputState+0x10; u16 countdown; initial load then decrement; interval reload at repeat
+0x03000832,gInputUnchangedMaskFrames,ram,0x2,,likely,InputState+0x12; static unchanged-mask count; resets at 0xffff rather than saturating; limit untested
+0x03000838,gKeysPrevious,ram,0x2,,confirmed,u16 previous held mask on Input_Update entry; overwritten with current at end; store 0x08009680
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x08009614,Input_Update,func,,thumb,confirmed,polls KEYINPUT and writes InputState; caller 0x080001a4; lr 0x08000231; 128 code bytes with internal literals
 0x086ca1e0,kSaveTypeTag,data,0xc,,confirmed,SRAM_F_V103 save-type tag
