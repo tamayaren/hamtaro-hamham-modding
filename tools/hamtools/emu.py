@@ -79,6 +79,11 @@ class Emu:
 
     def launch(self, rom_file: Path | None = None, savestate: Path | None = None, wait: float = 20.0) -> dict:
         """Start mGBA with the bridge, or reuse a running one."""
+        # mGBA runs from its own folder, so relative paths must be resolved here
+        rom_file = Path(rom_file).resolve() if rom_file else None
+        savestate = Path(savestate).resolve() if savestate else None
+        if rom_file and not rom_file.exists():
+            raise EmuError(f"ROM not found: {rom_file}")
         if savestate and not Path(savestate).exists():
             raise EmuError(f"savestate not found: {savestate}")
         if self.connect():
