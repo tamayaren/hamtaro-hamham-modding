@@ -2,6 +2,13 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-08 — First mod: faster-walk (Claude)
+- `patches/faster-walk`: walk 1→2, run 2→3 px/frame via 8 edits to `kPlayerMoveVelocityTable`.
+- Verified on the patched ROM against the frame counter in all directions (open floor), and
+  collision stops (right wall x 224, bed x 184, top wall y 32, bottom rail y 152) match the
+  original ROM exactly; screenshots identical apart from speed. This also confirms the
+  table drives player movement (`kPlayerMoveVelocityTable` → confirmed by modification).
+
 ## 2026-10-08 — Hamtaro's position, movement code, and walk/run speed table (Claude)
 - RAM search (u16 and u32, walk right/down/left/up + idle filters) from savestate
   `walking.ss0` (clubhouse bedroom) → X `0x02022c34`, Y `0x02022c3c`, s32 16.16.

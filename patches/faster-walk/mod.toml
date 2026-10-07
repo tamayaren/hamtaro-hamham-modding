@@ -1,0 +1,55 @@
+name = "faster-walk"
+description = "Hamtaro walks at 2 px/frame (was 1) and runs at 3 px/frame (was 2)"
+enabled = true
+
+# kPlayerMoveVelocityTable (0x08467af0): [walk, run] x [Up, Down, Left, Right] x (vx, vy),
+# s32 16.16 fixed point. Only the non-zero component of each pair changes.
+# See kb/structs.md (Entity) and kb/findings.md (2026-10-08 movement entry).
+
+[[edit]]
+address = 0x08467af4
+expect = "00 00 ff ff"
+hex = "00 00 fe ff"
+comment = "walk Up vy -1 -> -2"
+
+[[edit]]
+address = 0x08467afc
+expect = "00 00 01 00"
+hex = "00 00 02 00"
+comment = "walk Down vy +1 -> +2"
+
+[[edit]]
+address = 0x08467b00
+expect = "00 00 ff ff"
+hex = "00 00 fe ff"
+comment = "walk Left vx -1 -> -2"
+
+[[edit]]
+address = 0x08467b08
+expect = "00 00 01 00"
+hex = "00 00 02 00"
+comment = "walk Right vx +1 -> +2"
+
+[[edit]]
+address = 0x08467b14
+expect = "00 00 fe ff"
+hex = "00 00 fd ff"
+comment = "run Up vy -2 -> -3"
+
+[[edit]]
+address = 0x08467b1c
+expect = "00 00 02 00"
+hex = "00 00 03 00"
+comment = "run Down vy +2 -> +3"
+
+[[edit]]
+address = 0x08467b20
+expect = "00 00 fe ff"
+hex = "00 00 fd ff"
+comment = "run Left vx -2 -> -3"
+
+[[edit]]
+address = 0x08467b28
+expect = "00 00 02 00"
+hex = "00 00 03 00"
+comment = "run Right vx +2 -> +3"
