@@ -24,4 +24,5 @@ uv run hamtools rom info
 
 ## Status
 
-Phase 0 (foundation) done. Next: emulator bridge, Ghidra automation, patch toolchain.
+Phase 1 (tooling) done: emulator bridge + MCP server, headless Ghidra, mod build pipeline.
+Next: first real mods (text, palettes, gameplay values).

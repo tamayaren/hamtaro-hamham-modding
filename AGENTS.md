@@ -34,24 +34,29 @@ AGENTS.md / CLAUDE.md      agent instructions (CLAUDE.md just imports this file)
 .agents/skills/<name>/     shared skills (canonical; Codex reads here)
 .claude/skills/            generated copy for Claude Code — do not edit, run the sync script
 agent-profile/agents/      model-tier agent roster (canonical) → .claude/agents, .codex/agents
-tools/hamtools/            Python CLI that all skills call (`uv run hamtools ...`)
+.mcp.json, .codex/config.toml  MCP server registration (Claude / Codex)
+tools/hamtools/            Python package: CLI (`uv run hamtools ...`) + MCP server
+  rom.py emu.py ghidra.py patch.py bps.py mcp_emu.py
+tools/mgba/bridge.lua      Lua script loaded into mGBA; serves the emulator on 127.0.0.1:61337
 tools/sync_agent_profile.py  regenerates .claude/skills, .claude/agents, .codex/agents
 kb/                        knowledge base: symbols, RAM map, structs, ROM map, findings log
-patches/                   mod sources (asm/C) — Phase 1+
-mcp/mgba-bridge/           Windows-native emulator MCP server — Phase 1
-ghidra/scripts/            headless Ghidra scripts — Phase 1
-gba/  states/  build/  extracted/   local only, gitignored
+patches/<mod>/mod.toml     mod sources; patches/include/gba.h shared header
+tests/                     pytest (`uv run pytest -q`)
+gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local only, gitignored
 ```
 
 ## Tool status
 
 | Tool | Status | Notes |
 |---|---|---|
-| `hamtools rom verify / info` | ready | checksum + header |
-| mGBA emulator bridge (MCP) | planned (Phase 1) | persistent session, input, memory, savestates |
-| Ghidra headless + scripts | planned (Phase 1) | needs Ghidra install |
-| ARM toolchain / armips | planned (Phase 1) | for building patches |
+| `hamtools rom ...` | ready | verify, info, peek, find, xrefs |
+| emulator: `hamtaro-emu` MCP + `hamtools emu ...` | ready | mGBA 0.11 dev build + `tools/mgba/bridge.lua`; input, screenshots, memory, savestates, watchpoints, RAM search |
+| `hamtools ghidra ...` | ready | PyGhidra + Ghidra 12.1.4; decompile, disasm, func, xrefs, make-func, sync |
+| `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
 | text / gfx tools | planned (Phase 2) | |
+
+External tools are found automatically; override with `HAMTARO_MGBA` (mGBA.exe 0.11+),
+`GHIDRA_INSTALL_DIR`, `ARM_TOOLCHAIN_BIN`, `HAMTARO_ROM`.
 
 If a skill refers to a tool marked *planned*, stop and say so — don't improvise a substitute
 that writes into the repo.
@@ -84,25 +89,35 @@ tiers: use the cheapest tier that can do the job reliably, escalate on failure.
 
 Parallel work: give each agent a disjoint area (e.g. text vs graphics) and its own git
 worktree; merge KB changes carefully (`kb/symbols.csv` is the usual conflict point —
-keep it sorted by address).
+keep it sorted by address). Shared resources: there is **one emulator** (one bridge port
+per mGBA instance) and the Ghidra project is **locked by one process at a time** — point
+worktrees at the main project with `HAMTARO_GHIDRA_PROJECT=<main repo>/ghidra/projects`
+and expect to take turns, or let one agent own the emulator and others do static work.
 
 ## Skills
 
 | Skill | When |
 |---|---|
 | `gba-primer` | Any time you need GBA hardware facts: memory map, ARM/Thumb, BIOS calls, compression |
-| `rom-recon` | Exploring the ROM statically: header, free space, pointer tables, compressed data |
+| `rom-recon` | Exploring the ROM statically: header, free space, byte/pointer searches |
+| `emu-probe` | Seeing/driving the live game; "what code touches this address?" |
+| `ram-hunt` | Finding where a value lives in RAM |
+| `ghidra-analyze` | Understanding code: decompile, callers/callees, naming |
+| `patch-build` | Writing and building a mod |
+| `verify-mod` | Testing a built mod before calling it done |
 | `kb-update` | Recording any finding — naming rules, file formats, confidence |
-
-More skills land with their tools (emulator, Ghidra, text, graphics, patch build, verify).
 
 ## Commands
 
 ```
-uv run hamtools rom verify           # check the ROM is the expected dump
-uv run hamtools rom info             # header, save type, used/free space
+uv run hamtools rom verify                         # check the ROM is the expected dump
+uv run hamtools ghidra init                        # one-time: build the Ghidra project (minutes)
+uv run hamtools ghidra decompile 0x0800961c        # understand a function
+uv run hamtools emu launch                         # start mGBA with the bridge
+uv run hamtools patch build                        # build enabled mods
+uv run pytest -q                                   # tests
 uv run python tools/sync_agent_profile.py          # after editing skills or agents
-uv run python tools/sync_agent_profile.py --check  # CI-style drift check
+uv run python tools/sync_agent_profile.py --check  # drift check
 ```
 
 ## Style

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "hamtaro-emu": {
+      "command": "uv",
+      "args": ["run", "hamtools-mcp-emu"]
+    }
+  }
+}

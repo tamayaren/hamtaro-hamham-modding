@@ -3,10 +3,14 @@ name = "hamtools"
 version = "0.1.0"
 description = "Reverse-engineering and modding tools for Hamtaro: Ham-Ham Heartbreak (GBA)"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "mcp>=2.3.0",
+    "pyghidra==3.1.0",
+]
 
 [project.scripts]
 hamtools = "hamtools.cli:main"
+hamtools-mcp-emu = "hamtools.mcp_emu:main"
 
 [build-system]
 requires = ["uv_build>=0.12,<0.13"]
@@ -15,3 +19,8 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-root = "tools"
 module-name = "hamtools"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]

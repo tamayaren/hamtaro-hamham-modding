@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
+from pathlib import Path
 
 from . import rom
 
@@ -119,16 +121,188 @@ def build_parser() -> argparse.ArgumentParser:
     xrefs.add_argument("address", type=_int)
     xrefs.add_argument("--limit", type=_int)
     xrefs.set_defaults(func=cmd_rom_xrefs)
+
+    _add_ghidra(sub)
+    _add_emu(sub)
+    _add_patch(sub)
     return p
+
+
+# ---------------------------------------------------------------------------
+# patch
+# ---------------------------------------------------------------------------
+def _add_patch(sub) -> None:
+    g = sub.add_parser("patch", help="build mods into build/").add_subparsers(dest="cmd", required=True)
+
+    def do_list(args):
+        from . import patch
+        for m in patch.load_mods(names=[p.parent.name for p in patch.PATCHES_DIR.glob("*/mod.toml")]):
+            print(f"{'on ' if m.enabled else 'off'}  {m.path.name:<24} {m.description}")
+        return 0
+
+    def do_build(args):
+        from . import patch
+        print("\n".join(patch.build(args.mods or None)))
+        return 0
+
+    g.add_parser("list", help="list mods").set_defaults(func=do_list)
+    p = g.add_parser("build", help="build enabled mods (or the named ones)")
+    p.add_argument("mods", nargs="*")
+    p.set_defaults(func=do_build)
+
+
+# ---------------------------------------------------------------------------
+# ghidra
+# ---------------------------------------------------------------------------
+def _add_ghidra(sub) -> None:
+    g = sub.add_parser("ghidra", help="headless Ghidra analysis").add_subparsers(dest="cmd", required=True)
+
+    def run(fn):
+        def wrapped(args):
+            from . import ghidra
+            out = fn(ghidra, args)
+            print("\n".join(out) if isinstance(out, list) else out)
+            return 0
+        return wrapped
+
+    p = g.add_parser("init", help="create the Ghidra project from the ROM and analyze it")
+    p.add_argument("--force", action="store_true", help="delete and rebuild an existing project")
+    p.add_argument("--no-analyze", action="store_true")
+    p.set_defaults(func=run(lambda gh, a: gh.init(force=a.force, analyze=not a.no_analyze)))
+
+    g.add_parser("sync", help="push kb/symbols.csv names into the project").set_defaults(
+        func=run(lambda gh, a: gh.sync_symbols()))
+    g.add_parser("stats", help="function/instruction counts").set_defaults(func=run(lambda gh, a: gh.stats()))
+    g.add_parser("analyze", help="re-run auto-analysis (after adding functions)").set_defaults(
+        func=run(lambda gh, a: gh.analyze_again()))
+
+    p = g.add_parser("decompile", help="decompile the function containing an address or symbol")
+    p.add_argument("target")
+    p.set_defaults(func=run(lambda gh, a: gh.decompile(a.target)))
+
+    p = g.add_parser("disasm", help="disassembly listing from an address")
+    p.add_argument("target")
+    p.add_argument("--count", type=int, default=40)
+    p.set_defaults(func=run(lambda gh, a: gh.disassemble(a.target, a.count)))
+
+    p = g.add_parser("func", help="function info: size, callers, callees")
+    p.add_argument("target")
+    p.set_defaults(func=run(lambda gh, a: gh.function_info(a.target)))
+
+    p = g.add_parser("xrefs", help="references Ghidra knows to an address")
+    p.add_argument("target")
+    p.set_defaults(func=run(lambda gh, a: gh.xrefs(a.target)))
+
+    p = g.add_parser("make-func", help="disassemble and create a function at an address")
+    p.add_argument("target")
+    mode = p.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--thumb", action="store_true")
+    mode.add_argument("--arm", action="store_true")
+    p.add_argument("--name")
+    p.set_defaults(func=run(lambda gh, a: gh.create_function(a.target, a.thumb, a.name)))
+
+
+# ---------------------------------------------------------------------------
+# emu (same bridge the MCP server uses; handy from a shell or script)
+# ---------------------------------------------------------------------------
+def _add_emu(sub) -> None:
+    e = sub.add_parser("emu", help="drive the live mGBA emulator").add_subparsers(dest="cmd", required=True)
+
+    def run(fn):
+        def wrapped(args):
+            from .emu import Emu
+            emu = Emu()
+            if args.cmd != "launch":
+                emu.ensure()
+            out = fn(emu, args)
+            if out is not None:
+                print(out if isinstance(out, str) else json.dumps(out, indent=2))
+            return 0
+        return wrapped
+
+    p = e.add_parser("launch", help="start mGBA with the bridge (or reuse it)")
+    p.add_argument("--rom", help="ROM path (default: original)")
+    p.add_argument("--state", help="savestate path to load at boot")
+    p.set_defaults(func=run(lambda emu, a: emu.launch(Path(a.rom) if a.rom else None,
+                                                      Path(a.state) if a.state else None)))
+    e.add_parser("status").set_defaults(func=run(lambda emu, a: emu.call("ping")))
+
+    p = e.add_parser("shot", help="save a screenshot")
+    p.add_argument("path", nargs="?", default="screenshots/shot.png")
+    p.set_defaults(func=run(lambda emu, a: str(emu.screenshot(Path(a.path).resolve()))))
+
+    p = e.add_parser("press", help="press buttons, e.g. 'A' or 'UP+B'")
+    p.add_argument("buttons")
+    p.add_argument("--hold", type=int, default=6)
+    p.add_argument("--after", type=int, default=30)
+    p.set_defaults(func=run(lambda emu, a: {"frame": emu.press(a.buttons, a.hold, a.after)}))
+
+    p = e.add_parser("wait", help="run N frames")
+    p.add_argument("frames", type=int)
+    p.set_defaults(func=run(lambda emu, a: {"frame": emu.wait(a.frames)}))
+
+    p = e.add_parser("read", help="hexdump live memory")
+    p.add_argument("address", type=_int)
+    p.add_argument("--len", type=_int, default=64)
+    p.set_defaults(func=run(lambda emu, a: _hexdump(a.address, emu.read(a.address, a.len))))
+
+    e.add_parser("regs").set_defaults(func=run(lambda emu, a: {k: f"{v:#010x}" for k, v in emu.call("regs").items()}))
+
+    p = e.add_parser("watch", help="record which code touches an address over N frames")
+    p.add_argument("address", type=_int)
+    p.add_argument("--len", type=_int, default=1)
+    p.add_argument("--kind", choices=["write", "read", "rw", "change"], default="write")
+    p.add_argument("--frames", type=int, default=60)
+    p.set_defaults(func=run(_watch))
+
+
+def _watch(emu, a):
+    probe = emu.call("watch", f"{a.address:#x}", a.len, a.kind)
+    try:
+        emu.wait(a.frames)
+        report = emu.call("hits", probe)[0]
+    finally:
+        emu.call("unprobe", probe)
+    lines = [f"{a.kind} {a.address:#010x}+{a.len}: {report['total']} hit(s) in {a.frames} frames"]
+    for s in report["sites"]:
+        lines.append(f"  pc {s['pc']:#010x}  x{s['count']}  lr {s['regs'].get('lr', 0):#010x}  {s.get('extra') or ''}")
+    return "\n".join(lines)
+
+
+def _hexdump(base: int, data: bytes) -> str:
+    rows = []
+    for i in range(0, len(data), 16):
+        row = data[i:i + 16]
+        rows.append(f"{base + i:08x}  {' '.join(f'{b:02x}' for b in row):<47}")
+    return "\n".join(rows)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except rom.RomError as e:
+    except Exception as e:  # noqa: BLE001 — report tool errors plainly to agents
+        known = {"RomError", "EmuError", "GhidraError", "ToolNotFound", "PatchError"}
+        if type(e).__name__ not in known:
+            raise
         print(f"error: {e}", file=sys.stderr)
         return 2
+    finally:
+        if args.group == "ghidra":
+            _exit_jvm()
+
+
+def _exit_jvm() -> None:
+    """Ghidra's non-daemon Java threads keep the process alive after we're done (or after an
+    error), leaving a zombie that holds the project lock. Exit hard once output is flushed."""
+    import os
+    import traceback
+    exc = sys.exc_info()[1]
+    if exc is not None and type(exc).__name__ not in {"GhidraError", "ToolNotFound"}:
+        traceback.print_exc()
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(1 if exc is not None else 0)
 
 
 if __name__ == "__main__":

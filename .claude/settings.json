@@ -1,0 +1,12 @@
+{
+  "enabledMcpjsonServers": ["hamtaro-emu"],
+  "permissions": {
+    "allow": [
+      "mcp__hamtaro-emu",
+      "Bash(uv run hamtools:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run python tools/sync_agent_profile.py:*)",
+      "Bash(uv sync:*)"
+    ]
+  }
+}
