@@ -42,7 +42,9 @@ emu_hits(run_frames=60)                                    # distinct pc sites +
 emu_unwatch()
 ```
 
-- `pc` is the instruction mGBA reports; `cpsr` bit 5 (`0x20`) set = Thumb. Mode bits
+- `pc` is **ahead of the accessing instruction** (CPU pipeline): in Thumb code the access is
+  at `pc - 4` (verified: KEYINPUT `ldrh` at `0x08009618` reported as pc `0x0800961c`); in ARM
+  code expect `pc - 8` (unverified). `cpsr` bit 5 (`0x20`) set = Thumb. Mode bits
   `0x12` = IRQ handler, `0x1f` = normal code.
 - `lr` is the caller's return address (Thumb → odd) — a quick way to find the caller.
 - `extra` has the access details (`address`, `width`, `oldValue`, `accessType`).

@@ -305,6 +305,7 @@ def sync_symbols() -> list[str]:
 # queries
 # ---------------------------------------------------------------------------
 def decompile(target: str, timeout: int = 60) -> str:
+    start()
     import pyghidra
     from ghidra.app.decompiler import DecompInterface
 

@@ -11,6 +11,11 @@ The project lives in `ghidra/projects/hamtaro.gpr` (gitignored, local). If it's 
 runs auto-analysis).
 
 Each command starts a JVM (~15 s). Batch your questions; don't call in a tight loop.
+
+**Known issue:** auto-analysis on the raw ROM creates ~300k "functions" — most are graphics
+and data misread as code. Real code decompiles fine; just don't trust `FUN_` entries far from
+known code, and treat `ghidra stats` counts as meaningless for now. Confirm a function is real
+via callers (`ghidra func`) or an emulator breakpoint before naming it.
 If the Ghidra GUI has the project open, close it first (project lock).
 
 ## Commands
