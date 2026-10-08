@@ -27,6 +27,20 @@ scene; go through `gEntityArray` / `gPlayerEntityIndex`. Copies of the position 
 
 ## IWRAM (0x03000000–0x03007FFF)
 
+### Text and dialogue
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x030005f0` | TextState pointer | `gEventTextState` | Text state owned by the current dialogue event; zero after release | confirmed |
+| `0x03000608` | TextState pointer | `gTextStateList` | Head of the generic text-state list; sentinel when empty | confirmed |
+| `0x03000610` | TextState sentinel | `gTextStateSentinel` | List endpoint and empty-list head value | confirmed; size `0x34` likely |
+
+For the supplied clubhouse dialogue state, the active TextState is `0x0202447c`
+in EWRAM and its stream cursor is `0x0202448c` (`+0x10`). Redirecting that cursor
+changed the displayed passage. The root returned to the sentinel after the
+patched dialogue closed. Follow the global list rather than hard-coding this
+scene's heap addresses. See [dialogue.md](dialogue.md) and [TextState](structs.md#textstate-allocation-size-0x34-likely).
+
 ### Entity bookkeeping
 
 | Address | Type | Name | Meaning | Confidence |

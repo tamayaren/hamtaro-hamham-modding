@@ -2,6 +2,30 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Dialogue located and sunflower sentence mod verified (Codex; re-scout static scan)
+- Verified the original ROM SHA1 before analysis. Used the human's
+  `states/dialogue-state.ss0`, copied locally as `dialogue-hunt-base.ss`.
+- Boss's response stream starts at `0x0846cc6b`, ends with a wait control at
+  `0x0846ccc2`, and is reached by the unaligned pointer operand `0x0804ffb6`.
+  A RAM cursor redirect displayed a different passage; no original ROM file edits.
+- Text list root `0x03000608`; sentinel `0x03000610`; event-owned state pointer
+  `0x030005f0`. In this scene, TextState `0x0202447c`, cursor `0x0202448c`.
+  Watchpoint PC `0x08004630` identifies the stream read at `0x0800462c` in
+  `Text_Update` (`0x08004548`); glyph cursor store at `0x08004772`.
+- Mapped two control dispatch tables and the main cursor/list fields. Lowercase
+  uses ASCII values; spaces/capitals/punctuation and controls are custom.
+  Full mappings and static candidate-bank limits remain incomplete.
+- `patches/sunflower-dialogue` supplies the human's authored sentence in a new
+  `0x29`-byte stream at `0x086d0000` and redirects only the four-byte operand.
+  Build changed 44 bytes, produced a 135-byte BPS, and verified its round-trip.
+  Six pytest tests passed with the installed ARM toolchain.
+- Patched title boot, full two-line sentence, normal portrait, final wait/close,
+  repeat conversation, local movement, and Ham-Chat menu were tested. The final
+  wait reads `0x086d0028`; after A the list root returned to `0x03000610`.
+  Room transitions and longer sessions remain for the human.
+- Details and confidence limits: [dialogue.md](dialogue.md). Bulk static output,
+  runtime traces, screenshots, and savestates stay in gitignored local paths.
+
 ## 2026-10-08 — First mod: faster-walk (Claude)
 - `patches/faster-walk`: walk 1→2, run 2→3 px/frame via 8 edits to `kPlayerMoveVelocityTable`.
 - Verified on the patched ROM against the frame counter in all directions (open floor), and

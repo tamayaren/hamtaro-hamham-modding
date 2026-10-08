@@ -1,0 +1,12 @@
+name = "sunflower-dialogue"
+description = "Boss says: There is a new sunflower by the water."
+enabled = true
+sources = ["dialogue.c"]
+
+# This event-script operand is an unaligned data pointer, not a Thumb pointer.
+# Its original target is documented in kb/dialogue.md.
+[[pointer]]
+address = 0x0804ffb6
+expect = "6b cc 46 08"
+target = "Mod_BossSunflowerDialogue"
+thumb = false

@@ -1,5 +1,31 @@
 # Structs
 
+## TextState (allocation size 0x34, likely)
+
+Generic text object used by menus and dialogue. `Text_CreateState` at
+`0x08004284` requests `0x34` bytes and appends the object to the list rooted at
+`gTextStateList` (`0x03000608`). The sentinel is `0x03000610`.
+The clubhouse dialogue instance was `0x0202447c`; that address is scene-specific.
+
+| Offset | Size | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `+0x00` | 1 | status | Low seven bits select state; observed 3 processing, 4 glyph delay; 1 inactive in static code | likely |
+| `+0x05` | 1 | glyphDelay | Delay copied to `+0x06` after a glyph unless status high bit bypasses it | likely |
+| `+0x06` | 1 | delayRemaining | Countdown for glyph/scroll timing | likely |
+| `+0x0b` | 1 | flags | Includes line redraw and alternate-font flags | likely |
+| `+0x0c` | 4 | tileDestination | Destination used when copying rendered text tiles | likely |
+| `+0x10` | 4 | cursor | Pointer to the next glyph/control, normally in ROM; can temporarily point to RAM | confirmed by redirect and traces |
+| `+0x14` | 4 | returnCursor | Resume location saved during inserted text | confirmed by substitution/resume trace |
+| `+0x18` | 4 | glyphBuffer | Buffer used by glyph renderer and copies | likely |
+| `+0x1c` | 2 | pixelX | Horizontal glyph position in pixels | likely |
+| `+0x1e` | 2 | lineIndex | Incremented by line advance, wrapped for buffer addressing | likely |
+| `+0x28` | 4 | previousLinkSlot | Pointer to the list pointer that owns this object | likely |
+| `+0x2c` | 4 | next | Next TextState, or sentinel | confirmed list insertion/removal; traversal static |
+
+The remaining fields are not mapped. `Text_SetString` (`0x08004258`) initializes
+the cursor and status. `Text_Update` (`0x08004548`) reads glyph/control bytes and
+advances the cursor. See [dialogue.md](dialogue.md) for controls and experiments.
+
 ## Entity (size 0x68)
 
 Element of the array at `*gEntityArray` (`0x03002d88`). Positions are 3D (x, height, y),

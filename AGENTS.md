@@ -130,3 +130,27 @@ uv run python tools/sync_agent_profile.py --check  # drift check
   `0x03001234` (IWRAM). ROM file offset = address − `0x08000000`.
 - Thumb function pointers have bit 0 set; record functions by their even address and note
   the mode.
+
+## Commit attribution (all agents, including Claude)
+
+Every commit prepared by an AI agent must credit the main agent and every subagent whose
+work contributed to that commit, using standard `Co-authored-by: Name <email>` trailers.
+Preserve the human's configured Git author/committer identity; do not change Git identity
+settings to impersonate the agent.
+
+- Main-agent credit: include the provider/model's readable name, exact model identifier,
+  and reasoning effort when the runtime reports it. Use the actual running model, not a
+  guessed default. For example, a GPT-6.1 Codex run can identify `gpt-6.1-sol` and `max`.
+- Subagent credit: include its worker nickname, role, actual model, and reasoning effort
+  (for example, `Erdos (re-scout; gpt-6-luna; max)`). Credit only agents that contributed.
+- Apply the same rule to Claude Code and Claude workers: identify the actual Claude model
+  and effort when available. If a detail is unavailable, say `unknown` rather than invent it.
+- Use a supplied attribution email when available. Otherwise use stable attribution labels
+  `codex@users.noreply.github.com`, `claude@users.noreply.github.com`, or
+  `<worker-role>@users.noreply.github.com`; these are labels, not claims of verified accounts.
+- Put each credit on its own trailer line after a blank line at the end of the commit
+  message. Check the completed message before committing. Preserve these trailers when
+  amending, cherry-picking, or preparing a squash message, and when pushing those commits.
+
+`AGENTS.md` is the canonical shared instruction file. `CLAUDE.md` imports it; the singular
+`AGENT.md` is only a pointer to this file so the instructions stay in one place.
