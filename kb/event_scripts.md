@@ -296,7 +296,8 @@ contexts and native jumps. It decodes **98,214 commands with zero invalid opcode
 reaches **3,599 distinct show-text targets** (0x1a/0x1b). Byte patterns shaped like
 show-text commands occur at 4,257 places in the ROM, and the walk covers 4,144 of them
 (97%). The remainder may be false matches or scripts reached only from native code or
-tables; that is the coverage-sweep step of text extraction.
+tables; that is the coverage-sweep step of text extraction. The walker is now
+`hamtools.events.walk`, used by `hamtools text dump` ([text_dump.md](text_dump.md)).
 
 **Live check:** in the emulator, breakpoint sampling of the fetch routine (`0x08001542`,
 `r1` = opcode address) plus per-frame cursor polling over three savestates (clubhouse Boss

@@ -125,12 +125,52 @@ def build_parser() -> argparse.ArgumentParser:
     _add_ghidra(sub)
     _add_emu(sub)
     _add_patch(sub)
+    _add_text(sub)
     return p
 
 
 # ---------------------------------------------------------------------------
 # patch
 # ---------------------------------------------------------------------------
+def _add_text(sub) -> None:
+    t = sub.add_parser("text", help="decode game text (output stays in extracted/)").add_subparsers(
+        dest="cmd", required=True)
+
+    p = t.add_parser("dump", help="walk all event scripts and write extracted/text/*")
+    p.add_argument("--out", type=Path, help="output directory (default: extracted/text)")
+    p.set_defaults(func=cmd_text_dump)
+
+    p = t.add_parser("show", help="decode the text stream at a ROM address")
+    p.add_argument("address", type=_int, nargs="+")
+    p.set_defaults(func=cmd_text_show)
+
+
+def _verified_rom() -> bytes:
+    data = rom.load_rom()
+    if rom.sha1(data) != rom.EXPECTED_SHA1:
+        raise rom.RomError("ROM does not match the expected USA dump; text addresses would be wrong")
+    return data
+
+
+def cmd_text_dump(args: argparse.Namespace) -> int:
+    from . import text
+    from .paths import EXTRACTED_DIR
+    out = args.out or EXTRACTED_DIR / "text"
+    counts = text.dump(_verified_rom(), out)
+    print(f"wrote {out}: " + ", ".join(f"{k} {v}" for k, v in counts.items()))
+    return 0 if counts["problems"] == 0 else 1
+
+
+def cmd_text_show(args: argparse.Namespace) -> int:
+    from . import text
+    data = _verified_rom()
+    for address in args.address:
+        stream = text.read_stream(data, address)
+        sys.stdout.reconfigure(encoding="utf-8")
+        print(text.format_entry(stream, f"{len(stream.raw)} bytes"))
+    return 0
+
+
 def _add_patch(sub) -> None:
     g = sub.add_parser("patch", help="build mods into build/").add_subparsers(dest="cmd", required=True)
 
@@ -282,7 +322,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.func(args)
     except Exception as e:  # noqa: BLE001 — report tool errors plainly to agents
-        known = {"RomError", "EmuError", "GhidraError", "ToolNotFound", "PatchError"}
+        known = {"RomError", "TextError", "EmuError", "GhidraError", "ToolNotFound", "PatchError"}
         if type(e).__name__ not in known:
             raise
         print(f"error: {e}", file=sys.stderr)
