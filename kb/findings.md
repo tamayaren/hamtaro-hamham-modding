@@ -2,6 +2,19 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — `hamtools text dump`: readable extraction of all script text (Claude Opus 5.5)
+
+- New modules `tools/hamtools/events.py` (static script walker, command lengths, natives
+  from [event_natives.csv](event_natives.csv)) and `tools/hamtools/text.py` (lossless
+  codec with tags, dump/parse). See [text_dump.md](text_dump.md).
+- The walker reproduces the prototype exactly: 148 entries, 98,214 commands, 3,599 text
+  streams, 0 problems. Every stream decodes and re-encodes to its exact bytes; no stream
+  needs a raw `{xx}` byte.
+- Insert table `0x084aa740` has 248 entries (likely; bounded by the first non-pointer).
+- Run-time text: show-text at `0x080d9762`/`0x080d9772` uses a pointer register; switch
+  `0x080be96d` has an entry below 0x10.
+- Next: coverage sweep for text outside the walk; then an edit/re-insert workflow.
+
 ## 2026-10-09 — Text control lengths verified (Codex glyph-controls analyst; Claude Opus 5.5)
 
 - Codex statically mapped all 32 text controls plus prefixes `0x5e`/`0xff`

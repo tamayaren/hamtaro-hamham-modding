@@ -36,7 +36,7 @@ AGENTS.md / CLAUDE.md      agent instructions (CLAUDE.md just imports this file)
 agent-profile/agents/      model-tier agent roster (canonical) → .claude/agents, .codex/agents
 .mcp.json, .codex/config.toml  MCP server registration (Claude / Codex)
 tools/hamtools/            Python package: CLI (`uv run hamtools ...`) + MCP server
-  rom.py emu.py ghidra.py patch.py bps.py dialogue.py mcp_emu.py
+  rom.py emu.py ghidra.py patch.py bps.py dialogue.py mcp_emu.py events.py text.py
 tools/mgba/bridge.lua      Lua script loaded into mGBA; serves the emulator on 127.0.0.1:61337
 tools/sync_agent_profile.py  regenerates .claude/skills, .claude/agents, .codex/agents
 kb/                        knowledge base: symbols, RAM map, structs, ROM map, findings log
@@ -54,7 +54,8 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | `hamtools ghidra ...` | ready | PyGhidra + Ghidra 12.1.4; decompile, disasm, func, xrefs, make-func, sync |
 | `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
 | authored dialogue C helper | ready | `patches/include/dialogue.h`; literal `DIALOGUE_TEXT(...)` encoding during `hamtools patch build`; see `patches/sunflower-dialogue/` |
-| text extraction / graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; full extraction and editing are not implemented |
+| `hamtools text ...` | ready | dump, show: event-script walker + lossless text decoder → `extracted/text/` (never commit); see `kb/text_dump.md` |
+| text re-insertion / graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; editing extracted text back into a ROM is not implemented |
 
 In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`
 (gitignored) before `uv run`.
@@ -118,6 +119,7 @@ uv run hamtools rom verify                         # check the ROM is the expect
 uv run hamtools ghidra init                        # one-time: build the Ghidra project (minutes)
 uv run hamtools ghidra decompile 0x0800961c        # understand a function
 uv run hamtools emu launch                         # start mGBA with the bridge
+uv run hamtools text dump                          # readable dialogue → extracted/text/
 uv run hamtools patch build                        # build enabled mods
 uv run pytest -q                                   # tests
 uv run python tools/sync_agent_profile.py          # after editing skills or agents
