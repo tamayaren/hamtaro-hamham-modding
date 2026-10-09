@@ -185,11 +185,11 @@ def parse_dump(text: str) -> dict[int, str]:
 
 
 def dump(data: bytes, out_dir) -> dict[str, int]:
-    """Walk all event scripts and write the readable text files; return counts."""
+    """Write rooted dialogue and separate tentative/table inventories; return counts."""
     import json
     from pathlib import Path
 
-    from . import events
+    from . import events, text_tables
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -215,6 +215,38 @@ def dump(data: bytes, out_dir) -> dict[str, int]:
                for i, p in enumerate(insert_table(data))]
     (out_dir / "inserts.txt").write_text(header + f"# Insert table {INSERT_TABLE:#010x}\n\n"
                                          + "\n".join(inserts), "utf-8", newline="\n")
+
+    # Keep these apart from dialogue.json: its refs are reached script operands
+    # that the planned editing workflow can check. An unreferenced command-shaped
+    # fragment alone does not establish a safe runtime entry point.
+    candidates: dict[int, list[events.TextCandidate]] = {}
+    for candidate in events.stray_text_refs(data, walked):
+        candidates.setdefault(candidate.target, []).append(candidate)
+    tentative, tentative_index = [], []
+    for address, refs in sorted(candidates.items()):
+        stream = read_stream(data, address)
+        note = f"unreferenced candidate  from {refs[0].command:#010x}"
+        if len(refs) > 1:
+            note += f" +{len(refs) - 1} more"
+        tentative.append(format_entry(stream, note))
+        tentative_index.append({
+            "address": f"{address:#010x}", "length": len(stream.raw),
+            "confidence": "likely", "reachability": "unproven",
+            "refs": [f"{r.command:#010x}" for r in refs],
+            "also_in_dialogue": address in walked.texts, "text": stream.text,
+        })
+    (out_dir / "unreferenced.txt").write_text(
+        header + "# Likely script fragments; runtime reachability unproven.\n"
+        "# Separate from editable rooted dialogue. Evidence: kb/text_coverage.md\n\n"
+        + "\n".join(tentative), "utf-8", newline="\n")
+    (out_dir / "unreferenced.json").write_text(
+        json.dumps(tentative_index, ensure_ascii=False, indent=1), "utf-8", newline="\n")
+    variant_counts = text_tables.dump_variants(data, out_dir)
+    native_counts = text_tables.dump_native(data, out_dir)
     return {"streams": len(entries), "inserts": len(inserts), "commands": len(walked.commands),
-            "scene_entries": len(walked.roots), "problems": len(walked.problems),
-            "indirect": len(walked.indirect), "unknown_natives": len(walked.unknown_natives)}
+            "scene_entries": len(walked.roots), "scene_table_slots": events.SCENE_COUNT,
+            "problems": len(walked.problems), "indirect": len(walked.indirect),
+            "unknown_natives": len(walked.unknown_natives),
+            "unreferenced_streams": len(tentative),
+            "unreferenced_commands": sum(map(len, candidates.values())),
+            **variant_counts, **native_counts}

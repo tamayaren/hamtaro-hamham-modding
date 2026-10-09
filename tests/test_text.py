@@ -130,13 +130,24 @@ def test_walk_of_real_rom_matches_kb_counts():
     w = events.walk(_rom_or_skip())
     assert (len(w.roots), len(w.commands), len(w.texts)) == (148, 98214, 3599)
     assert not w.problems and not w.unknown_natives
+    assert set(w.sizes) == set(w.commands)
+    candidates = events.stray_text_refs(_rom_or_skip(), w)
+    assert len(candidates) == 113
+    assert len({c.target for c in candidates}) == 101
+    assert len({c.target for c in candidates} - set(w.texts)) == 83
 
 
-def test_every_real_stream_round_trips(tmp_path):
+def test_every_real_stream_round_trips():
     data = _rom_or_skip()
-    counts = text.dump(data, tmp_path)
+    out_dir = paths.EXTRACTED_DIR / "text-validation"
+    counts = text.dump(data, out_dir)
     assert counts["streams"] == 3599 and counts["inserts"] == 248
-    parsed = text.parse_dump((tmp_path / "dialogue.txt").read_text("utf-8"))
+    parsed = text.parse_dump((out_dir / "dialogue.txt").read_text("utf-8"))
     assert len(parsed) == 3599
     for address, decoded in parsed.items():
         assert text.encode(decoded) == text.read_stream(data, address).raw
+    for filename, count in (("unreferenced.txt", 101), ("variants.txt", 556), ("native.txt", 448)):
+        parsed = text.parse_dump((out_dir / filename).read_text("utf-8"))
+        assert len(parsed) == count
+        for address, decoded in parsed.items():
+            assert text.encode(decoded) == text.read_stream(data, address).raw

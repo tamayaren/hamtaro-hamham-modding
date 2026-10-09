@@ -291,12 +291,16 @@ value, then checked: decoding after every call site must stay valid. All 602 pas
 ### Whole-ROM walk (static validation)
 
 A recursive-descent walk starting from all 148 scene/subscene entry scripts (scene table
-`0x08466944`, 12 scenes) follows jumps, calls, branches, switch targets, background
+`0x08466944`, 11 pointer slots ending at `0x08466970`) follows jumps, calls, branches, switch targets, background
 contexts and native jumps. It decodes **98,214 commands with zero invalid opcodes** and
 reaches **3,599 distinct show-text targets** (0x1a/0x1b). Byte patterns shaped like
-show-text commands occur at 4,257 places in the ROM, and the walk covers 4,144 of them
-(97%). The remainder may be false matches or scripts reached only from native code or
-tables; that is the coverage-sweep step of text extraction. The walker is now
+show-text commands in the observed direct-text address span occur at 4,257 sites
+outside other decoded operands; the walk covers 4,144 of them (97%). A broader
+search with a slot below 0x10 and any ROM pointer finds 4,483 raw patterns, including
+code/operand/animation coincidences. The 113 unreached text candidates are likely
+script fragments, but a runtime path into them has not been established. Their
+101 streams are exported separately, not promoted to scene roots. See
+[text_coverage.md](text_coverage.md) for entry-point sources and limits. The walker is now
 `hamtools.events.walk`, used by `hamtools text dump` ([text_dump.md](text_dump.md)).
 
 **Live check:** in the emulator, breakpoint sampling of the fetch routine (`0x08001542`,

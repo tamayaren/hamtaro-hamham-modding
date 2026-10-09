@@ -54,7 +54,7 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | `hamtools ghidra ...` | ready | PyGhidra + Ghidra 12.1.4; decompile, disasm, func, xrefs, make-func, sync |
 | `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
 | authored dialogue C helper | ready | `patches/include/dialogue.h`; literal `DIALOGUE_TEXT(...)` encoding during `hamtools patch build`; see `patches/sunflower-dialogue/` |
-| `hamtools text ...` | ready | dump, show: event-script walker + lossless text decoder → `extracted/text/` (never commit); see `kb/text_dump.md` |
+| `hamtools text ...` | ready | dump, show: rooted dialogue + separate candidate/variant/native inventories; lossless decoder → `extracted/text/` (never commit); see `kb/text_dump.md` |
 | text re-insertion / graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; editing extracted text back into a ROM is not implemented |
 
 In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`

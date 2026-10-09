@@ -7,6 +7,7 @@ reads the ROM; it never stores ROM bytes.
 
 from __future__ import annotations
 
+import bisect
 import csv
 import struct
 from dataclasses import dataclass, field
@@ -16,7 +17,7 @@ from .paths import KB_DIR
 from .rom import ROM_BASE
 
 SCENE_TABLE = 0x08466944
-SCENE_COUNT = 12
+SCENE_COUNT = 11                 # 0x08466970 starts descriptors, not a twelfth pointer
 DESCRIPTOR_SIZE = 0x10
 LAST_OPCODE = 0x60
 
@@ -111,17 +112,28 @@ class TextRef:
 class Walk:
     roots: dict[int, str]
     commands: dict[int, int] = field(default_factory=dict)     # address -> opcode
+    sizes: dict[int, int] = field(default_factory=dict)        # address -> command length
     texts: dict[int, list[TextRef]] = field(default_factory=dict)
     problems: list[tuple[int, str]] = field(default_factory=list)
     indirect: list[int] = field(default_factory=list)          # commands using a pointer register
     unknown_natives: dict[int, list[int]] = field(default_factory=dict)
 
 
-def walk(data: bytes, natives: dict[int, Native] | None = None) -> Walk:
-    """Recursive-descent decode of every script reachable from the scene entries."""
+def walk(data: bytes, natives: dict[int, Native] | None = None,
+         roots: dict[int, str] | None = None, *,
+         extra_roots: dict[int, str] | None = None) -> Walk:
+    """Decode scripts from scene entries, or from explicit roots for analysis.
+
+    Extra roots supplement the selected roots. Their labels identify their source;
+    the caller must establish that source before claiming runtime reachability.
+    No byte-pattern candidate is automatically promoted to a scene entry.
+    """
     rom = _Rom(data)
     natives = load_natives() if natives is None else natives
-    result = Walk(scene_roots(data))
+    selected = scene_roots(data) if roots is None else dict(roots)
+    for address, label in (extra_roots or {}).items():
+        selected.setdefault(address, label)
+    result = Walk(selected)
     todo = [(addr, label) for addr, label in result.roots.items()]
     todo.reverse()
     while todo:
@@ -146,21 +158,35 @@ def walk(data: bytes, natives: dict[int, Native] | None = None) -> Walk:
                 break
             stop = op in TERMINATORS
             if op == NATIVE_CALL:
+                if not rom.ok(addr, 5):
+                    result.problems.append((addr, "truncated native-call pointer"))
+                    break
                 fn = rom.u32(addr + 1) & ~1
                 native = natives.get(fn)
                 if native is None:
                     result.unknown_natives.setdefault(fn, []).append(addr)
                     result.commands[addr] = op
+                    result.sizes[addr] = 5
                     break
                 if native.kind == "scene-end":
                     result.commands[addr] = op
+                    result.sizes[addr] = 5
                     break
                 if native.kind == "branch":
+                    if not rom.ok(addr, NATIVE_BRANCH_TARGET + 4):
+                        result.problems.append((addr, "truncated native branch target"))
+                        break
                     follow(addr, rom.u32(addr + NATIVE_BRANCH_TARGET))
                 length = 5 + native.extra
             elif op == SWITCH:
+                if not rom.ok(addr, 2):
+                    result.problems.append((addr, "truncated switch count"))
+                    break
                 count = rom.u8(addr + 1)
                 length = 2 + 4 * count
+                if not rom.ok(addr, length):
+                    result.problems.append((addr, "switch table runs past ROM end"))
+                    break
                 for k in range(count):
                     follow(addr, rom.u32(addr + 2 + 4 * k))
                 # 0x1d does not bounds-check; extra valid pointers mean the
@@ -179,6 +205,7 @@ def walk(data: bytes, natives: dict[int, Native] | None = None) -> Walk:
                 result.problems.append((addr, "command runs past ROM end"))
                 break
             result.commands[addr] = op
+            result.sizes[addr] = length
             if op in SHOW_TEXT:
                 t = rom.u32(addr + 2)
                 if t < POINTER_REGISTERS:
@@ -199,3 +226,44 @@ def walk(data: bytes, natives: dict[int, Native] | None = None) -> Walk:
         # Depth-first in program order: the first target found is decoded next.
         todo.extend(reversed(pending))
     return result
+
+
+@dataclass(frozen=True)
+class TextCandidate:
+    command: int
+    opcode: int
+    slot: int
+    target: int
+
+
+def stray_text_refs(data: bytes, walked: Walk) -> list[TextCandidate]:
+    """Find unreached text-shaped commands for a separate, tentative inventory.
+
+    Require a slot below 0x10 and a pointer within the observed text-address span.
+    Exclude patterns inside decoded command operands. These are likely script
+    fragments, not proven roots: see kb/text_coverage.md for the entry-point audit.
+    The observed span is a search filter, not a claim about text-bank boundaries.
+    """
+    if not walked.texts:
+        return []
+    rom = _Rom(data)
+    low, high = min(walked.texts), max(walked.texts)
+    starts = sorted(walked.commands)
+    found = []
+    for op in SHOW_TEXT:
+        pos = data.find(bytes([op]))
+        while pos >= 0:
+            address = ROM_BASE + pos
+            pos = data.find(bytes([op]), pos + 1)
+            if address in walked.commands or not rom.ok(address, 6):
+                continue
+            slot, target = rom.u8(address + 1), rom.u32(address + 2)
+            if slot >= POINTER_REGISTERS or not low <= target <= high:
+                continue
+            previous = bisect.bisect_right(starts, address) - 1
+            if previous >= 0:
+                owner = starts[previous]
+                if address < owner + walked.sizes.get(owner, 1):
+                    continue
+            found.append(TextCandidate(address, op, slot, target))
+    return sorted(found, key=lambda candidate: candidate.command)

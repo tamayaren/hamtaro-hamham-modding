@@ -162,3 +162,14 @@ Full writer counts, frame stamps, timing limitations, and the unsuccessful poke
 are documented in [the findings log](findings.md). Local raw evidence is in
 `extracted/input-hunt-20261008/final-transitions.json` and the parent's
 `extracted/input-ram-hunt/ghidra-input-*.txt`. No ROM bytes or raw dumps are tracked.
+
+## Runtime-selected dialogue (likely; static coverage sweep)
+
+Native `Event_NativeSelectTextSlots` at `0x0803b2d0` fills pointer registers
+0 and 1 before the indirect show-text commands `0x080d9762` and `0x080d9772`.
+The selected index is byte variable 0x0060 at `0x020039f0`. Source pointer
+arrays are in RAM at `0x02001ab4` and `0x02001c6c`; their complete storage
+bounds and initialization sources are not established. Slot 0 uses a direct
+pointer for indexes below `0x1f`, otherwise a transformed stream in the
+32-byte buffer at `0x03003ad0`. These are static findings, not live pokes.
+See [text_coverage.md](text_coverage.md) for the exact native/script sources.

@@ -2,6 +2,38 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Dialogue coverage and variant inventories (Codex; Ohm re-analyst; Claude research)
+
+- Corrected the scene-pointer array to 11 slots at `0x08466944` through
+  `0x08466970` exclusive. The twelfth word was a descriptor entry. The reached
+  walk remains 148 unique roots, 98,214 commands, 4,144 direct text sites, and
+  3,599 streams. See [text_coverage.md](text_coverage.md).
+- Audited the 113 missed text candidates using command boundaries, unaligned
+  pointer searches, and native cursor/callback paths. Their 101 streams (83 new
+  targets) are likely script fragments; no additional runtime-reached root is
+  claimed. Exported separately as `unreferenced.txt` / `unreferenced.json`.
+- `events.walk` supports explicit/additional source-labelled roots for future
+  evidenced entries and records command sizes. Truncated variable headers report
+  problems rather than raising indexing errors.
+- Ohm mapped five variant families: 15 logical rows, 14 physical rows, 651
+  logical entries, 569 physical slots, 556 distinct stored streams. Fixed bounds,
+  final empty slots, and shared rows are retained in `variants.txt` / `variants.json`.
+  All new table interpretation remains likely. See [text_tables.md](text_tables.md).
+- Added `native.txt` / `native.json`: four evidenced native tables preserve 518
+  slots (73 nulls) and 441 unique streams; seven fixed sources/10 literal references
+  bring the inventory to 448. Bounds and source relationships remain likely;
+  runtime-generated text and unmapped UI tables are explicitly excluded.
+- Traced indirect show sites `0x080d9762` / `0x080d9772` to native
+  `0x0803b2d0`: pointer slots 0/1 select RAM arrays at `0x02001ab4` and
+  `0x02001c6c`, with generated text at `0x03003ad0`. Contextual content is not
+  misrepresented as static ROM dialogue.
+- Validation: **101 tests passed**, agent profile in sync, symbol rows sorted,
+  and original ROM SHA1 unchanged. Exact re-encoding of rooted, candidate,
+  variant, and native streams;
+  synthetic operand-coincidence, explicit-root, truncation, table-boundary, and
+  shared-row checks. No emulator state or original ROM was changed. Earlier
+  unfinished Claude coverage research was read and preserved in its own worktree.
+
 ## 2026-10-09 — `hamtools text dump`: readable extraction of all script text (Claude Opus 5.5)
 
 - New modules `tools/hamtools/events.py` (static script walker, command lengths, natives
