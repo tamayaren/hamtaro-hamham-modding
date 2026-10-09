@@ -155,6 +155,7 @@ address,name,kind,size,mode,confidence,notes
 0x084a92c1,kNativeRecordFallbackSecondary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038ef0 and 0x08038fc0
 0x084a9b60,kNativePresentationTextPtrs,data,0x214,,likely,19 by 7 pointer slots; 73 nulls retained; native 0x0803fd28 checks null entries
 0x084aa740,kTextInsertTable,data,,,confirmed,String pointers used by text controls 0xf0/0xfa; entry 0x38 displayed via 0xf0; 248 entries (count likely)
+0x08653040,kTextGlyphWidths,data,0x200,,confirmed,Normal-bank advance plus spacing verified against live cursor; alternate-bank indexing and full extent likely
 0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss script; portrait command operand at 0x08687ddf; live animation replay tested
 0x08687ddf,kBossAlternatePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfa60; replay tested
 0x08687e17,kBossClubhouseIdleAnimation,data,,,confirmed,Boss idle script selected by clubhouse callback 0x08; starts with portrait load command

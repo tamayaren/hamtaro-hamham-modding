@@ -56,3 +56,22 @@ best re-checked if a mod depends on one.
 
 - Control operands are now mapped and length-verified in
   [text_controls.md](text_controls.md).
+
+## Widths for editing checks
+
+`kTextGlyphWidths` at `0x08653040` contains the width bytes consulted by
+`Text_Update`. The normal bank indexes `glyph_byte - 1`; the alternate bank
+adds `0x100` (strong static evidence in the existing reader export). For
+proportional text, cursor advance is that width plus TextState `+0x04`'s low
+seven bits. Its high bit instead selects fixed-width cells; centering and
+insertions need additional scene context.
+
+Normal-bank advance is **confirmed**: in the authored Boss example, the width
+sum plus spacing 1 predicted 147 pixels for its second line. At the page wait,
+the live TextState `+0x1c` was exactly 147. The window's live parameters were
+21 tiles wide, six tiles high (168 pixels, three visible text lines), start X
+zero, spacing 1, normal font. Alternate-bank indexing and fixed-cell behavior
+remain **likely** from static analysis; this verification did not exercise them.
+
+`hamtools.text_layout` reads widths from the original ROM for advisory warnings;
+font data is never copied into tracked files. See [editing](text_dump.md#editing).

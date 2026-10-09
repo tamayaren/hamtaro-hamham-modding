@@ -133,7 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
 # patch
 # ---------------------------------------------------------------------------
 def _add_text(sub) -> None:
-    t = sub.add_parser("text", help="decode game text (output stays in extracted/)").add_subparsers(
+    t = sub.add_parser("text", help="decode game text or export edited streams as mod sources").add_subparsers(
         dest="cmd", required=True)
 
     p = t.add_parser("dump", help="walk all event scripts and write extracted/text/*")
@@ -143,6 +143,17 @@ def _add_text(sub) -> None:
     p = t.add_parser("show", help="decode the text stream at a ROM address")
     p.add_argument("address", type=_int, nargs="+")
     p.set_defaults(func=cmd_text_show)
+
+    p = t.add_parser("edits", help="export changed dialogue streams from an edited dump",
+                     description="Compare a dump against the verified original ROM. Only changed "
+                                 "streams are exported. Review replacement text before committing; "
+                                 "commit only dialogue you authored.")
+    p.add_argument("edited_dump", type=Path)
+    p.add_argument("--out", type=Path, required=True, help="output mod.toml path")
+    p.add_argument("--partial", action="store_true",
+                   help="intentional subset: omitted entries stay untouched, never deletions")
+    p.add_argument("--force", action="store_true", help="explicitly replace an existing output file")
+    p.set_defaults(func=cmd_text_edits)
 
 
 def _verified_rom() -> bytes:
@@ -168,6 +179,30 @@ def cmd_text_show(args: argparse.Namespace) -> int:
         stream = text.read_stream(data, address)
         sys.stdout.reconfigure(encoding="utf-8")
         print(text.format_entry(stream, f"{len(stream.raw)} bytes"))
+    return 0
+
+
+def cmd_text_edits(args: argparse.Namespace) -> int:
+    from . import patch, text
+
+    try:
+        out = args.out.resolve()
+        for source in (rom.rom_path().resolve(), args.edited_dump.resolve()):
+            if out == source or (out.exists() and source.exists() and out.samefile(source)):
+                raise patch.PatchError("output must not overwrite the original ROM or edited dump")
+        if out.exists() and not args.force:
+            raise patch.PatchError(f"output already exists: {out}; use --force to replace it")
+        changed = text.edits(_verified_rom(), args.edited_dump.read_text(encoding="utf-8"),
+                             partial=args.partial)
+        rendered = text.format_edits(changed)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        # Exclusive creation also protects against an output appearing after the
+        # initial check. --force is the only path that truncates an existing file.
+        with out.open("w" if args.force else "x", encoding="utf-8", newline="\n") as fh:
+            fh.write(rendered)
+    except (OSError, UnicodeError) as exc:
+        raise patch.PatchError(f"cannot export text edits: {exc}") from exc
+    print(f"wrote {out}: {len(changed)} changed stream(s)")
     return 0
 
 
