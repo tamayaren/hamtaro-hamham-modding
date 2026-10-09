@@ -1,6 +1,9 @@
 address,name,kind,size,mode,confidence,notes
+0x02001ab4,gRuntimeDialoguePrimaryPtrs,ram,,,likely,RAM pointer array read by native 0x0803b2d0 for event text slot 0; bounds unknown
+0x02001c6c,gRuntimeDialogueSecondaryPtrs,ram,,,likely,RAM pointer array read by native 0x0803b2d0 for event text slot 1; bounds unknown
 0x02003990,gEventByteVars,ram,,,confirmed,Event byte variables indexed by u16; var 0x003b poke changed Boss route
 0x020039cb,gBossHintCounter,ram,0x1,,confirmed,Event byte var 0x003b; Boss repeat-greeting hint index 0-3; preset 2 selected third hint
+0x020039f0,gRuntimeDialogueChoice,ram,0x1,,likely,Byte variable 0x0060 selects runtime dialogue in native 0x0803b2d0
 0x0201d0b0,gEventWordVars,ram,,,likely,Event u16 variables indexed by u16; static only
 0x0201d2b0,gDialoguePortraitTilesSlot2,ram,0x480,,confirmed,Boss portrait decompression destination in clubhouse; normal and alternate data matched ROM assets
 0x03000010,gEventOpcode,ram,0x1,,confirmed,Current event opcode; 0 means fetch next; observed 0x1a during Boss reply
@@ -36,6 +39,7 @@ address,name,kind,size,mode,confidence,notes
 0x03002c48,gSceneId,ram,0x1,,likely,Current scene; observed 1 in clubhouse Boss state
 0x03002c50,gEventCursor,ram,0x4,,confirmed,Event operand cursor = opcode address + 1; 0x0804ffb5 during Boss reply
 0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
+0x03003ad0,gRuntimeDialogueTransformBuffer,ram,0x20,,likely,Native 0x0803b2d0 produces selected text here and forces final byte zero
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
@@ -107,6 +111,7 @@ address,name,kind,size,mode,confidence,notes
 0x0800d014,Anim_CtrlLoadPortraitTiles,func,,thumb,confirmed,Animation command 0xcb loads LZ77 portrait tiles via unaligned operand; reads 0x0800d030/32/38/3e observed
 0x08018858,Event_NativeJumpIfEntityAnim,func,,thumb,likely,0x1c native; 9 extra bytes; jump to target if entity is active and animation matches
 0x08020768,Event_NativeJumpIfVarNotEqual,func,,thumb,likely,0x1c native; 9 extra bytes (bank idx value target); jump unless variable == value
+0x0803b2d0,Event_NativeSelectTextSlots,func,,thumb,likely,Fills pointer registers 0 and 1 from RAM tables before show sites 0x080d9762 and 0x080d9772
 0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
 0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
 0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Clubhouse callback 0x08 sets Boss script 0x08687e17; table read and portrait path verified
@@ -123,14 +128,32 @@ address,name,kind,size,mode,confidence,notes
 0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
 0x081bfa60,kBossAlternatePortraitTilesLz,data,0x213,,confirmed,Existing alternate Boss portrait asset; LZ77 expands to 0x480 bytes; pointer mod tested
 0x081bfc74,kBossClubhousePortraitTilesLz,data,0x222,,confirmed,Boss idle portrait asset; LZ77 expands to 0x480 bytes; runtime buffer matched
-0x08466944,kSceneTable,data,,,likely,Per-scene pointers to 0x10-byte subscene descriptor arrays
+0x08465510,kTextEmptyStream,data,0x1,,likely,Shared null stream terminating the fixed variant pointer rows
+0x08465df8,kTextVariantSplitLowRows,data,0xc,,likely,Three row pointers for f6/fc indexes below 4; physical rows each have 9 slots
+0x08465e04,kTextVariantSplitHighRows,data,0xc,,likely,Three row pointers for f6/fc indexes 4 and above using index minus 3; 49 slots per row
+0x08465e10,kTextVariantF7Rows,data,0xc,,likely,Three rows used by f7/fd; 32 stored pointer slots per row
+0x08465e1c,kTextVariantF8Rows,data,0xc,,likely,Three logical rows used by f8/fe; rows 1 and 2 share storage; 82 slots per physical row
+0x08465e28,kTextVariantF1Rows,data,0xc,,likely,Three rows used by f1/fb; 45 stored pointer slots per row
+0x08465e34,kTextVariantFamilyDirectory,data,0x14,,likely,Five pointers to variant family roots; literal references 0x080060e4 and 0x0800612c
+0x08466944,kSceneTable,data,0x2c,,likely,11 scene pointers to 0x10-byte descriptor arrays; next word at 0x08466970 is already a descriptor
 0x084669a0,kSceneDescClubhouse,data,0x10,,confirmed,Scene 1 subscene 1 descriptor; event entry 0x0804ef60 matches live cursor
 0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; 97 entries 0x00-0x60; entry 0x1a at 0x0846749c targets observed 0x080027a8
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
 0x08469cdc,kDialoguePortraitSlotRecords,data,,,likely,Record stride 0x11c; first word points to a decompression buffer; slot 2 verified for Boss
+0x0846c67a,kNativeSelectedVariantWrapper,data,,,likely,Native-rendered wrapper using fe with selected-index fallback; literals 0x08013cf4 and 0x08036918
 0x0846cc6b,kBossClubhouseDialogue,data,0x58,,confirmed,Uncompressed custom glyph/control stream; final wait 0x0846ccc2; reached by 0x0804ffb6
+0x0847a9df,kNativePairedLabelPrimary,data,,,likely,Fixed native text selected by 0x0801c560; literal 0x0801c5d8
+0x0847a9e5,kNativePairedLabelSecondary,data,,,likely,Fixed native text selected by 0x0801c560; literal 0x0801c5dc
+0x084a35bd,kNativeRecordActionLabel,data,,,likely,Fixed native record action label; literal 0x08038ec4
+0x084a35c4,kNativeRecordUnavailableLabel,data,,,likely,Fixed native unavailable-selection label; literal 0x08038fa8
+0x084a7840,kHamChatListTextPtrs,data,0x15c,,likely,87 stored text pointers; fallback plus 86 list entries; native literal 0x08032ec4
+0x084a799c,kHamChatCompanionTextPtrs,data,0x15c,,likely,87 companion text pointers; native literals 0x08033034 and 0x080330a0
+0x084a7ea8,kMenuItemLineTextPtrs,data,0x34c,,likely,211 item-description line pointers; terminal offset and independent next table bound storage
+0x084a92b8,kNativeRecordFallbackPrimary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038c7c and 0x08038d6c
+0x084a92c1,kNativeRecordFallbackSecondary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038ef0 and 0x08038fc0
+0x084a9b60,kNativePresentationTextPtrs,data,0x214,,likely,19 by 7 pointer slots; 73 nulls retained; native 0x0803fd28 checks null entries
 0x084aa740,kTextInsertTable,data,,,confirmed,String pointers used by text controls 0xf0/0xfa; entry 0x38 displayed via 0xf0; 248 entries (count likely)
 0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss script; portrait command operand at 0x08687ddf; live animation replay tested
 0x08687ddf,kBossAlternatePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfa60; replay tested
