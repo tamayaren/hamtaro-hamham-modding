@@ -52,10 +52,11 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | `hamtools rom ...` | ready | verify, info, peek, find, xrefs |
 | emulator: `hamtaro-emu` MCP + `hamtools emu ...` | ready | mGBA 0.11 dev build + `tools/mgba/bridge.lua`; input, screenshots, memory, savestates, watchpoints, RAM search |
 | `hamtools ghidra ...` | ready | PyGhidra + Ghidra 12.1.4; decompile, disasm, func, xrefs, make-func, sync |
-| `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
+| `hamtools patch ...` | ready | edits/hooks/pointers/text + C in free space → `build/*.gba` + `.bps` |
 | authored dialogue C helper | ready | `patches/include/dialogue.h`; literal `DIALOGUE_TEXT(...)` encoding during `hamtools patch build`; see `patches/sunflower-dialogue/` |
-| `hamtools text ...` | ready | dump, show: event-script walker + lossless text decoder → `extracted/text/` (never commit); see `kb/text_dump.md` |
-| text re-insertion / graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; editing extracted text back into a ROM is not implemented |
+| `hamtools text ...` | ready | dump, show, edits: lossless tag notation; changed-only mod export; dumps → `extracted/text/` (never commit); see `kb/text_dump.md` |
+| text re-insertion | ready | `[[text]]` replacements checked by original-stream SHA1; safe in-place edits or automatic free-space relocation and direct-reference repointing |
+| graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; general graphics editing is not implemented |
 
 In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`
 (gitignored) before `uv run`.

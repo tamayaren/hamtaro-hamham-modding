@@ -1,0 +1,13 @@
+name = "boss-text-edit"
+description = "Three authored pages demonstrate dialogue relocation and colour tags."
+enabled = false
+
+# Clubhouse -> Boss -> Hamha, using states/event-sel-boss-base.ss.
+# Build this example alone: sunflower-dialogue redirects the same event operand.
+[[text]]
+address = 0x0846cc6b
+expect_sha1 = "ad6dd53ec50851ce5d7ce50592daa9853b4d146e"
+text = """[callback 08]I can read our [red]new[normal] text!
+This line fits the box.[page]Longer messages move
+into spare ROM space.[page]Every script follows
+the edited message.[end]"""

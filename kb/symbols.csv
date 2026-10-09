@@ -132,6 +132,7 @@ address,name,kind,size,mode,confidence,notes
 0x08469cdc,kDialoguePortraitSlotRecords,data,,,likely,Record stride 0x11c; first word points to a decompression buffer; slot 2 verified for Boss
 0x0846cc6b,kBossClubhouseDialogue,data,0x58,,confirmed,Uncompressed custom glyph/control stream; final wait 0x0846ccc2; reached by 0x0804ffb6
 0x084aa740,kTextInsertTable,data,,,confirmed,String pointers used by text controls 0xf0/0xfa; entry 0x38 displayed via 0xf0; 248 entries (count likely)
+0x08653040,kTextGlyphWidths,data,0x200,,confirmed,Normal-bank advance plus spacing verified against live cursor; alternate-bank indexing and full extent likely
 0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss script; portrait command operand at 0x08687ddf; live animation replay tested
 0x08687ddf,kBossAlternatePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfa60; replay tested
 0x08687e17,kBossClubhouseIdleAnimation,data,,,confirmed,Boss idle script selected by clubhouse callback 0x08; starts with portrait load command

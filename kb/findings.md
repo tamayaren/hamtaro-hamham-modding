@@ -2,6 +2,37 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Dialogue editing and ROM re-insertion (Codex; Herschel, re-engineer)
+
+- `[[text]]` entries now build authored tag notation with an original-stream SHA1,
+  safe in-place placement, or free-space relocation with all walked direct
+  `0x1a`/`0x1b` references redirected. Shared tails, duplicate targets, overlapping
+  writes, incomplete walks, invalid streams, and exhausted/nonpadding space are
+  rejected or safely relocated. Synthetic tests cover these cases; no original
+  dialogue or extracted data is stored in patch sources.
+- **Confirmed in mGBA:** from `states/event-sel-boss-base.ss`, the Boss/Hamha
+  stream at `0x0846cc6b` (88 bytes) was replaced by 137 authored bytes at
+  `0x086d0000`; operand `0x0804ffb6` followed the new address. All three pages,
+  red/normal colour tags, portrait, page clearing, and final close worked.
+  Title boot, dictionary, movement, and repeat interaction also worked.
+- **Confirmed in mGBA:** a separate 19-byte replacement stayed at `0x0846cc6b`;
+  its operand remained unchanged and the cursor reached `0x0846cc7d`. Both
+  variants closed to TextState-list sentinel `0x03000610`; relocated text also
+  cleared event text pointer `0x030005f0` to zero. The original ROM hash is intact.
+- `kTextGlyphWidths` `0x08653040`: normal-bank advance plus spacing **confirmed**
+  by a predicted/measured 147-pixel cursor. The Boss window measured 168px and
+  three lines. Alternate-bank indexing remains **likely** from the existing
+  reader export. Advisory layout checks read widths from the ROM; inserts and
+  other scene settings still need playtesting. See [glyphs.md](glyphs.md).
+- `hamtools text edits` exports only changed whole streams and original hashes;
+  partial dumps require `--partial`, existing output requires `--force`. See
+  [text_dump.md](text_dump.md#editing). The disabled `boss-text-edit` example
+  must be built separately from `sunflower-dialogue` (same pointer claim).
+- Local evidence: `screenshots/text-edit-{relocated,inplace}-*.png` in the
+  `text-edit` worktree; original comparison under the main repo's screenshots.
+  Native-only/runtime text and unseen references remain coverage limits. Human
+  playtesting still needs room changes, longer sessions, and other window layouts.
+
 ## 2026-10-09 — `hamtools text dump`: readable extraction of all script text (Claude Opus 5.5)
 
 - New modules `tools/hamtools/events.py` (static script walker, command lengths, natives

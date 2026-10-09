@@ -42,7 +42,7 @@ Not yet covered:
 
 `hamtools.text.parse_dump` reads `dialogue.txt` back. For every stream,
 `encode(decoded text)` gives back the exact ROM bytes (tested on all 3,599 streams).
-This is the basis for a future editing workflow.
+The editing workflow below uses this byte-exact codec.
 
 ## Notation
 
@@ -79,3 +79,101 @@ This is the basis for a future editing workflow.
 | `[v1]` `[v2]` | ff / 5e | select variant 1 / 2 for the next insert (no operand) |
 
 The tag names are the tool's own; meanings marked likely in text_controls.md stay likely.
+
+## Editing
+
+`hamtools patch build` accepts `[[text]]` entries in a mod's `mod.toml`.
+Only the authored replacement and an original-stream hash belong in the public
+mod source. Do not include the original dialogue, extracted dumps, or long byte
+signatures. Example for the mapped Boss response (this short replacement fits):
+
+```toml
+name = "my-dialogue"
+enabled = false
+
+[[text]]
+address = 0x0846cc6b
+expect_sha1 = "ad6dd53ec50851ce5d7ce50592daa9853b4d146e"
+text = "[callback 08]Our new line.[end]"
+```
+
+The hash covers `read_stream(original_rom, address).raw`, including the end byte.
+The whole-ROM USA hash is checked first. `text.encode` and `validate_stream`
+reject invalid glyphs/tags, incomplete controls, missing terminators, or bytes
+after the first end. End-looking **operand** bytes remain valid. Preserve
+scene-specific callbacks and waits when authoring; changing a callback changes
+game behavior, not just wording.
+
+Build with `uv run hamtools patch build my-dialogue`. A text-only mod needs no
+ARM compiler. The original ROM stays read-only; `.gba` and `.bps` go to `build/`.
+The disabled example `patches/boss-text-edit/` contains three fully authored
+pages and deliberately exercises relocation. Build it separately from
+`sunflower-dialogue`, which claims the same Boss operand.
+
+### Placement and limits
+
+- A replacement no longer than its original stream is written in place, with
+  bytes after its new terminator left untouched, when no other known stream
+  overlaps the original allocation.
+- Longer or overlapping/shared-tail streams move to four-byte-aligned free
+  space after compiled mod code, starting at `0x086d0000`. Every distinct direct
+  `0x1a`/`0x1b` reference returned by `events.walk(original_rom)` is redirected
+  at command + 2, including unaligned operands. The original shared text stays
+  intact for other streams. Insert-table streams are also checked for overlaps.
+- Code, manual edits, hooks, pointers, allocated text, and redirected operands
+  share one conflict check. Allocation skips explicitly claimed free space.
+  Duplicate replacements, source mismatches, out-of-ROM writes, exhausted or
+  non-`0xff` free space, and overlapping writes fail before final outputs.
+- Entry addresses must be direct text-stream addresses from the walker, not
+  command addresses or arbitrary ROM strings. Pointer-register commands
+  `0x080d9762` and `0x080d9772` cannot be repointed by this feature. Native-only,
+  runtime-selected, and insert-table-only text needs separate analysis. An
+  incomplete walk (problems or unknown native operands) blocks text builds.
+- Coverage follows `events.walk()` automatically as its roots improve. The
+  tool can redirect the references the walker knows; it does not prove the
+  absence of undiscovered native/data references. Verify edited scenes in the
+  emulator, especially while the coverage sweep is still in progress.
+
+### Export only changed streams from an edited dump
+
+Keep the dumped original and an edited copy in the gitignored `extracted/text/`.
+Edit the text below an entry header, preserving its `@0x...` address and a
+final `[end]`, `[null]`, or `[end-nowait]` tag. Then:
+
+```
+uv run hamtools text edits extracted/text/dialogue-edited.txt --out patches/my-dialogue/mod.toml
+uv run hamtools patch build my-dialogue
+```
+
+The helper compares **encoded bytes** with the verified original, so aliases
+that encode identically are not exported. Output is sorted `[[text]]` entries
+containing only changed whole streams and their original SHA1 hashes. The
+folder name becomes the mod name; exported mods are enabled unless you add
+`enabled = false` before the first `[[text]]` entry. Review replacements before
+committing: changing one phrase does not remove copied game dialogue elsewhere
+in that stream. Commit only text you authored.
+
+All dumped entries must be present by default. Use `--partial` for an
+intentional subset; missing entries always mean **leave unchanged**, never
+delete. Duplicates, unknown addresses, malformed tags, and missing/end-in-middle
+controls are rejected. Existing output needs `--force` to replace it; doing
+so replaces the whole file, including any other mod settings. The helper
+refuses to overwrite the edited dump or source ROM, including file aliases.
+
+### Layout warnings and playtesting
+
+The builder reads glyph widths from the source ROM, without storing font data
+in mod sources. Defaults estimate the observed Boss response: `width = 168`
+pixels, `lines = 3`, `spacing = 1`, `font = 0`. Optional fields on `[[text]]`
+adjust the estimate only; they do not resize the game's window. `font` may be
+0 or 1. Long literal lines and excess unpaced newlines produce warnings, not
+automatic wrapping or build errors. `[wait-line]`, `[scroll]`, and `[page]`
+pace/reset the line estimate.
+
+Inserted strings, names, values, icons, centering/fixed-width modes, and
+scene callbacks can alter layout; inserted widths are excluded and flagged.
+Other scenes can have different windows. The estimate cannot replace an
+on-screen check. Load the patched ROM and `states/event-sel-boss-base.ss`,
+open Boss's Hamha response, advance each page, close it, and check movement,
+menus, and another conversation. Human playtesting should also cover room
+changes, longer sessions, and scenes containing expanded inserts.
