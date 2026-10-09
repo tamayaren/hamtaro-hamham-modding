@@ -21,6 +21,7 @@ The clubhouse dialogue instance was `0x0202447c`; that address is scene-specific
 | `+0x1e` | 2 | lineIndex | Incremented by line advance, wrapped for buffer addressing | likely |
 | `+0x28` | 4 | previousLinkSlot | Pointer to the list pointer that owns this object | likely |
 | `+0x2c` | 4 | next | Next TextState, or sentinel | confirmed list insertion/removal; traversal static |
+| `+0x30` | 4 | windowTemplate | Window template pointer; observed `0x08464e5c` in the Boss response | likely format; pointer read observed |
 
 The remaining fields are not mapped. `Text_SetString` (`0x08004258`) initializes
 the cursor and status. `Text_Update` (`0x08004548`) reads glyph/control bytes and
@@ -34,7 +35,7 @@ player, `Player_Update` (`0x0800631c`).
 
 | Offset | Size | Name | Meaning | Confidence |
 |---|---|---|---|---|
-| `+0x04` | 4 | anim? | compared against the wanted animation before `FUN_0800af54(index, anim)` is called | guess |
+| `+0x04` | 4 | animationScript | ROM animation script pointer; Boss replay selected a different portrait | confirmed |
 | `+0x18` | 4 | x | X position | confirmed (poke moved Hamtaro) |
 | `+0x1c` | 4 | z | height axis (between x and y; integrated like them) | likely |
 | `+0x20` | 4 | y | Y position (screen down = +) | confirmed (poke moved Hamtaro, camera followed) |
@@ -43,6 +44,8 @@ player, `Player_Update` (`0x0800631c`).
 | `+0x2c` | 4 | vy | Y velocity | confirmed |
 | `+0x30` / `+0x34` / `+0x38` | 4 each | ax / az / ay | acceleration added to velocity by `Entity_ApplyPhysics` | likely |
 | `+0x3c` / `+0x3e` / `+0x40` | 2 each | ? | accumulate `+0x44` / `+0x46` / `+0x48`; first two clamp to 0x200 (scale?) | guess |
+| `+0x4c` | 2 | animationOffset | Byte offset in the current script; reset for animation replay, advanced by command handlers | confirmed replay; static increments |
+| `+0x63` | 1 | animationCounter? | Reset by the animation setter; exact counter purpose unmapped | likely |
 
 Player velocity comes from `kPlayerMoveVelocityTable` (`0x08467af0`): 2 speed modes
 (walk, run while B held) × 4 directions (Up, Down, Left, Right) × (vx, vy) s32 16.16.

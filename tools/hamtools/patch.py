@@ -36,7 +36,7 @@ import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import bps, paths, rom
+from . import bps, dialogue, paths, rom
 
 PATCHES_DIR = paths.REPO_ROOT / "patches"
 FREE_BASE = 0x086D0000          # inside the verified 0xFF tail (kb/rom_map.md)
@@ -106,17 +106,23 @@ def _run(cmd: list, what: str) -> str:
 
 def compile_code(mods: list[Mod], workdir: Path, root: Path = PATCHES_DIR) -> tuple[bytes, dict[str, int], list[str]]:
     """Compile and link all mod sources at FREE_BASE. Returns (blob, symbols, log)."""
-    sources = [s for m in mods for s in m.sources]
+    sources = [(m, s) for m in mods for s in m.sources]
     if not sources:
         return b"", {}, []
     workdir.mkdir(parents=True, exist_ok=True)
     gcc, objcopy, nm = paths.arm_tool("gcc"), paths.arm_tool("objcopy"), paths.arm_tool("nm")
     objs = []
-    for src in sources:
+    for index, (mod, src) in enumerate(sources):
         if not src.exists():
             raise PatchError(f"missing source {src}")
+        generated = workdir / "generated" / mod.path.name / f"{index}_{src.name}"
+        try:
+            prepared = dialogue.prepare_source(src, generated)
+        except dialogue.DialogueError as exc:
+            raise PatchError(str(exc)) from exc
         obj = workdir / f"{src.parent.name}_{src.stem}.o"
-        _run([gcc, *CFLAGS, f"-I{src.parent}", f"-I{root / 'include'}", f"-I{PATCHES_DIR / 'include'}", "-c", src, "-o", obj],
+        # Quoted mod includes must resolve from the editable source's directory.
+        _run([gcc, *CFLAGS, f"-I{src.parent}", f"-I{root / 'include'}", f"-I{PATCHES_DIR / 'include'}", "-c", prepared, "-o", obj],
              f"compile {src.name}")
         objs.append(obj)
 

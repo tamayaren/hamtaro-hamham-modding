@@ -2,6 +2,57 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Boss portraits located; readable dialogue C helper verified (GPT-6.1; Harvey re-engineer)
+
+- Corrected the earlier `0xf4` portrait label: it consumes a scene callback ID.
+  The live callback table is `0x03001fb0`; the `0x08` entry at `0x03001fd0`
+  was read by `Scene_InvokeCallback` (`0x08001440`, exact load `0x0800144a`).
+  That clubhouse callback sets Boss's idle animation `0x08687e17`.
+- Boss portrait assets: idle `0x081bfc74` (compressed size `0x222`), alternate
+  `0x081bfa60` (`0x213`), both LZ77-expanded size `0x480`. Geometry is likely
+  48x48, while palette/layout/animated overlay details remain unmapped.
+  Animation command `0xcb`, handler `0x0800d014`, reads the unaligned idle
+  asset operand at `0x08687e18`. Both decompressed assets matched the live
+  slot-2 buffer `0x0201d2b0` in their respective tests.
+- The loader selects `(entityIndex - 10) / 3`, not a remainder. Boss was
+  index 16 at entity `0x02022e8c`; the runtime selector was 2. Slot record
+  `0x08469f14` contains the confirmed buffer pointer. Other slots and remaining
+  record fields are static/likely. See [portraits.md](portraits.md).
+- Added disabled `boss-portrait-demo`: a checked four-byte operand redirect
+  uses the existing alternate face without importing graphics. The separate
+  combined build changed 46 bytes and produced a 161-byte BPS. Fresh boot,
+  alternate buffer/display, final wait/close, and repeat conversation passed.
+  The initial fast test pressed A before typing finished; the corrected check
+  waited for cursor `0x086d0028`, then observed empty root `0x03000610`.
+- The response route is Clubhouse -> Boss -> Hamha -> show-text command
+  `0x0804ffb4`, slot 0, pointer `0x0804ffb6`. Runtime operand reads identify
+  `Event_ShowTextAndWait` (`0x080027a8`), exact read `0x08002876`, caller
+  `Event_RunCommands` (`0x08000d74`). Broader branches/choices remain unmapped.
+- Harvey implemented the authored-string encoder, generated C integration,
+  shared `dialogue.h`, and meaningful parser/build tests in an isolated
+  worktree. Integrated the helper and rewrote the sunflower C as a named,
+  commented node with normal string literals. Unsupported glyphs fail with
+  source positions; original C/raw initializers remain compatible.
+- Probed digits `0x02–0x0b` and labelled punctuation `0xca–0xd9`, then expanded
+  the helper with the confirmed common glyphs. Digits, commas, apostrophes,
+  hyphen/underscore, parentheses, angle signs, slashes, curly double quotes,
+  and `!?` now work in readable strings. ASCII double quote and unmapped
+  glyphs remain errors; `0xd0` quote style is still unexposed.
+  A readable C glyph probe displayed the new mappings, reached its end control,
+  and closed normally; the probe sources/output remain local under `build/`.
+- All 64 integrated tests passed with real ARM compilation and BPS checks.
+  The readable helper produced the same `0x29`-byte stream, 44 changed bytes,
+  and 135-byte BPS as the first mod. Fresh helper-built ROM boot, complete
+  sentence, close, and repeat were verified. Restored the normal-portrait
+  output after the optional demo and removed probes/released buttons.
+- Updated README with project progress, addresses, editing/build guidance,
+  verification scope, and remaining research. Canonical shared instructions
+  distinguish ready text authoring from planned extraction/graphics tools;
+  GPT/Claude commit attribution was added in the preceding dialogue commit.
+- Evidence stays local in `extracted/dialogue-hunt-20261009/`, `states/`, and
+  `screenshots/`. The original ROM SHA1 remains unchanged. Room transitions,
+  animation reuse in other scenes, and longer gameplay still need playtesting.
+
 ## 2026-10-09 — Dialogue located and sunflower sentence mod verified (Codex; re-scout static scan)
 - Verified the original ROM SHA1 before analysis. Used the human's
   `states/dialogue-state.ss0`, copied locally as `dialogue-hunt-base.ss`.

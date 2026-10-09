@@ -36,11 +36,11 @@ AGENTS.md / CLAUDE.md      agent instructions (CLAUDE.md just imports this file)
 agent-profile/agents/      model-tier agent roster (canonical) → .claude/agents, .codex/agents
 .mcp.json, .codex/config.toml  MCP server registration (Claude / Codex)
 tools/hamtools/            Python package: CLI (`uv run hamtools ...`) + MCP server
-  rom.py emu.py ghidra.py patch.py bps.py mcp_emu.py
+  rom.py emu.py ghidra.py patch.py bps.py dialogue.py mcp_emu.py
 tools/mgba/bridge.lua      Lua script loaded into mGBA; serves the emulator on 127.0.0.1:61337
 tools/sync_agent_profile.py  regenerates .claude/skills, .claude/agents, .codex/agents
 kb/                        knowledge base: symbols, RAM map, structs, ROM map, findings log
-patches/<mod>/mod.toml     mod sources; patches/include/gba.h shared header
+patches/<mod>/mod.toml     mod sources; patches/include/gba.h and dialogue.h shared headers
 tests/                     pytest (`uv run pytest -q`)
 gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local only, gitignored
 ```
@@ -53,7 +53,8 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | emulator: `hamtaro-emu` MCP + `hamtools emu ...` | ready | mGBA 0.11 dev build + `tools/mgba/bridge.lua`; input, screenshots, memory, savestates, watchpoints, RAM search |
 | `hamtools ghidra ...` | ready | PyGhidra + Ghidra 12.1.4; decompile, disasm, func, xrefs, make-func, sync |
 | `hamtools patch ...` | ready | edits/hooks/pointers + C in free space → `build/*.gba` + `.bps` |
-| text / gfx tools | planned (Phase 2) | |
+| authored dialogue C helper | ready | `patches/include/dialogue.h`; literal `DIALOGUE_TEXT(...)` encoding during `hamtools patch build`; see `patches/sunflower-dialogue/` |
+| text extraction / graphics editing tools | planned (Phase 2) | Known portrait pointers can be redirected with checked byte edits; full extraction and editing are not implemented |
 
 In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`
 (gitignored) before `uv run`.

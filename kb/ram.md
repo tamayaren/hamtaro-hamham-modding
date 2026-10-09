@@ -34,6 +34,7 @@ scene; go through `gEntityArray` / `gPlayerEntityIndex`. Copies of the position 
 | `0x030005f0` | TextState pointer | `gEventTextState` | Text state owned by the current dialogue event; zero after release | confirmed |
 | `0x03000608` | TextState pointer | `gTextStateList` | Head of the generic text-state list; sentinel when empty | confirmed |
 | `0x03000610` | TextState sentinel | `gTextStateSentinel` | List endpoint and empty-list head value | confirmed; size `0x34` likely |
+| `0x03001fb0` | Thumb callback table | `gSceneCallbacks` | Scene-installed callbacks invoked by text control `0xf4`; number of entries unknown | confirmed callback `0x08` read; scope likely |
 
 For the supplied clubhouse dialogue state, the active TextState is `0x0202447c`
 in EWRAM and its stream cursor is `0x0202448c` (`+0x10`). Redirecting that cursor
@@ -41,11 +42,17 @@ changed the displayed passage. The root returned to the sentinel after the
 patched dialogue closed. Follow the global list rather than hard-coding this
 scene's heap addresses. See [dialogue.md](dialogue.md) and [TextState](structs.md#textstate-allocation-size-0x34-likely).
 
+The Boss portrait is loaded into EWRAM `0x0201d2b0` in this scene. Both normal
+and alternate `0x480`-byte tile blocks matched their independently decompressed
+ROM assets. The loader chooses slot 2 for entity index 16; this is not a single
+universal portrait buffer. See [portraits.md](portraits.md).
+
 ### Entity bookkeeping
 
 | Address | Type | Name | Meaning | Confidence |
 |---|---|---|---|---|
 | `0x03002bfc` | u8 | `gPlayerEntityIndex` | Hamtaro's index in the entity array | confirmed |
+| `0x03002bf4` | u8 | `gClubhouseBossEntityIndex` | Boss index used by this scene's callbacks; observed 16 | confirmed for clubhouse; reuse elsewhere unknown |
 | `0x03002d88` | u32 ptr | `gEntityArray` | Pointer to the Entity array | confirmed |
 
 ### Input

@@ -10,9 +10,15 @@ Developer: AlphaDream (same studio as *Mario & Luigi: Superstar Saga*).
 | `0x080000C0` | ? | startup code | likely |
 | `0x08004548` | `0x08004817` | text updater, including gaps for internal literal pools | confirmed |
 | `0x0804ffb6` | `0x0804ffb9` | unaligned pointer operand for Boss's clubhouse dialogue | confirmed |
+| `0x081bfa60` | `0x081bfc72` | alternate Boss portrait LZ77 block; expands to `0x480` bytes | confirmed |
+| `0x081bfc74` | `0x081bfe95` | Boss idle portrait LZ77 block; expands to `0x480` bytes | confirmed |
+| `0x08467434` | ? | event command handler pointer table; entry `0x1a` selects `0x080027a8` | confirmed observed handler; bounds unknown |
 | `0x084677f0` | `0x0846782f` | sixteen text-control handler pointers for `0xe0–0xef` | confirmed dispatch; individual meanings vary |
 | `0x08467830` | `0x0846786f` | sixteen text-control handler pointers for `0xf0–0xff` | confirmed dispatch; individual meanings vary |
+| `0x08469cdc` | ? | portrait slot records, stride `0x11c`; first words are decompression destinations | likely format; Boss slot 2 confirmed |
 | `0x0846cc6b` | `0x0846ccc2` | Boss's response after Hamha in the provided clubhouse savestate | confirmed |
+| `0x08687dde` | ? | alternate Boss animation; `0xcb` asset operand at `0x08687ddf` | confirmed replay |
+| `0x08687e17` | ? | Boss idle animation; `0xcb` portrait asset operand at `0x08687e18` | confirmed |
 | `0x086CA1E0` | `0x086CA1EB` | save-type tag `SRAM_F_V103` (32 KB SRAM) | confirmed |
 | ? | `0x086CC537` | last non-padding byte | confirmed |
 | `0x086CC538` | `0x087FFFFF` | `0xFF` padding — **candidate free space** (~1.2 MB) for patches; confirm unreferenced before use | likely |

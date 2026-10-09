@@ -1,4 +1,5 @@
 address,name,kind,size,mode,confidence,notes
+0x0201d2b0,gDialoguePortraitTilesSlot2,ram,0x480,,confirmed,Boss portrait decompression destination in clubhouse; normal and alternate data matched ROM assets
 0x030005f0,gEventTextState,ram,0x4,,confirmed,TextState pointer owned by dialogue event; write 0x0800264c; clear 0x08002734
 0x03000608,gTextStateList,ram,0x4,,confirmed,Generic text-state list head; empty value 0x03000610; active clubhouse state 0x0202447c
 0x03000610,gTextStateSentinel,ram,,,confirmed,TextState list endpoint; empty head value verified after dialogue close; size 0x34 likely
@@ -12,6 +13,8 @@ address,name,kind,size,mode,confidence,notes
 0x03000830,gInputRepeatCountdown,ram,0x2,,confirmed,InputState+0x10; u16 countdown; initial load then decrement; interval reload at repeat
 0x03000832,gInputUnchangedMaskFrames,ram,0x2,,likely,InputState+0x12; static unchanged-mask count; resets at 0xffff rather than saturating; limit untested
 0x03000838,gKeysPrevious,ram,0x2,,confirmed,u16 previous held mask on Input_Update entry; overwritten with current at end; store 0x08009680
+0x03001fb0,gSceneCallbacks,ram,,,confirmed,Scene callback pointer table; text 0xf4 callback 0x08 read at 0x03001fd0; entry count unknown
+0x03002bf4,gClubhouseBossEntityIndex,ram,0x1,,confirmed,Boss index used by clubhouse callbacks; observed 16; scene reuse elsewhere unknown
 0x03002bfc,gPlayerEntityIndex,ram,0x1,,confirmed,u8 index of Hamtaro in gEntityArray; 10 in clubhouse bedroom
 0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
@@ -19,6 +22,9 @@ address,name,kind,size,mode,confidence,notes
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x08000d74,Event_RunCommands,func,,thumb,confirmed,Dispatches event handlers through a command table; observed handler LR 0x08000d91
+0x08001440,Scene_InvokeCallback,func,,thumb,confirmed,Dispatches through gSceneCallbacks; exact table load 0x0800144a observed from text callback
+0x080027a8,Event_ShowTextAndWait,func,,thumb,confirmed,Configures slot text template then starts stream and waits; operand read 0x08002876 observed
 0x08004258,Text_SetString,func,,thumb,confirmed,Sets TextState+0x10 stream and processing status; cursor write 0x0800425c observed
 0x08004284,Text_CreateState,func,,thumb,confirmed,Allocates and appends a TextState; list insertion 0x080042b6 observed; allocation size 0x34 static
 0x08004500,Text_DestroyState,func,,thumb,confirmed,Unlinks and frees TextState; observed root update at 0x0800451c
@@ -29,15 +35,31 @@ address,name,kind,size,mode,confidence,notes
 0x08005050,Text_CtrlNewline,func,,thumb,confirmed,Control 0xe2; new line verified in authored mod; calls Text_AdvanceLine
 0x080050f0,Text_CtrlWaitNextLine,func,,thumb,confirmed,Control 0xe3; waits for input then advances or scrolls; verified on original dialogue
 0x08005210,Text_CtrlInsertTextE6,func,,thumb,confirmed,Control 0xe6 saves return cursor and inserts RAM stream at 0x03001f60; cursor write 0x08005218 observed
-0x08005558,Text_CtrlSetPortrait,func,,thumb,likely,Control 0xf4 consumes one argument and calls 0x08001440; purpose likely portrait selection
+0x08005558,Text_CtrlInvokeCallback,func,,thumb,confirmed,Control 0xf4 consumes one scene callback id; invokes 0x08001440; callback table read observed
 0x0800631c,Player_Update,func,,thumb,likely,calls Player_HandleMovementInput then adds velocity to position; writes pos at 0x080063c8/0x080063d0
 0x08006508,Player_HandleMovementInput,func,,thumb,confirmed,D-pad -> direction 1-4; B held -> run; velocity from kPlayerMoveVelocityTable
 0x08009614,Input_Update,func,,thumb,confirmed,polls KEYINPUT and writes InputState; caller 0x080001a4; lr 0x08000231; 128 code bytes with internal literals
 0x0800af1c,Entity_SetVelocity,func,,thumb,confirmed,(index vx vz vy) -> Entity +0x24/+0x28/+0x2c
+0x0800af54,Entity_SetAnimation,func,,thumb,likely,Sets Entity+0x04 script pointer and resets +0x4c offset plus animation counters; Boss callback 0x08 target
+0x0800b1c0,Entity_GetIndex,func,,thumb,likely,Finds entity pointer in gEntityArray and returns u8 index or 0xff; static code
 0x0800b2f0,Entity_ApplyPhysics,func,,thumb,likely,pos += vel; vel += accel; +0x3c..+0x48 shorts clamp at 0x200
+0x0800d014,Anim_CtrlLoadPortraitTiles,func,,thumb,confirmed,Animation command 0xcb loads LZ77 portrait tiles via unaligned operand; reads 0x0800d030/32/38/3e observed
+0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
+0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
+0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Clubhouse callback 0x08 sets Boss script 0x08687e17; table read and portrait path verified
 0x0804ffb6,kBossClubhouseDialoguePointer,data,0x4,,confirmed,Unaligned event-script text pointer; redirect to authored ROM text verified in emulator
+0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,likely,swi 0x11 then bx lr; called by portrait loader; destination data matches decompressed asset
+0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
+0x081bfa60,kBossAlternatePortraitTilesLz,data,0x213,,confirmed,Existing alternate Boss portrait asset; LZ77 expands to 0x480 bytes; pointer mod tested
+0x081bfc74,kBossClubhousePortraitTilesLz,data,0x222,,confirmed,Boss idle portrait asset; LZ77 expands to 0x480 bytes; runtime buffer matched
+0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; entry 0x1a at 0x0846749c targets observed 0x080027a8; bounds unknown
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
+0x08469cdc,kDialoguePortraitSlotRecords,data,,,likely,Record stride 0x11c; first word points to a decompression buffer; slot 2 verified for Boss
 0x0846cc6b,kBossClubhouseDialogue,data,0x58,,confirmed,Uncompressed custom glyph/control stream; final wait 0x0846ccc2; reached by 0x0804ffb6
+0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss script; portrait command operand at 0x08687ddf; live animation replay tested
+0x08687ddf,kBossAlternatePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfa60; replay tested
+0x08687e17,kBossClubhouseIdleAnimation,data,,,confirmed,Boss idle script selected by clubhouse callback 0x08; starts with portrait load command
+0x08687e18,kBossClubhousePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfc74; checked redirect to alternate portrait verified
 0x086ca1e0,kSaveTypeTag,data,0xc,,confirmed,SRAM_F_V103 save-type tag

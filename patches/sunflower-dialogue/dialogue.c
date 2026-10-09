@@ -1,21 +1,25 @@
 #include "gba.h"
+#include "dialogue.h"
 
+/* Dialogue tree: Clubhouse -> Boss -> Hamha -> response.
+ * The event's ShowText command is at 0x0804ffb4; its unaligned text pointer
+ * is at 0x0804ffb6 (original node: 0x0846cc6b).
+ * mod.toml redirects that pointer to the named node below.
+ *
+ * Edit the strings, keeping lines short enough for the dialogue box.
+ * \n starts a line; DIALOGUE_WAIT_LINE() waits for A before advancing/scrolling;
+ * DIALOGUE_END() waits for A and finishes this node. Choices and conditional
+ * routes belong to the game's event script, not to these text arrays.
+ */
 enum {
-    Text_Space = 0x01,
-    Text_CapitalT = 0x1f,
-    Text_Period = 0xca,
-    Text_EndWait = 0xe0,
-    Text_Newline = 0xe2,
-    Text_SetPortrait = 0xf4,
+    /* Scene callback, not a universal portrait id. Sets Boss's idle animation,
+     * which also loads his normal dialogue portrait. See kb/portraits.md. */
+    Boss_IdleCallback = 0x08,
 };
 
-/* Original text authored for this mod. The two lines fit Boss's dialogue box.
- * Encoding and controls: kb/dialogue.md. */
 const u8 Mod_BossSunflowerDialogue[] = {
-    Text_SetPortrait, 0x08,
-    Text_CapitalT, 'h', 'e', 'r', 'e', Text_Space,
-    'i', 's', Text_Space, 'a', Text_Space, 'n', 'e', 'w', Text_Space,
-    's', 'u', 'n', 'f', 'l', 'o', 'w', 'e', 'r', Text_Newline,
-    'b', 'y', Text_Space, 't', 'h', 'e', Text_Space,
-    'w', 'a', 't', 'e', 'r', Text_Period, Text_EndWait,
+    DIALOGUE_CALL(Boss_IdleCallback),
+    DIALOGUE_TEXT("There is a new sunflower\n"
+                  "by the water."),
+    DIALOGUE_END(),
 };

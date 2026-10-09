@@ -13,6 +13,7 @@ animation to finish before inspecting Boss's response.
 | Address | Meaning | Confidence |
 |---|---|---|
 | `0x0804ffb6` | Unaligned four-byte event-script operand pointing to Boss's response | confirmed |
+| `0x0804ffb4` | Show-text event command `0x1a`, followed by slot `0x00` and the pointer operand | confirmed response path; broader event semantics incomplete |
 | `0x0846cc6b` | Start of that response's encoded text/control stream | confirmed |
 | `0x0846ccc2` | Final `0xe0` of that response; next stream starts at `0x0846ccc3` | confirmed |
 
@@ -57,21 +58,68 @@ but complete sentences cannot be treated as ordinary ASCII strings.
 | Byte or range | Meaning | Confidence |
 |---|---|---|
 | `0x01` | Space | confirmed by the sunflower sentence |
+| `0x02` through `0x0b` | Digits 0 through 9 | confirmed by labelled local glyph probe |
 | `0x0c` through `0x25` | Expected A through Z: ASCII uppercase minus `0x35` | likely for the full range |
 | `0x1f` | Capital T | confirmed by the mod |
 | `0x61` through `0x7a` | ASCII lowercase glyph values | confirmed for letters displayed in the mod; full range likely |
 | `0xca` | Period | confirmed by the mod |
-| `0xd8`, `0xd9` | Exclamation mark, question mark | likely from original stream/screen comparison |
+| `0xcb`, `0xcc` | Hyphen, underscore | confirmed by labelled glyph probe |
+| `0xcd`, `0xce` | Opening/closing double quote glyphs; helper uses curly double quotes | confirmed by labelled glyph probe |
+| `0xcf` | Comma | confirmed by labelled glyph probe |
+| `0xd1` | Apostrophe/closing single quote; helper accepts ASCII apostrophe or `’` | confirmed displayed glyph; aliases are authoring choices |
+| `0xd2`, `0xd3` | Opening/closing parentheses | confirmed by labelled glyph probe |
+| `0xd4`, `0xd5` | Less-than/greater-than signs | confirmed by labelled glyph probe |
+| `0xd6`, `0xd7` | Forward slash/backslash | confirmed by labelled glyph probe |
+| `0xd8`, `0xd9` | Exclamation mark, question mark | confirmed by labelled glyph probe |
 | `0xe0` | Finish message, wait for input, then close | confirmed by original and patched final waits |
 | `0xe1`, also `0x00` | Finish/return from an inserted stream; resume `+0x14` if present | confirmed cursor restoration; static zero-to-e1 dispatch |
 | `0xe2` | New line; at the bottom it can wait/scroll | confirmed new line; bottom behavior from static code |
 | `0xe3` | Wait for input, then advance/scroll to the next line | confirmed by the original conversation |
 | `0xe6` | Insert a dynamic stream from `0x03001f60`, saving the return cursor | confirmed by cursor write/resume trace |
-| `0xf4` plus one argument | Portrait/face selection; argument `0x08` is reused for Boss | likely purpose; argument consumption and normal mod portrait observed |
+| `0xf4` plus one argument | Invoke a scene callback; `0x08` sets Boss's idle animation in this scene | confirmed callback table read and resulting animation/portrait |
 
 The reader handles `0x5e` separately. Do not assume it is an ordinary printable
 ASCII caret. Other substitutions, punctuation, font modes, and control operands
 are still incompletely mapped.
+
+The earlier portrait-selection label for `0xf4` was too narrow. Callback IDs
+depend on the current scene, and the portrait loads through an animation
+command. See [portraits.md](portraits.md) for the verified asset pointers and
+the optional portrait swap.
+
+## Editable C nodes and dialogue tree
+
+The mapped route is **Clubhouse -> Boss -> Hamha -> response**. Its show-text
+command is `0x0804ffb4`, slot `0x00`, with the unaligned text pointer at
+`0x0804ffb6`. This identifies one response node; the complete event tree,
+conditional routes, choices, and quest-flag behavior are not yet decoded.
+
+`patches/sunflower-dialogue/dialogue.c` names that node and records its binding
+in comments. `patches/include/dialogue.h` provides literal text, input waits,
+end controls, and scene callback helpers. `tools/hamtools/dialogue.py` expands
+authored strings before the patch compiler runs, writing generated source only
+under `build/`. It does not extract game dialogue.
+
+The supported alphabet is space, A-Z, a-z, 0-9, newline, `.`, `!`, `?`, `-`,
+`_`, comma, apostrophe, parentheses, angle signs, slashes, curly double quotes,
+and closing single quote. ASCII double quote is not aliased automatically;
+use curly double quotes to choose opening/closing glyphs explicitly.
+Unsupported glyphs and malformed calls are errors with source positions; raw
+initializers remain compatible. This is an authoring subset, not evidence
+that every supported glyph was dynamically verified. The confidence table
+above distinguishes tested glyphs from expected ranges.
+
+Digits and the punctuation above were probed directly in the supplied dialogue
+scene, with labels for `0xca` through `0xd9`. The helper's expanded alphabet
+was then compiled and displayed from readable strings, reaching its final
+wait and closing normally. The quote-like glyph at `0xd0` remains unexposed
+pending a clearer orientation/style mapping. Colons, semicolons, accented
+letters, and many symbols remain unmapped.
+
+Each `const u8` array names a stream. Its TOML pointer binding determines which
+located event operand reaches it; adjacent arrays do not imply branching.
+See [the editable example](../patches/sunflower-dialogue/README.md) for the
+syntax, additional wait/scroll lines, and build commands.
 
 ## Reader and dispatch
 
@@ -79,11 +127,25 @@ All listed functions are Thumb; their recorded addresses are even.
 
 | Address | Name | Evidence |
 |---|---|---|
+| `0x080027a8` | `Event_ShowTextAndWait` | Copies the five argument bytes, applies the slot's text-window template, starts text, and waits; observed operand read at `0x08002876` |
 | `0x08004258` | `Text_SetString` | Cursor store at `0x0800425c`; observed write PC `0x08004260` |
 | `0x08004284` | `Text_CreateState` | Static allocation of `0x34` bytes; observed list insertion at `0x080042b6` |
 | `0x08004500` | `Text_DestroyState` | Unlinks/frees a state; observed head update at `0x0800451c` |
 | `0x08004548` | `Text_Update` | Reads stream byte at `0x0800462c`, advances glyph cursor at `0x08004772` |
 | `0x08004ff4` | `Text_AdvanceLine` | Observed cursor store at `0x0800500c`; increments line position |
+
+The event handler first configures the text state from its window template,
+then reads the unaligned pointer byte by byte. The observed operand read
+reported PC `0x0800287a`, exact `ldrb` at `0x08002876`, with LR `0x08000d91`
+inside `Event_RunCommands` (`0x08000d74`). After TextState status becomes 1,
+the handler reports five consumed argument bytes to the event engine.
+The neighboring `0x080028e0` handler has a similar text-start/wait path but
+does not perform that initial template configuration; it is not the handler
+observed reading this response operand.
+
+The event command table starts at `0x08467434` (literal at `0x08000dac`).
+Its entry `0x1a`, at `0x0846749c`, is the Thumb pointer `0x080027a9`, matching
+the observed handler. The table's total entry count remains unmapped.
 
 Read-watchpoints on the original response and patched final control both report
 PC `0x08004630`, corresponding to the Thumb `ldrb` at `0x0800462c`. Cursor
@@ -120,12 +182,22 @@ original-pointer check. The build places the new `0x29`-byte stream at
 `0x086d0000` and redirects `0x0804ffb6`. The original stream is preserved in
 the built image. The stream includes a line break and final wait control.
 
-Validation: six pytest tests passed; BPS round-trip checked by the builder;
+Initial validation: six pytest tests passed; BPS round-trip checked by the builder;
 patched title booted; the complete sentence and normal portrait were visually
 checked; final wait/close and another conversation were tested. Local movement
 and the Ham-Chat menu were also exercised. Room changes and longer gameplay
 remain for human playtesting.
 
+The readable C helper subsequently reproduced the same `0x29`-byte stream and
+44 changed bytes. All 64 integrated tests passed, including real ARM builds,
+generated-source/include handling, invalid input diagnostics, raw initializer
+compatibility, linked control bytes, and BPS round-trips. The fresh helper-built
+ROM booted, displayed the full sentence, closed on A, and repeated successfully.
+
 Local-only evidence: `extracted/dialogue-hunt-20261009/`,
 `states/dialogue-hunt-*.ss`, `states/sunflower-dialogue-visible.ss`, and
 `screenshots/sunflower-dialogue.png`. These paths are gitignored.
+
+Glyph evidence also stays local: `screenshots/dialogue-glyph-probe.png`,
+`screenshots/dialogue-punctuation-probe.png`, `screenshots/dialogue-authored-glyphs.png`,
+and `extracted/dialogue-hunt-20261009/authored-glyph-test.json`.

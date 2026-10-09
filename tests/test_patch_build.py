@@ -50,3 +50,46 @@ def test_expect_mismatch_fails(tmp_path):
     (mod / "mod.toml").write_text('name = "bad"\n[[edit]]\naddress = 0x08000000\nexpect = "00 00"\nhex = "11 11"\n')
     with pytest.raises(patch.PatchError, match="original bytes"):
         patch.build(["bad"], root=tmp_path / "mods", out_dir=tmp_path / "build")
+
+
+def test_build_authored_dialogue_keeps_local_includes_and_raw_source(tmp_path):
+    mod = tmp_path / "mods" / "dialogue"
+    srcdir = mod / "src"
+    srcdir.mkdir(parents=True)
+    # This quoted include must still resolve relative to the original source.
+    (mod / "local.h").write_text(
+        '#include "gba.h"\n#include "dialogue.h"\n#define SCENE_CALLBACK 7\n'
+    )
+    authored = (
+        '#include "../local.h"\n'
+        'const u8 Mod_Text[] = { DIALOGUE_TEXT("There is a new sunflower\\n"\n'
+        '    "by the water."), DIALOGUE_WAIT_LINE(), DIALOGUE_CALL(SCENE_CALLBACK),\n'
+        '    DIALOGUE_END() };\n'
+    )
+    (srcdir / "main.c").write_text(authored)
+    legacy = (
+        '#include "gba.h"\n'
+        '/* DIALOGUE_TEXT("7") is only a comment. */\n'
+        'const u8 Mod_Raw[] = { 0x1f, 0x01, 0xe0 };\n'
+    )
+    (mod / "legacy.c").write_text(legacy)
+    (mod / "mod.toml").write_text(
+        'name = "dialogue"\nsources = ["src/main.c", "legacy.c"]\n'
+        '[[pointer]]\naddress = 0x087FFF20\nexpect = "ff ff ff ff"\ntarget = "Mod_Text"\n'
+        '[[pointer]]\naddress = 0x087FFF24\nexpect = "ff ff ff ff"\ntarget = "Mod_Raw"\n'
+    )
+    out = tmp_path / "build"
+    patch.build(["dialogue"], root=tmp_path / "mods", out_dir=out)
+    built = (out / "hamtaro-mod.gba").read_bytes()
+    text_pointer = int.from_bytes(built[0x7FFF20:0x7FFF24], "little")
+    expected = b"\x1fhere\x01is\x01a\x01new\x01sunflower\xe2by\x01the\x01water\xca\xe3\xf4\x07\xe0"
+    offset = rom.to_offset(text_pointer)
+    assert built[offset:offset + len(expected)] == expected
+    raw_pointer = int.from_bytes(built[0x7FFF24:0x7FFF28], "little")
+    assert built[rom.to_offset(raw_pointer):rom.to_offset(raw_pointer) + 3] == b"\x1f\x01\xe0"
+    assert (srcdir / "main.c").read_text() == authored
+    assert (mod / "legacy.c").read_text() == legacy
+    generated = list((out / "obj" / "generated" / "dialogue").rglob("*.c"))
+    assert len(generated) == 1
+    assert "DIALOGUE_TEXT" not in generated[0].read_text()
+    assert bps.apply(rom.load_rom(), (out / "hamtaro-mod.bps").read_bytes()) == built

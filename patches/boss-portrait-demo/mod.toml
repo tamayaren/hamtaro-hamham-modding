@@ -1,0 +1,14 @@
+name = "boss-portrait-demo"
+description = "Use another existing Boss portrait in the clubhouse idle animation."
+enabled = false
+
+# Optional demonstration; build explicitly with sunflower-dialogue to compare.
+# CB in the animation script loads LZ77 portrait tiles. Its operand is unaligned.
+# This changes every use of this animation, not just our authored text node.
+# Normal asset: 0x081bfc74. Alternate existing asset: 0x081bfa60.
+# See kb/portraits.md. No graphics are included in this mod.
+[[edit]]
+address = 0x08687e18
+expect = "74 fc 1b 08"
+hex = "60 fa 1b 08"
+comment = "Boss idle portrait tiles: normal -> alternate existing face"
