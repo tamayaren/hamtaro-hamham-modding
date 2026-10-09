@@ -1,5 +1,11 @@
 address,name,kind,size,mode,confidence,notes
+0x02003990,gEventByteVars,ram,,,confirmed,Event byte variables indexed by u16; var 0x003b poke changed Boss route
+0x020039cb,gBossHintCounter,ram,0x1,,confirmed,Event byte var 0x003b; Boss repeat-greeting hint index 0-3; preset 2 selected third hint
+0x0201d0b0,gEventWordVars,ram,,,likely,Event u16 variables indexed by u16; static only
 0x0201d2b0,gDialoguePortraitTilesSlot2,ram,0x480,,confirmed,Boss portrait decompression destination in clubhouse; normal and alternate data matched ROM assets
+0x03000010,gEventOpcode,ram,0x1,,confirmed,Current event opcode; 0 means fetch next; observed 0x1a during Boss reply
+0x03000014,gEventOperandAdvance,ram,0x4,,likely,Operand bytes to skip on next fetch
+0x03000018,gEventPhase,ram,0x1,,likely,Phase of current multi-frame event command
 0x030005f0,gEventTextState,ram,0x4,,confirmed,TextState pointer owned by dialogue event; write 0x0800264c; clear 0x08002734
 0x03000608,gTextStateList,ram,0x4,,confirmed,Generic text-state list head; empty value 0x03000610; active clubhouse state 0x0202447c
 0x03000610,gTextStateSentinel,ram,,,confirmed,TextState list endpoint; empty head value verified after dialogue close; size 0x34 likely
@@ -13,18 +19,41 @@ address,name,kind,size,mode,confidence,notes
 0x03000830,gInputRepeatCountdown,ram,0x2,,confirmed,InputState+0x10; u16 countdown; initial load then decrement; interval reload at repeat
 0x03000832,gInputUnchangedMaskFrames,ram,0x2,,likely,InputState+0x12; static unchanged-mask count; resets at 0xffff rather than saturating; limit untested
 0x03000838,gKeysPrevious,ram,0x2,,confirmed,u16 previous held mask on Input_Update entry; overwritten with current at end; store 0x08009680
+0x03001f58,gSubsceneId,ram,0x1,,likely,Current subscene; observed 1 in clubhouse Boss state
+0x03001fac,gEventSelector,ram,0x2,,likely,Shared selector/result register for interaction hits menus and 0x1d dispatch
 0x03001fb0,gSceneCallbacks,ram,,,confirmed,Scene callback pointer table; text 0xf4 callback 0x08 read at 0x03001fd0; entry count unknown
+0x03002170,gEventFlags,ram,,,confirmed,Packed progression flags byte id>>3 bit id&7; flag 0x0010 and 0x017d tested
+0x030021e0,gInteractionRecords,ram,0x80,,likely,32 interaction-record pointers installed by event 0x20 or 0x4d
+0x03002ba0,gEventPtrRegs,ram,0x40,,likely,16 pointer registers; pointer operands below 0x10 index this in some handlers
+0x03002be0,gEventCallDepth,ram,0x1,,likely,Event call-stack depth
 0x03002bf4,gClubhouseBossEntityIndex,ram,0x1,,confirmed,Boss index used by clubhouse callbacks; observed 16; scene reuse elsewhere unknown
 0x03002bfc,gPlayerEntityIndex,ram,0x1,,confirmed,u8 index of Hamtaro in gEntityArray; 10 in clubhouse bedroom
+0x03002c00,gEventCallStack,ram,0x40,,likely,Event call stack of operand addresses
+0x03002c48,gSceneId,ram,0x1,,likely,Current scene; observed 1 in clubhouse Boss state
+0x03002c50,gEventCursor,ram,0x4,,confirmed,Event operand cursor = opcode address + 1; 0x0804ffb5 during Boss reply
 0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x080009f8,Scene_Load,func,,thumb,likely,Loads 0x10-byte scene descriptor; sets event entry and callbacks
 0x08000d74,Event_RunCommands,func,,thumb,confirmed,Dispatches event handlers through a command table; observed handler LR 0x08000d91
+0x08000dbc,Event_RunContexts,func,,thumb,likely,Schedules background event contexts 1-16 around the main one
 0x08001440,Scene_InvokeCallback,func,,thumb,confirmed,Dispatches through gSceneCallbacks; exact table load 0x0800144a observed from text callback
+0x08001458,Event_GetFlag,func,,thumb,likely,Reads packed flag from gEventFlags
+0x08001478,Event_SetFlag,func,,thumb,likely,Writes packed flag in gEventFlags
+0x08001508,Util_RandomRange,func,,thumb,likely,Returns random value in [low high) scaled from 0x080003d8
+0x08001530,Event_FetchOpcode,func,,thumb,likely,Opcode 0 handler; applies advance then reads next opcode
 0x080027a8,Event_ShowTextAndWait,func,,thumb,confirmed,Configures slot text template then starts stream and waits; operand read 0x08002876 observed
+0x080029fc,Event_CmdSwitch,func,,thumb,likely,Opcode 0x1d; u8 N then N absolute targets chosen by selector
+0x08002a70,Event_CmdCall,func,,thumb,likely,Opcode 0x1e; pushes operand address and jumps
+0x08002af8,Event_CmdReturn,func,,thumb,likely,Opcode 0x1f; resumes after the call operand
+0x08002c60,Event_CmdWaitInteraction,func,,thumb,likely,Opcode 0x21; runs player updates until an interaction selector is produced
+0x08002e10,Event_CmdMenu,func,,thumb,confirmed,Opcode 0x24 Ham-Chat menu; observed running at 0x0804f48e
+0x080034d4,Event_CmdBranchFlag,func,,thumb,confirmed,Opcode 0x33; u8 wanted u16 flag ptr target; flag 0x0010 poke switched branch
+0x08003b8c,Event_CmdSetFlag,func,,thumb,confirmed,Opcode 0x46; u16 flag u8 value; flag 0x017d store at 0x08003bec observed
+0x08003db0,Event_CmdRandomVar,func,,thumb,likely,Opcode 0x50; variable = random in [low high); static only
 0x08004258,Text_SetString,func,,thumb,confirmed,Sets TextState+0x10 stream and processing status; cursor write 0x0800425c observed
 0x08004284,Text_CreateState,func,,thumb,confirmed,Allocates and appends a TextState; list insertion 0x080042b6 observed; allocation size 0x34 static
 0x08004500,Text_DestroyState,func,,thumb,confirmed,Unlinks and frees TextState; observed root update at 0x0800451c
@@ -47,11 +76,21 @@ address,name,kind,size,mode,confidence,notes
 0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
 0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
 0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Clubhouse callback 0x08 sets Boss script 0x08687e17; table read and portrait path verified
+0x0804ef60,kClubhouseRoomEvent,data,,,likely,Scene 1 subscene 1 event entry from descriptor 0x084669a0
+0x0804ef8e,kClubhouseInteractionLoop,data,0x1,,confirmed,Event 0x21 wait; idle cursor 0x0804ef8f observed
+0x0804ff99,kBossHamhaRoute,data,,,confirmed,Boss Hamha event route; reached via menu dispatch 0x0804f49a
+0x0804ffa7,kBossHamhaFlag10Branch,data,0x8,,confirmed,Event 0x33 on flag 0x0010; set -> 0x0804ffe7 alternate route
 0x0804ffb6,kBossClubhouseDialoguePointer,data,0x4,,confirmed,Unaligned event-script text pointer; redirect to authored ROM text verified in emulator
+0x08050010,kBossHamhaFirstAltText,data,0x6,,confirmed,Show-text 0x1a reached with flags 0x0010 0x007e set and 0x017d clear; operand 0x08050012
+0x08050079,kBossHamhaHintRoute,data,,,confirmed,Repeat-greeting route; hint counter byte var 0x003b then random choice
+0x080e2150,kBossInteractionRecord,data,0x10,,likely,Interaction record entity 16 selector 9 circle radius 40
+0x080e21a0,kClubhouseInteractionList,data,0x80,,likely,Clubhouse interaction-record pointer list; slot 4 is Boss
 0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,likely,swi 0x11 then bx lr; called by portrait loader; destination data matches decompressed asset
 0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
 0x081bfa60,kBossAlternatePortraitTilesLz,data,0x213,,confirmed,Existing alternate Boss portrait asset; LZ77 expands to 0x480 bytes; pointer mod tested
 0x081bfc74,kBossClubhousePortraitTilesLz,data,0x222,,confirmed,Boss idle portrait asset; LZ77 expands to 0x480 bytes; runtime buffer matched
+0x08466944,kSceneTable,data,,,likely,Per-scene pointers to 0x10-byte subscene descriptor arrays
+0x084669a0,kSceneDescClubhouse,data,0x10,,confirmed,Scene 1 subscene 1 descriptor; event entry 0x0804ef60 matches live cursor
 0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; entry 0x1a at 0x0846749c targets observed 0x080027a8; bounds unknown
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff

@@ -91,8 +91,9 @@ the optional portrait swap.
 
 The mapped route is **Clubhouse -> Boss -> Hamha -> response**. Its show-text
 command is `0x0804ffb4`, slot `0x00`, with the unaligned text pointer at
-`0x0804ffb6`. This identifies one response node; the complete event tree,
-conditional routes, choices, and quest-flag behavior are not yet decoded.
+`0x0804ffb6`. This is the response when event flag 0x0010 is clear; the
+conditions that pick other Boss lines (flags, a hint counter, random choice) are
+mapped in [event_scripts.md](event_scripts.md).
 
 `patches/sunflower-dialogue/dialogue.c` names that node and records its binding
 in comments. `patches/include/dialogue.h` provides literal text, input waits,
