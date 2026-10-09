@@ -2,6 +2,23 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — All event command lengths; whole-ROM script walk (Claude Opus 5.5)
+
+- Handler table `0x08467434` has 97 entries (0x00–0x60); `0x084675b8` onward is a
+  separate sound-function table used by command 0x0a.
+- Read every handler's operand-advance constant from Ghidra decompiles. Ghidra had
+  decoded part of handler 0x28 (`0x080030b0`–`0x080030e7`) as ARM, which gave garbage;
+  re-disassembled as Thumb, 0x28 is 5 bytes.
+- 0x1c native calls return their extra operand count (or −4 after jumping). Resolved
+  602 native functions; recorded in [event_natives.csv](event_natives.csv).
+- 0x00 is a one-byte no-op; switch 0x1d is unbounded (two scripts have hidden fourth
+  targets).
+- Validation: a recursive walk from 148 scene entry scripts decodes 98,214 commands
+  with zero invalid opcodes and reaches 3,599 show-text targets (97% of show-text-shaped
+  byte patterns). In mGBA, 28 sampled executing command addresses all matched the walk.
+  Confidence likely (small live sample).
+- Next: build the event decoder/walker plus the text decoder as `hamtools` commands.
+
 ## 2026-10-09 — Event scripts: how Boss's Hamha response is chosen (GPT-6-astra re-lead; Claude Opus 5.5)
 
 - Codex (re-lead) mapped statically the scene descriptor -> room event -> interaction

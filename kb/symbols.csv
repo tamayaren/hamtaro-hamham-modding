@@ -51,6 +51,7 @@ address,name,kind,size,mode,confidence,notes
 0x08002af8,Event_CmdReturn,func,,thumb,likely,Opcode 0x1f; resumes after the call operand
 0x08002c60,Event_CmdWaitInteraction,func,,thumb,likely,Opcode 0x21; runs player updates until an interaction selector is produced
 0x08002e10,Event_CmdMenu,func,,thumb,confirmed,Opcode 0x24 Ham-Chat menu; observed running at 0x0804f48e
+0x080030a0,Event_CmdSelectorFromPtr,func,,thumb,likely,Opcode 0x28; ptr operand; selector = byte at ptr; Ghidra had an ARM island here
 0x080034d4,Event_CmdBranchFlag,func,,thumb,confirmed,Opcode 0x33; u8 wanted u16 flag ptr target; flag 0x0010 poke switched branch
 0x08003b8c,Event_CmdSetFlag,func,,thumb,confirmed,Opcode 0x46; u16 flag u8 value; flag 0x017d store at 0x08003bec observed
 0x08003db0,Event_CmdRandomVar,func,,thumb,likely,Opcode 0x50; variable = random in [low high); static only
@@ -73,6 +74,8 @@ address,name,kind,size,mode,confidence,notes
 0x0800b1c0,Entity_GetIndex,func,,thumb,likely,Finds entity pointer in gEntityArray and returns u8 index or 0xff; static code
 0x0800b2f0,Entity_ApplyPhysics,func,,thumb,likely,pos += vel; vel += accel; +0x3c..+0x48 shorts clamp at 0x200
 0x0800d014,Anim_CtrlLoadPortraitTiles,func,,thumb,confirmed,Animation command 0xcb loads LZ77 portrait tiles via unaligned operand; reads 0x0800d030/32/38/3e observed
+0x08018858,Event_NativeJumpIfEntityAnim,func,,thumb,likely,0x1c native; 9 extra bytes; jump to target if entity is active and animation matches
+0x08020768,Event_NativeJumpIfVarNotEqual,func,,thumb,likely,0x1c native; 9 extra bytes (bank idx value target); jump unless variable == value
 0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
 0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
 0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Clubhouse callback 0x08 sets Boss script 0x08687e17; table read and portrait path verified
@@ -91,7 +94,7 @@ address,name,kind,size,mode,confidence,notes
 0x081bfc74,kBossClubhousePortraitTilesLz,data,0x222,,confirmed,Boss idle portrait asset; LZ77 expands to 0x480 bytes; runtime buffer matched
 0x08466944,kSceneTable,data,,,likely,Per-scene pointers to 0x10-byte subscene descriptor arrays
 0x084669a0,kSceneDescClubhouse,data,0x10,,confirmed,Scene 1 subscene 1 descriptor; event entry 0x0804ef60 matches live cursor
-0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; entry 0x1a at 0x0846749c targets observed 0x080027a8; bounds unknown
+0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; 97 entries 0x00-0x60; entry 0x1a at 0x0846749c targets observed 0x080027a8
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
