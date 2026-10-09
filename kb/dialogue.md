@@ -77,7 +77,7 @@ but complete sentences cannot be treated as ordinary ASCII strings.
 | `0xe2` | New line; at the bottom it can wait/scroll | confirmed new line; bottom behavior from static code |
 | `0xe3` | Wait for input, then advance/scroll to the next line | confirmed by the original conversation |
 | `0xe6` | Insert a dynamic stream from `0x03001f60`, saving the return cursor | confirmed by cursor write/resume trace |
-| `0xf4` plus one argument | Invoke a scene callback; `0x08` sets Boss's idle animation in this scene | confirmed callback table read and resulting animation/portrait |
+| `0xf4` plus one argument | Invoke a scene callback; `0x08` sets Boss's room-head idle animation here | confirmed callback table read and resulting room-head animation |
 
 The reader handles `0x5e` separately. Do not assume it is an ordinary printable
 ASCII caret. The full glyph table is in [glyphs.md](glyphs.md). All 32 controls and the
@@ -85,9 +85,9 @@ two prefixes, with emulator-confirmed byte lengths and colours, are in
 [text_controls.md](text_controls.md).
 
 The earlier portrait-selection label for `0xf4` was too narrow. Callback IDs
-depend on the current scene, and the portrait loads through an animation
-command. See [portraits.md](portraits.md) for the verified asset pointers and
-the optional portrait swap.
+depend on the scene. The mapped Entity animation loads the room head;
+the actual face beside dialogue loads through separate event graphics commands.
+See [portraits.md](portraits.md) for this correction and the verified assets.
 
 ## Editable C nodes and dialogue tree
 

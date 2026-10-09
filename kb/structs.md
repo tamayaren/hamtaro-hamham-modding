@@ -35,7 +35,8 @@ player, `Player_Update` (`0x0800631c`).
 
 | Offset | Size | Name | Meaning | Confidence |
 |---|---|---|---|---|
-| `+0x04` | 4 | animationScript | ROM animation script pointer; Boss replay selected a different portrait | confirmed |
+| `+0x00` | 4 | spriteDescriptor | Pose selected by room-head command `0xcd`; observed `0x086538d4` for Boss | likely assignment; descriptor/OAM match confirmed |
+| `+0x04` | 4 | animationScript | ROM animation script pointer; Boss replay selected a different room-head frame | confirmed |
 | `+0x18` | 4 | x | X position | confirmed (poke moved Hamtaro) |
 | `+0x1c` | 4 | z | height axis (between x and y; integrated like them) | likely |
 | `+0x20` | 4 | y | Y position (screen down = +) | confirmed (poke moved Hamtaro, camera followed) |
@@ -51,6 +52,39 @@ Player velocity comes from `kPlayerMoveVelocityTable` (`0x08467af0`): 2 speed mo
 (walk, run while B held) × 4 directions (Up, Down, Left, Right) × (vx, vy) s32 16.16.
 Walk = 1 px/frame, run = 2 px/frame, measured against the frame counter. Only one direction
 applies at a time (Up > Down > Left > Right priority), so there is no diagonal movement.
+
+## RoomHeadSlotRecord (stride 0x11c, likely format)
+
+Table base `0x08469cdc`; slot = `(Entity index - 10) / 3`. Boss index 16 uses
+slot 2, record `0x08469f14`. This describes room OBJ heads, not BG dialogue faces.
+
+| Offset | Size | Field | Meaning | Confidence |
+|---|---|---|---|---|
+| `+0x00` | 4 | tileBuffer | Decompression destination; slot 2 `0x0201d2b0` | confirmed buffer match |
+| `+0x04` | 4 | vramDestination | OBJ row-upload base; slot 2 `0x06010e20` | confirmed VRAM rows |
+| `+0x08` | pointer array, bounds unknown | poses | Command `0xcd` selects one by index; first slot-2 pointer `0x086538d4` | likely selection; descriptor/OAM match confirmed |
+| `+0x118` | 1 | widthTiles | Number of 32-byte tiles per source row; observed 6 | likely semantics; 6-tile row match confirmed |
+| `+0x119` | 1 | heightTiles | Number of rows; observed 6 | likely semantics; six uploaded rows confirmed |
+| `+0x11a` | 2 | unknown | Remaining record bytes | unmapped |
+
+Each row advances `widthTiles * 32` source bytes and `0x400` VRAM bytes.
+The first pose is one 64 x 64, 4bpp OBJ, relative `(-12,-20)`, tile `0x50`,
+palette bank 4. The head occupies an inset 6 x 6 tile area of this canvas.
+Other pose entries and record count remain unmapped. See [portraits.md](portraits.md).
+
+## GfxCopyQueueEntry (size 0x0c, likely)
+
+The queue at `0x03000840` consists of three-word entries, indexed by a byte
+cursor at `0x03002e24`. `Gfx_QueueTileRows` stores one entry per 4bpp row;
+`Gfx_FlushCopyQueue` consumes entries and selects halfword/word DMA3 copies.
+
+| Offset | Size | Field | Meaning | Confidence |
+|---|---|---|---|---|
+| `+0x00` | 4 | sourceOrFill | Source pointer, or flagged fill value | likely format; observed Boss DMA source confirmed |
+| `+0x04` | 4 | destination | Graphics-memory destination | likely format; observed Boss destinations confirmed |
+| `+0x08` | 4 | byteCount | Bytes to transfer; converted to DMA unit count | likely format; `0x480` tile transfer confirmed |
+
+Fill encoding and queue limits were not independently tested.
 
 ## InputState (minimum covered size 0x14)
 

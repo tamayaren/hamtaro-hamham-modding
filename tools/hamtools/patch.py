@@ -29,9 +29,18 @@ mod.toml:
     expect_sha1 = "<SHA1 of original stream including its end byte>"
     text = "[callback 08]Our new dialogue.[end]"
 
+    [[gfx]]                              # authored differences; no game graphics in git
+    asset = "boss-portrait"
+    expect_tiles_sha1 = "<SHA1 of original compressed tile stream>"
+    expect_palette_sha1 = "<SHA1 of original compressed palette stream>"
+    colors = [{ index = 3, bgr555 = 0x7d00 }]  # optional changed palette entries
+    pixels = [{ offset = 99, index = 4 }]     # optional row-major pixel changes
+
 Text fits in place when its original allocation is unshared. Otherwise the builder
 allocates after compiled code in free space and redirects every walked 0x1a/0x1b
 operand. Hashes keep original dialogue out of public patch sources.
+Graphics recipes likewise rebuild against the verified ROM, compress changed
+tiles/palettes, and allocate beside code/text with checked unaligned repoints.
 
 C code can call game functions and use RAM variables from kb/symbols.csv by name: each
 symbol is passed to the linker (Thumb functions with bit 0 set). Declare them yourself, e.g.
@@ -72,6 +81,7 @@ class Mod:
     hooks: list[dict] = field(default_factory=list)
     pointers: list[dict] = field(default_factory=list)
     texts: list[dict] = field(default_factory=list)
+    graphics: list[dict] = field(default_factory=list)
 
 
 def _hex(text: str) -> bytes:
@@ -86,7 +96,7 @@ def load_mods(names: list[str] | None = None, root: Path = PATCHES_DIR) -> list[
                   description=data.get("description", ""), enabled=data.get("enabled", True),
                   sources=[toml_path.parent / s for s in data.get("sources", [])],
                   edits=data.get("edit", []), hooks=data.get("hook", []), pointers=data.get("pointer", []),
-                  texts=data.get("text", []))
+                  texts=data.get("text", []), graphics=data.get("gfx", []))
         if names is not None:
             if toml_path.parent.name in names or mod.name in names:
                 mods.append(mod)
@@ -238,7 +248,9 @@ def build(names: list[str] | None = None, root: Path = PATCHES_DIR,
             log.append(f"ptr    {a:#010x} -> {p['target']}")
 
     # Explicit edits go first, so allocations can skip every claimed range, even
-    # one declared in a later mod. Code and text share the same free-space pool.
+    # one declared in a later mod. Code, graphics, and text share the same pool.
+    if any(m.graphics for m in mods):
+        _build_gfx(original, mods, claimed, put, FREE_BASE + len(blob), log)
     if any(m.texts for m in mods):
         _build_texts(original, mods, claimed, put, FREE_BASE + len(blob), log)
 
@@ -383,6 +395,56 @@ def _layout_options(entry: dict, who: str) -> dict[str, int]:
     if options["font"] not in (0, 1) or options["spacing"] > 0x7f:
         raise PatchError(f"{who}: font must be 0 or 1 and spacing must be 0..127")
     return options
+
+
+def _build_gfx(original: bytes, mods: list[Mod], claimed: list[tuple[int, int, str]],
+               put, cursor: int, log: list[str]) -> None:
+    from . import gfx
+
+    selected: set[tuple[int, str]] = set()
+    for mod in mods:
+        for index, entry in enumerate(mod.graphics):
+            who = f"{mod.name}.gfx[{index}]"
+            try:
+                replacements = gfx.prepare_entry(original, entry)
+            except gfx.GfxError as exc:
+                raise PatchError(f"{who}: {exc}") from exc
+            if not replacements:
+                log.append(f"gfx    {entry['asset']} unchanged")
+            for replacement in replacements:
+                key = (replacement.source_address, replacement.kind)
+                if key in selected:
+                    raise PatchError(f"{who}: duplicate graphics replacement for {replacement.kind}")
+                selected.add(key)
+                # Editing a source that this recipe supersedes is ambiguous even
+                # though the new copy is elsewhere. Fail instead of masking edits.
+                start = rom.to_offset(replacement.source_address)
+                for a, b, other in claimed:
+                    if start < b and a < start + len(replacement.original):
+                        raise PatchError(f"{who} overlaps {other} at {replacement.source_address:#010x}")
+                raw = replacement.data
+                limit = min(FREE_END, rom.ROM_BASE + len(original))
+                while True:
+                    cursor = (cursor + 3) & ~3
+                    end = cursor + len(raw)
+                    if cursor < FREE_BASE or end > limit:
+                        raise PatchError(f"{who}: graphics do not fit in ROM free space")
+                    collisions = [b + rom.ROM_BASE for a, b, _ in claimed
+                                  if cursor < b + rom.ROM_BASE and a + rom.ROM_BASE < end]
+                    if not collisions:
+                        break
+                    cursor = max(collisions)
+                off = rom.to_offset(cursor)
+                if any(byte != 0xFF for byte in original[off:off + len(raw)]):
+                    raise PatchError(f"{who}: free-space region at {cursor:#010x} is not all 0xFF")
+                target = cursor
+                put(target, raw, None, f"{who}.{replacement.kind}")
+                cursor = end
+                for reference in replacement.references:
+                    put(reference, target.to_bytes(4, "little"), replacement.source_address.to_bytes(4, "little"),
+                        f"{who}.{replacement.kind}.ref[{reference:#010x}]")
+                log.append(f"gfx    {entry['asset']} {replacement.kind} -> {target:#010x} "
+                           f"({len(raw)} bytes; {len(replacement.references)} checked reference(s))")
 
 
 def _required(who: str):

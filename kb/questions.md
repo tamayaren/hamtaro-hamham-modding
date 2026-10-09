@@ -19,8 +19,11 @@
   and the runtime dialogue pointer arrays remain contextual. See [text_tables.md](text_tables.md).
 - Story meanings of event flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191 and of
   `0x08051baa`'s progression result; needs later-game savestates.
-- Map portrait palettes, tile arrangement, blink/mouth overlays, and graphics upload.
-  Boss's compressed portrait assets and their animation operands are located; see
-  [portraits.md](portraits.md). Custom image import is not implemented.
+- Map other dialogue portraits and expression changes in later scenes, plus the
+  remaining room-head pose/animation commands. Boss's dialogue image, palette,
+  BG tilemap and upload are now editable; the old Entity assets are room heads.
+  See [portraits.md](portraits.md) and [graphics.md](graphics.md).
 - Where is the main loop (`swi 0x05` VBlankIntrWait callers)?
-- Is `0x086CC538–0x087FFFFF` truly unreferenced free space?
+- Resolve remaining computed/unmapped accesses before claiming the entire padding
+  universally unused. The startup end-bound and pointer-window audit are recorded
+  in [rom_map.md](rom_map.md#free-space-audit-2026-10-10).

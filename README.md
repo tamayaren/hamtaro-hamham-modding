@@ -23,11 +23,11 @@ uv run hamtools rom info
 - `AGENTS.md`, `.agents/skills/`, `agent-profile/` — the agent setup: instructions, skills,
   and a model-tier roster generated for both Claude Code and Codex
 
-## Progress so far — 2026-10-09
+## Progress so far — 2026-10-10
 
 Phase 1 tooling is working, and the first gameplay and dialogue mods have been
-tested in mGBA. Text authoring and portrait pointer editing are now available;
-the full dialogue/event format and graphics editing tools are still in progress.
+tested in mGBA. Phase 2 now exports/imports Boss's dialogue portrait as PNG and
+builds a verified blue-palette mod. Other graphics still need mapping.
 
 | Area | Progress | Details |
 |---|---|---|
@@ -37,7 +37,7 @@ the full dialogue/event format and graphics editing tools are still in progress.
 | Input | Held, pressed, released, repeat masks, and repeat timers mapped and tested | [InputState](kb/structs.md#inputstate-minimum-covered-size-0x14) |
 | Dialogue | Boss's clubhouse Hamha response, unaligned script pointer, live cursor, text reader, and several controls located | [Dialogue findings](kb/dialogue.md) |
 | Editable dialogue | Plain C string literals compile to the game's encoding; named nodes, newlines, input waits, end controls, and scene callbacks | [Editable example](patches/sunflower-dialogue/dialogue.c), [guide](patches/sunflower-dialogue/README.md) |
-| Portraits | Boss's normal and alternate compressed face assets located; a checked pointer swap tested | [Portrait findings](kb/portraits.md), [optional demo](patches/boss-portrait-demo/mod.toml) |
+| Portraits | Actual Boss dialogue BG image, palette and upload mapped; PNG roundtrip and blue recolour verified; separate room-head OBJ assets identified | [Graphics guide](kb/graphics.md), [portrait findings](kb/portraits.md), [boss-recolor](patches/boss-recolor/README.md) |
 
 The sunflower mod makes Boss say our authored sentence:
 
@@ -54,8 +54,10 @@ Useful addresses for this scene:
 | `0x0804ffb6` | Unaligned event operand pointing to Boss's response |
 | `0x0846cc6b` | Original encoded response stream |
 | `0x03000608` | Generic text-state list head; follow each state's `+0x10` cursor |
-| `0x081bfc74` | Normal Boss portrait, LZ77-compressed |
-| `0x08687e18` | That portrait's operand in the idle animation script |
+| `0x080eb9bc` | Boss dialogue-window portrait, LZ77-compressed |
+| `0x080f437c` | Its compressed sixteen-colour palette |
+| `0x084b1dbc` | Checked left-slot palette operand |
+| `0x081bfc74` | Separate Boss room-head frame; idle operand `0x08687e18` |
 
 All addresses apply to the verified dump above. Scene-specific heap addresses,
 callback IDs, and entity indices need confirmation in other scenes.
@@ -98,7 +100,8 @@ line lengths in the game.
 Each named C array is a text node, and a checked TOML pointer binds it to a
 located event operand. The complete tree's choices, conditions, and quest flags
 are not yet decoded. Callback IDs are scene-specific: `0x08` sets Boss's idle
-animation here, which also loads his portrait.
+animation here, which also loads his room-head frame. The dialogue face has a
+separate event graphics path.
 
 To try the optional existing-face swap, build both mods explicitly:
 
@@ -106,13 +109,14 @@ To try the optional existing-face swap, build both mods explicitly:
 uv run hamtools patch build sunflower-dialogue boss-portrait-demo
 ```
 
-The portrait demo is disabled by default and affects uses of that idle
-animation. Rebuild only `sunflower-dialogue` for the normal portrait. Custom
-image import and palette editing are not implemented yet.
+The old portrait demo is disabled by default and affects that idle room-head
+animation. Rebuild only `sunflower-dialogue` to restore it. For the actual
+dialogue face, export/edit/import with `hamtools gfx`, or build the palette-only
+example with `uv run hamtools patch build boss-recolor`.
 
 ## Verification and remaining work
 
-Current automated suite: **64 tests passed**, including literal encoding,
+Current automated suite: **350 tests passed**, including graphics roundtrips, literal encoding,
 diagnostics, generated-source handling, real ARM compilation, checked edits,
 linked text/control bytes, and BPS round-trips.
 
@@ -124,8 +128,8 @@ choose Hamha with A. Wait for the greeting and response, then press A to close
 and repeat. Room transitions and longer play sessions still need playtesting.
 
 Next research: complete the glyph/control table; map more NPC entry operands
-and event branches/choices; decode portrait palettes, tile layout, and animated
-overlays; add graphics import/editing tools. [Open questions](kb/questions.md)
+and event branches/choices; map other NPC graphics and later-scene expressions.
+Boss's dialogue image, palette and tilemap are now editable. [Open questions](kb/questions.md)
 and [the findings log](kb/findings.md) track confidence and evidence.
 
 ROMs, saves, screenshots, graphics, and extracted text stay in gitignored local

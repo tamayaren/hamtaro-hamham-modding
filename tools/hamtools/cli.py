@@ -126,6 +126,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_emu(sub)
     _add_patch(sub)
     _add_text(sub)
+    _add_gfx(sub)
     return p
 
 
@@ -159,8 +160,64 @@ def _add_text(sub) -> None:
 def _verified_rom() -> bytes:
     data = rom.load_rom()
     if rom.sha1(data) != rom.EXPECTED_SHA1:
-        raise rom.RomError("ROM does not match the expected USA dump; text addresses would be wrong")
+        raise rom.RomError("ROM does not match the expected USA dump; asset addresses would be wrong")
     return data
+
+
+def _add_gfx(sub) -> None:
+    g = sub.add_parser("gfx", help="export/import supported portrait PNGs and authored patch deltas").add_subparsers(
+        dest="cmd", required=True)
+    g.add_parser("list", help="list mapped image assets").set_defaults(func=cmd_gfx_list)
+    p = g.add_parser("export", help="export a portrait PNG under extracted/gfx/")
+    p.add_argument("asset")
+    p.add_argument("--out", type=Path, help="PNG path (must remain under extracted/gfx/)")
+    p.add_argument("--force", action="store_true", help="replace an existing local export")
+    p.set_defaults(func=cmd_gfx_export)
+    p = g.add_parser("import", help="re-encode PNG edits into a changed-only public mod source",
+                       description="Rebuilds graphics from your verified original ROM. Original mode "
+                                   "uses its palette; new mode quantizes to up to 15 opaque colours "
+                                   "plus transparency. Only image/palette differences enter mod.toml.")
+    p.add_argument("png", type=Path)
+    p.add_argument("--asset", help="asset name (otherwise use export sidecar or filename)")
+    p.add_argument("--palette", choices=("original", "new"), default="original")
+    p.add_argument("--out", type=Path, help="mod.toml path under patches/ (default: patches/<asset>-import/mod.toml)")
+    p.add_argument("--force", action="store_true", help="replace an existing mod source")
+    p.set_defaults(func=cmd_gfx_import)
+
+
+def cmd_gfx_list(args: argparse.Namespace) -> int:
+    from . import gfx
+    for asset in gfx.ASSETS.values():
+        print(f"{asset.name}: {asset.width}x{asset.height}, 4bpp, LZ77 tiles + 16-colour palette")
+    return 0
+
+
+def cmd_gfx_export(args: argparse.Namespace) -> int:
+    from . import gfx, paths
+    data = _verified_rom()
+    path = gfx.require_inside(args.out or paths.EXTRACTED_DIR / "gfx" / f"{args.asset}.png",
+                              paths.EXTRACTED_DIR / "gfx", "PNG output")
+    if path.suffix.lower() != ".png":
+        raise gfx.GfxError("export output must have a .png extension")
+    sidecar = gfx.require_inside(path.with_suffix(".json"), paths.EXTRACTED_DIR / "gfx", "asset sidecar")
+    if (path.exists() or sidecar.exists()) and not args.force:
+        raise gfx.GfxError(f"export already exists: {path}; use --force to replace it")
+    gfx.export_asset(data, args.asset, path)
+    print(f"wrote {path} (asset metadata: {sidecar})")
+    return 0
+
+
+def cmd_gfx_import(args: argparse.Namespace) -> int:
+    from . import gfx, paths
+    data = _verified_rom()
+    asset = args.asset or gfx.infer_asset(args.png)
+    out = args.out or paths.REPO_ROOT / "patches" / f"{asset}-import" / "mod.toml"
+    if out.name != "mod.toml":
+        raise gfx.GfxError("import output must be a patches/<mod>/mod.toml file")
+    pixels, colors = gfx.write_import(data, asset, args.png, out, args.palette, args.force)
+    print(f"wrote {out}: {pixels} changed pixels, {colors} changed colours")
+    print("re-encoded streams: extracted/gfx/imports/; build explicitly with hamtools patch build " + out.parent.name)
+    return 0
 
 
 def cmd_text_dump(args: argparse.Namespace) -> int:
@@ -357,7 +414,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return args.func(args)
     except Exception as e:  # noqa: BLE001 — report tool errors plainly to agents
-        known = {"RomError", "TextError", "EmuError", "GhidraError", "ToolNotFound", "PatchError"}
+        known = {"RomError", "TextError", "EmuError", "GhidraError", "ToolNotFound", "PatchError", "GfxError"}
         if type(e).__name__ not in known:
             raise
         print(f"error: {e}", file=sys.stderr)

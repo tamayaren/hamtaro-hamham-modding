@@ -4,8 +4,10 @@ address,name,kind,size,mode,confidence,notes
 0x02003990,gEventByteVars,ram,,,confirmed,Event byte variables indexed by u16; var 0x003b poke changed Boss route
 0x020039cb,gBossHintCounter,ram,0x1,,confirmed,Event byte var 0x003b; Boss repeat-greeting hint index 0-3; preset 2 selected third hint
 0x020039f0,gRuntimeDialogueChoice,ram,0x1,,likely,Byte variable 0x0060 selects runtime dialogue in native 0x0803b2d0
+0x02007710,gBossDialoguePortraitTileShadow,ram,0x480,,confirmed,Left BG portrait shadow; exact decoded image match and DMA source to 0x06003b80
+0x0201bbf0,gBossDialoguePortraitPaletteShadow,ram,0x20,,confirmed,Left BG palette shadow; original and recoloured palette matches; DMA source
 0x0201d0b0,gEventWordVars,ram,,,likely,Event u16 variables indexed by u16; static only
-0x0201d2b0,gDialoguePortraitTilesSlot2,ram,0x480,,confirmed,Boss portrait decompression destination in clubhouse; normal and alternate data matched ROM assets
+0x0201d2b0,gRoomHeadTilesSlot2,ram,0x480,,confirmed,Boss room-head decompression buffer; previously gDialoguePortraitTilesSlot2; separate from BG portrait
 0x03000010,gEventOpcode,ram,0x1,,confirmed,Current event opcode; 0 means fetch next; observed 0x1a during Boss reply
 0x03000014,gEventOperandAdvance,ram,0x4,,likely,Operand bytes to skip on next fetch
 0x03000018,gEventPhase,ram,0x1,,likely,Phase of current multi-frame event command
@@ -25,6 +27,7 @@ address,name,kind,size,mode,confidence,notes
 0x03000830,gInputRepeatCountdown,ram,0x2,,confirmed,InputState+0x10; u16 countdown; initial load then decrement; interval reload at repeat
 0x03000832,gInputUnchangedMaskFrames,ram,0x2,,likely,InputState+0x12; static unchanged-mask count; resets at 0xffff rather than saturating; limit untested
 0x03000838,gKeysPrevious,ram,0x2,,confirmed,u16 previous held mask on Input_Update entry; overwritten with current at end; store 0x08009680
+0x03000840,gGfxCopyQueue,ram,,,likely,Source destination byte-count triples; record stride 0x0c from static queue code
 0x03001f58,gSubsceneId,ram,0x1,,likely,Current subscene; observed 1 in clubhouse Boss state
 0x03001fac,gEventSelector,ram,0x2,,likely,Shared selector/result register for interaction hits menus and 0x1d dispatch
 0x03001fb0,gSceneCallbacks,ram,,,confirmed,Scene callback pointer table; text 0xf4 callback 0x08 read at 0x03001fd0; entry count unknown
@@ -39,9 +42,14 @@ address,name,kind,size,mode,confidence,notes
 0x03002c48,gSceneId,ram,0x1,,likely,Current scene; observed 1 in clubhouse Boss state
 0x03002c50,gEventCursor,ram,0x4,,confirmed,Event operand cursor = opcode address + 1; 0x0804ffb5 during Boss reply
 0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
+0x03002e24,gGfxCopyQueueWriteIndex,ram,0x1,,likely,Byte word-index cursor advanced by 3 per queued copy; row-copy helper 0x08009b80
 0x03003ad0,gRuntimeDialogueTransformBuffer,ram,0x20,,likely,Native 0x0803b2d0 produces selected text here and forces final byte zero
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
+0x05000060,gBossDialogueBgPalette,ram,0x20,,confirmed,Left portrait BG palette bank 3; recolour and original matched expected decoded palettes
+0x06003b80,gBossDialogueBgTiles,ram,0x480,,confirmed,Left dialogue face tiles; original image matched exactly before and after recolour
+0x0600bd42,gBossDialogueBgTilemapFirst,ram,0x2,,confirmed,Observed BG3 map row 21 column 1; tile 0x1dc palette bank 3; scene specific
+0x06010e20,gBossRoomHeadObjTileBase,ram,,,confirmed,Room-head slot 2 OBJ base; six 0xc0-byte source rows uploaded with 0x400-byte VRAM stride
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
@@ -53,6 +61,7 @@ address,name,kind,size,mode,confidence,notes
 0x08001478,Event_SetFlag,func,,thumb,likely,Writes packed flag in gEventFlags
 0x08001508,Util_RandomRange,func,,thumb,likely,Returns random value in [low high) scaled from 0x080003d8
 0x08001530,Event_FetchOpcode,func,,thumb,likely,Opcode 0 handler; applies advance then reads next opcode
+0x08001658,Event_CmdLoadLzGraphics,func,,thumb,confirmed,Event 0x06 reads source and destination pointers bytewise; WRAM shadow decompression then graphics DMA
 0x080027a8,Event_ShowTextAndWait,func,,thumb,confirmed,Configures slot text template then starts stream and waits; operand read 0x08002876 observed
 0x080029fc,Event_CmdSwitch,func,,thumb,likely,Opcode 0x1d; u8 N then N absolute targets chosen by selector
 0x08002a70,Event_CmdCall,func,,thumb,likely,Opcode 0x1e; pushes operand address and jumps
@@ -104,17 +113,22 @@ address,name,kind,size,mode,confidence,notes
 0x0800631c,Player_Update,func,,thumb,likely,calls Player_HandleMovementInput then adds velocity to position; writes pos at 0x080063c8/0x080063d0
 0x08006508,Player_HandleMovementInput,func,,thumb,confirmed,D-pad -> direction 1-4; B held -> run; velocity from kPlayerMoveVelocityTable
 0x08009614,Input_Update,func,,thumb,confirmed,polls KEYINPUT and writes InputState; caller 0x080001a4; lr 0x08000231; 128 code bytes with internal literals
+0x08009824,Gfx_FlushCopyQueue,func,,thumb,confirmed,Queued copy flush; Boss tile and palette DMA observed at instruction 0x08009928
+0x08009ac8,Gfx_QueueCopy,func,,thumb,likely,Event graphics loader queues source destination and byte count when display is active; static call
+0x08009b80,Gfx_QueueTileRows,func,,thumb,likely,Queues 4bpp rows; source stride width*32; destination stride 0x400; room-head command 0xcc caller
 0x0800af1c,Entity_SetVelocity,func,,thumb,confirmed,(index vx vz vy) -> Entity +0x24/+0x28/+0x2c
 0x0800af54,Entity_SetAnimation,func,,thumb,likely,Sets Entity+0x04 script pointer and resets +0x4c offset plus animation counters; Boss callback 0x08 target
 0x0800b1c0,Entity_GetIndex,func,,thumb,likely,Finds entity pointer in gEntityArray and returns u8 index or 0xff; static code
 0x0800b2f0,Entity_ApplyPhysics,func,,thumb,likely,pos += vel; vel += accel; +0x3c..+0x48 shorts clamp at 0x200
-0x0800d014,Anim_CtrlLoadPortraitTiles,func,,thumb,confirmed,Animation command 0xcb loads LZ77 portrait tiles via unaligned operand; reads 0x0800d030/32/38/3e observed
+0x0800d014,Anim_CtrlLoadRoomHeadTiles,func,,thumb,confirmed,Previously Anim_CtrlLoadPortraitTiles; 0xcb loads full room-head frames; BG dialogue face is separate
+0x0800d074,Anim_CtrlUploadRoomHeadTiles,func,,thumb,likely,0xcc uses slot record buffer destination and width/height bytes; calls 0x08009b80
+0x0800d0c8,Anim_CtrlSetRoomHeadPose,func,,thumb,likely,0xcd delay and pose index select slot-record descriptor into Entity+0x00; static interpretation
 0x08018858,Event_NativeJumpIfEntityAnim,func,,thumb,likely,0x1c native; 9 extra bytes; jump to target if entity is active and animation matches
 0x08020768,Event_NativeJumpIfVarNotEqual,func,,thumb,likely,0x1c native; 9 extra bytes (bank idx value target); jump unless variable == value
 0x0803b2d0,Event_NativeSelectTextSlots,func,,thumb,likely,Fills pointer registers 0 and 1 from RAM tables before show sites 0x080d9762 and 0x080d9772
 0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
 0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
-0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Clubhouse callback 0x08 sets Boss script 0x08687e17; table read and portrait path verified
+0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Callback 0x08 sets Boss room-head Entity animation 0x08687e17; dialogue BG portrait independent
 0x0804ef60,kClubhouseRoomEvent,data,,,likely,Scene 1 subscene 1 event entry from descriptor 0x084669a0
 0x0804ef8e,kClubhouseInteractionLoop,data,0x1,,confirmed,Event 0x21 wait; idle cursor 0x0804ef8f observed
 0x0804ff99,kBossHamhaRoute,data,,,confirmed,Boss Hamha event route; reached via menu dispatch 0x0804f49a
@@ -124,10 +138,14 @@ address,name,kind,size,mode,confidence,notes
 0x08050079,kBossHamhaHintRoute,data,,,confirmed,Repeat-greeting route; hint counter byte var 0x003b then random choice
 0x080e2150,kBossInteractionRecord,data,0x10,,likely,Interaction record entity 16 selector 9 circle radius 40
 0x080e21a0,kClubhouseInteractionList,data,0x80,,likely,Clubhouse interaction-record pointer list; slot 4 is Boss
-0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,likely,swi 0x11 then bx lr; called by portrait loader; destination data matches decompressed asset
+0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,confirmed,swi 0x11 then bx lr; observed execution and exact room-head/BG decompression matches
 0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
-0x081bfa60,kBossAlternatePortraitTilesLz,data,0x213,,confirmed,Existing alternate Boss portrait asset; LZ77 expands to 0x480 bytes; pointer mod tested
-0x081bfc74,kBossClubhousePortraitTilesLz,data,0x222,,confirmed,Boss idle portrait asset; LZ77 expands to 0x480 bytes; runtime buffer matched
+0x080eb9bc,kBossDialoguePortraitTilesLz,data,0x33a,,confirmed,Actual dialogue BG face; 0x480 decoded bytes; 48x48 4bpp row-major tiles; live VRAM match
+0x080f437c,kBossDialoguePortraitPaletteLz,data,0x26,,confirmed,Actual dialogue palette; 32 decoded bytes; palette-only relocation and recolour verified
+0x081b9f74,kBossRoomHeadPaletteLz,data,0x24,,likely,32 decoded bytes uniquely match live OBJ bank 4; source load not replayed
+0x081b9f98,kBossGreetingRoomHeadTilesLz,data,0x222,,confirmed,Greeting room-head frame; raw buffer and row-strided VRAM match; separate from dialogue face
+0x081bfa60,kBossAlternateRoomHeadTilesLz,data,0x213,,confirmed,Previously kBossAlternatePortraitTilesLz; whole room-head frame; alternate animation replay tested
+0x081bfc74,kBossClubhouseRoomHeadTilesLz,data,0x222,,confirmed,Previously kBossClubhousePortraitTilesLz; idle room-head frame; pointer demo tested
 0x08465510,kTextEmptyStream,data,0x1,,likely,Shared null stream terminating the fixed variant pointer rows
 0x08465df8,kTextVariantSplitLowRows,data,0xc,,likely,Three row pointers for f6/fc indexes below 4; physical rows each have 9 slots
 0x08465e04,kTextVariantSplitHighRows,data,0xc,,likely,Three row pointers for f6/fc indexes 4 and above using index minus 3; 49 slots per row
@@ -141,7 +159,7 @@ address,name,kind,size,mode,confidence,notes
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
-0x08469cdc,kDialoguePortraitSlotRecords,data,,,likely,Record stride 0x11c; first word points to a decompression buffer; slot 2 verified for Boss
+0x08469cdc,kRoomHeadSlotRecords,data,,,likely,Previously kDialoguePortraitSlotRecords; stride 0x11c; buffers OBJ destinations poses and dimensions
 0x0846c67a,kNativeSelectedVariantWrapper,data,,,likely,Native-rendered wrapper using fe with selected-index fallback; literals 0x08013cf4 and 0x08036918
 0x0846cc6b,kBossClubhouseDialogue,data,0x58,,confirmed,Uncompressed custom glyph/control stream; final wait 0x0846ccc2; reached by 0x0804ffb6
 0x0847a9df,kNativePairedLabelPrimary,data,,,likely,Fixed native text selected by 0x0801c560; literal 0x0801c5d8
@@ -155,9 +173,18 @@ address,name,kind,size,mode,confidence,notes
 0x084a92c1,kNativeRecordFallbackSecondary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038ef0 and 0x08038fc0
 0x084a9b60,kNativePresentationTextPtrs,data,0x214,,likely,19 by 7 pointer slots; 73 nulls retained; native 0x0803fd28 checks null entries
 0x084aa740,kTextInsertTable,data,,,confirmed,String pointers used by text controls 0xf0/0xfa; entry 0x38 displayed via 0xf0; 248 entries (count likely)
+0x084b1dbb,kBossDialoguePortraitLeftLoad,data,0x13,,confirmed,Event palette and tile load pair then return; left-window portrait path observed
+0x084b1dbc,kBossDialoguePortraitLeftPalettePointer,data,0x4,,confirmed,Unaligned event palette operand; checked redirect to recoloured palette at 0x086d0000 verified
+0x084b1dc5,kBossDialoguePortraitLeftTilePointer,data,0x4,,confirmed,Unaligned event image operand; source read and exact 0x06003b80 VRAM image match
+0x084b1dce,kBossDialoguePortraitRightLoad,data,0x13,,likely,Other-slot palette and tile pair; destinations 0x05000040 and 0x06003700; static only
+0x084b1dcf,kBossDialoguePortraitRightPalettePointer,data,0x4,,likely,Other-slot operand for same Boss palette; original bytes checked and repointed; slot not displayed
+0x084b1dd8,kBossDialoguePortraitRightTilePointer,data,0x4,,likely,Other-slot operand for same Boss image; static decode; slot not displayed
 0x08653040,kTextGlyphWidths,data,0x200,,confirmed,Normal-bank advance plus spacing verified against live cursor; alternate-bank indexing and full extent likely
-0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss script; portrait command operand at 0x08687ddf; live animation replay tested
-0x08687ddf,kBossAlternatePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfa60; replay tested
-0x08687e17,kBossClubhouseIdleAnimation,data,,,confirmed,Boss idle script selected by clubhouse callback 0x08; starts with portrait load command
-0x08687e18,kBossClubhousePortraitPointer,data,0x4,,confirmed,Unaligned 0xcb asset operand pointing to 0x081bfc74; checked redirect to alternate portrait verified
+0x086538d4,kRoomHeadSlot2FirstPose,data,0x8,,confirmed,One 64x64 4bpp OBJ; relative -12/-20; tile 0x50 palette 4; matches live OAM
+0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss room-head Entity script; operand at 0x08687ddf; replay tested
+0x08687ddf,kBossAlternateRoomHeadPointer,data,0x4,,confirmed,Previously kBossAlternatePortraitPointer; unaligned 0xcb room-head frame operand; replay tested
+0x08687e17,kBossClubhouseIdleAnimation,data,,,confirmed,Clubhouse idle room-head Entity script; callback 0x08; dialogue BG face uses event load commands
+0x08687e18,kBossClubhouseRoomHeadPointer,data,0x4,,confirmed,Previously kBossClubhousePortraitPointer; checked redirect changes room head; dialogue face independent
 0x086ca1e0,kSaveTypeTag,data,0xc,,confirmed,SRAM_F_V103 save-type tag
+0x086cc538,kStartupRamImageEnd,data,,,likely,Exclusive startup DMA source bound at literal 0x08000284; first FF padding byte; no read by that copy
+0x086d0000,kPatchFreeSpaceBase,data,,,confirmed,Conservative allocator start; Boss palette allocation tested; whole tail not proven universally unused

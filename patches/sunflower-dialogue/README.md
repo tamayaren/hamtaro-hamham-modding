@@ -77,22 +77,23 @@ Callback `0x08` is Boss's idle animation in this clubhouse scene. It is not a
 global portrait number; callbacks can also change a character's room animation
 or event timing. Keep this callback when editing this response.
 
-## Optional portrait demonstration
+## Optional room-head frame demonstration
 
-`patches/boss-portrait-demo/mod.toml` redirects the idle animation's portrait
-operand to another existing Boss face. It is disabled by default. Build both
+`patches/boss-portrait-demo/mod.toml` redirects the idle animation's room-head
+operand to another existing Boss frame. The dialogue face is separate.
+It is disabled by default. Build both
 examples explicitly to try it:
 
 ```powershell
 uv run hamtools patch build sunflower-dialogue boss-portrait-demo
 ```
 
-The portrait operand is at `0x08687e18`; the normal compressed asset starts at
+The room-head operand is at `0x08687e18`; the normal compressed asset starts at
 `0x081bfc74`, and the alternative starts at `0x081bfa60`. This affects uses of
 that animation, so it is broader than replacing this one message. Rebuild with
-only `sunflower-dialogue` to restore the normal portrait in the output.
+only `sunflower-dialogue` to restore the normal room head in the output.
 
 See [dialogue findings](../../kb/dialogue.md) and
 [portrait findings](../../kb/portraits.md) for the addresses, confidence, and
-verification evidence. Custom portrait image import, palettes, and arbitrary
-dialogue branching remain future work.
+verification evidence. [The graphics guide](../../kb/graphics.md) now supports
+Boss dialogue PNG/palette editing; arbitrary dialogue branching remains separate work.

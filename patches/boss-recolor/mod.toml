@@ -1,0 +1,14 @@
+name = "boss-recolor"
+description = "Authored Boss dialogue portrait image/palette edits."
+enabled = false
+
+# Generated changed-only graphics recipe. No game image or original bytes are embedded.
+# The builder reconstructs it from your verified original ROM, then allocates and repoints.
+[[gfx]]
+asset = "boss-portrait"
+expect_tiles_sha1 = "59292ee092106aafe69856c49b96b4eb4dd3a2a7"
+expect_palette_sha1 = "4070f46077a1118019e3097ea489c461ff1c830c"
+colors = [
+  { index = 4, bgr555 = 0x6a69 },
+  { index = 5, bgr555 = 0x7b74 },
+]

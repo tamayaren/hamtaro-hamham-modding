@@ -2,6 +2,57 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-10 — Boss dialogue graphics tooling and blue portrait (Codex; Popper re-scout; Mill re-engineer)
+
+- Corrected the earlier visual identification: `0x081bfc74` / `0x081bfa60`
+  are room-head OBJ frames, not the dialogue BG face. Renamed the affected
+  RAM/ROM/function symbols; earlier decompression and pointer-swap evidence
+  remains valid. See [portraits.md](portraits.md).
+- Confirmed the actual face at `0x080eb9bc` (`0x33a` LZ77 bytes -> `0x480`
+  bytes, 48 x 48, row-major 4bpp) and palette at `0x080f437c` (`0x26` LZ77
+  bytes -> sixteen BGR555 colours). Decoded data exactly matched live tiles
+  and palette; a relocated edited palette visibly changed the face.
+- Watched bytewise source operands at `0x084b1dbc` / `0x084b1dc5` in event
+  `0x06`, `0x08001658`. BIOS `swi 0x11` decodes to shadows `0x0201bbf0`
+  and `0x02007710`; DMA3 uploads to `0x05000060` / `0x06003b80`, reported
+  PC `0x0800992c`, instruction `0x08009928`. BG3 map rows 21..26 and
+  columns 1..6 select tiles `0x1dc..0x1ff`, palette 3. Other-slot source
+  operands `0x084b1dcf` / `0x084b1dd8` remain likely; that slot was not shown.
+- Room-head rows upload at `0x06010e20` with source stride `0xc0` and OBJ
+  VRAM stride `0x400`. Slot record `+0x04/+0x118/+0x119` supplies destination,
+  width and height. The first pose `0x086538d4` matches a 64 x 64 4bpp OBJ
+  using palette 4; its full pose table remains unmapped. A unique decoded
+  room-head palette at `0x081b9f74` matches live bank 4 (likely source).
+- Popper audited every four-byte ROM window and mirrors. `0x086cc538` is
+  referenced as the exclusive startup-copy bound, so the whole tail cannot
+  be called literally unreferenced. No additional evidenced data reference
+  was established. The documented audit retains unresolved raw/computed
+  cases; conservative allocations continue at `0x086d0000`. See
+  [rom_map.md](rom_map.md#free-space-audit-2026-10-10).
+- Added `hamtools gfx list/export/import`, Pillow PNG support, BIOS LZ77
+  compression, and 4bpp layout conversion. Imports store changed-only authored
+  pixel/colour recipes plus original hashes. Derived streams stay under
+  `extracted/gfx/`. Graphics share the builder's code/text collision map;
+  hash, original-pointer, free-space and original-ROM protections are checked.
+  Both original/new palette modes preserve an unchanged Boss export byte-for-byte.
+- `boss-recolor` changes palette entries 4 and 5 only. Its 38-byte palette at
+  `0x086d0000` is reached through two checked repoints. Verified cold boot,
+  blue left portrait, exact edited palette and unchanged tiles in RAM/VRAM,
+  greeting, response pages, close/repeat, and continued surrounding animation
+  for more than a minute. Original ROM SHA1 remained unchanged. Other slot,
+  room changes and longer sessions remain human playtests.
+- Validation: **350 tests passed**, including 137 synthetic codec cases and
+  ROM-gated PNG roundtrip; `tools/sync_agent_profile.py --check` passed.
+  A Windows sandbox temp failure was resolved by running tests with the normal
+  temp/tool paths. The running MCP executable prevented project reinstall;
+  Pillow was installed separately after `uv add pillow`, then `UV_NO_SYNC=1`
+  was used for this session. No game data is committed. The human's faster-walk
+  edit was left untouched.
+- Local evidence: `extracted/gfx/`, including the address-only free-space
+  audit, PNGs, upload traces and verification JSON; patched state
+  `states/boss-recolor-visible.ss`. The supplied `boss-portrait.ss0` was
+  retained and copied to `.ss` for MCP naming.
+
 ## 2026-10-09 — Dialogue coverage and variant inventories (Codex; Ohm re-analyst; Claude research)
 
 - Corrected the scene-pointer array to 11 slots at `0x08466944` through

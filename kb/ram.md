@@ -21,6 +21,17 @@ Hamtaro index 10 → entity `0x02022c1c`, so:
 | `0x02022c40` | Entity+0x24 | X velocity, zeroed after each update | confirmed |
 | `0x02022c48` | Entity+0x2c | Y velocity | confirmed |
 
+### Boss graphics shadows (observed clubhouse path)
+
+| Address | Size | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x02007710` | `0x480` | `gBossDialoguePortraitTileShadow` | Decoded BG portrait; copied to `0x06003b80` | confirmed |
+| `0x0201bbf0` | `0x20` | `gBossDialoguePortraitPaletteShadow` | Decoded BG palette; copied to bank 3 at `0x05000060` | confirmed |
+| `0x0201d2b0` | `0x480` | `gRoomHeadTilesSlot2` | Separate room-head frame buffer; OBJ row copies begin `0x06010e20` | confirmed |
+
+The dialogue face uses a BG tilemap; room heads use OAM. See
+[portraits.md](portraits.md) and [the slot record](structs.md#roomheadslotrecord-stride-0x11c-likely-format).
+
 ### Event script variables
 
 | Address | Type | Name | Meaning | Confidence |
