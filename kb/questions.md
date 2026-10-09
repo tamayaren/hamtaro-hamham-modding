@@ -8,8 +8,11 @@
   mapped for Boss Hamha (flags, hint counter, random choice); see
   [event_scripts.md](event_scripts.md). Other NPCs' routes from dispatch `0x0804efbf`
   are unmapped.
-- Event opcode lengths outside the documented set (needed for a full script decoder;
-  that tool is not implemented).
+- Meanings of most event commands (all 97 lengths are now known; see
+  [event_scripts.md](event_scripts.md#complete-command-length-table)) and the 34 guessed
+  native-call operand counts in [event_natives.csv](event_natives.csv).
+- Which scripts are reached only from native code or tables (113 show-text-shaped byte
+  patterns lie outside the static walk).
 - Story meanings of event flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191 and of
   `0x08051baa`'s progression result; needs later-game savestates.
 - Map portrait palettes, tile arrangement, blink/mouth overlays, and graphics upload.

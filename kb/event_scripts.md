@@ -151,10 +151,163 @@ advance `+0x44`, wait counter `+0x48`, selector `+0x4a`, opcode `+0x4c`, stack d
 Event `0x26` (`0x08002fb4`) initializes a background slot with `u8 slot, u32 entry`.
 Flags and variable arrays remain shared; the selector is saved per context.
 
-## Useful event instruction formats
+## Complete command-length table
+
+The handler table at `0x08467434` has **97 entries, 0x00–0x60**. The words after it
+(`0x084675b8`) belong to a sound-function table used by command 0x0a, not to events.
+Lengths include the opcode byte and come from the constant each handler stores to the
+operand-advance variable `0x03000014` (decompiled for every handler, with Ghidra's mode
+error at `0x080030b0` fixed). Confidence: **likely** overall, and backed by the whole-ROM
+walk and live checks below. Commands not listed in the format table further down have
+known lengths but unmapped meanings.
+
+| Op | Handler | Len | Flow / meaning |
+|---|---|---|---|
+| 0x00 | `0x08001530` | 1 | no-op (fetch routine) |
+| 0x01 | `0x08001568` | 1 | end: halts on this opcode |
+| 0x02 | `0x08001580` | 3 | wait u16 frames |
+| 0x03 | `0x080015d4` | 1 | — |
+| 0x04 | `0x08001620` | 1 | — |
+| 0x05 | `0x08001638` | 1 | yield |
+| 0x06 | `0x08001658` | 9 | LZ77 data load |
+| 0x07 | `0x0800177c` | 9 | LZ77 data load |
+| 0x08 | `0x08001804` | 11 | — |
+| 0x09 | `0x080018b8` | 11 | — |
+| 0x0a | `0x08001944` | 4 | — |
+| 0x0b | `0x08001a20` | 4 | — |
+| 0x0c | `0x08001d78` | 5 | jump `ptr` |
+| 0x0d | `0x08001dbc` | 2 | end: reload subscene |
+| 0x0e | `0x08001df8` | 2 | end: load scene |
+| 0x0f | `0x080021c0` | 14 | place entity (x,y,z) + animation |
+| 0x10 | `0x08002284` | 6 | set entity animation |
+| 0x11 | `0x080022f8` | 7 | set entity animation |
+| 0x12 | `0x08001ebc` | 7 | — |
+| 0x13 | `0x08001e2c` | 7 | — |
+| 0x14 | `0x08001f54` | 9 | — |
+| 0x15 | `0x080020a8` | 6 | — |
+| 0x16 | `0x08002178` | 2 | — |
+| 0x17 | `0x0800219c` | 2 | — |
+| 0x18 | `0x08002530` | 10 | — |
+| 0x19 | `0x080025f0` | 3 | open/close text window |
+| 0x1a | `0x080027a8` | 6 | show text and wait |
+| 0x1b | `0x080028e0` | 6 | show text |
+| 0x1c | `0x080029bc` | 5+n | native call, see below |
+| 0x1d | `0x080029fc` | 2+4N | switch `u8 N` + N `ptr` |
+| 0x1e | `0x08002a70` | 5 | call `ptr` |
+| 0x1f | `0x08002af8` | 1 | return |
+| 0x20 | `0x08002b30` | 18 | init player/map interaction |
+| 0x21 | `0x08002c60` | 1 | wait for interaction |
+| 0x22 | `0x08002d40` | 9 | branch, target at +5 |
+| 0x23 | `0x08002dbc` | 5 | — |
+| 0x24 | `0x08002e10` | 10 | Ham-Chat menu |
+| 0x25 | `0x08002f44` | 6 | — |
+| 0x26 | `0x08002fb4` | 6 | start context, entry at +2 (`0xffffffff` = stop) |
+| 0x27 | `0x08003078` | 1 | end: clear cursor |
+| 0x28 | `0x080030a0` | 5 | selector = byte at `ptr` |
+| 0x29 | `0x080030fc` | 3 | selector = byte var |
+| 0x2a | `0x0800313c` | 3 | selector = word var |
+| 0x2b | `0x0800317c` | 3 | selector = u16 |
+| 0x2c | `0x08002104` | 11 | — |
+| 0x2d | `0x080031ac` | 4 | byte var = u8 |
+| 0x2e | `0x080031f4` | 5 | word var = u16 |
+| 0x2f | `0x0800328c` | 8 | — |
+| 0x30 | `0x0800330c` | 10 | branch, target at +6 |
+| 0x31 | `0x080033a4` | 10 | branch, target at +6 |
+| 0x32 | `0x0800343c` | 10 | branch, target at +6 |
+| 0x33 | `0x080034d4` | 8 | branch, target at +4 |
+| 0x34 | `0x08003578` | 15 | — |
+| 0x35 | `0x08003690` | 15 | — |
+| 0x36 | `0x08003760` | 4 | — |
+| 0x37 | `0x080037ac` | 2 | — |
+| 0x38 | `0x08002760` | 3 | — |
+| 0x39 | `0x08002374` | 3 | — |
+| 0x3a | `0x080023c0` | 8 | — |
+| 0x3b | `0x08002418` | 3 | — |
+| 0x3c | `0x080037d8` | 10 | branch, target at +6 |
+| 0x3d | `0x08002cbc` | 1 | — |
+| 0x3e | `0x08002460` | 5 | — |
+| 0x3f | `0x0800386c` | 2 | — |
+| 0x40 | `0x08003900` | 2 | — |
+| 0x41 | `0x08003978` | 8 | — |
+| 0x42 | `0x080039e8` | 8 | — |
+| 0x43 | `0x08003a5c` | 2 | — |
+| 0x44 | `0x080024b4` | 8 | — |
+| 0x45 | `0x08002eb8` | 6 | — |
+| 0x46 | `0x08003b8c` | 4 | set/clear flag |
+| 0x47 | `0x08003bfc` | 3 | — |
+| 0x48 | `0x08003c30` | 4 | — |
+| 0x49 | `0x08003c6c` | 3 | — |
+| 0x4a | `0x08002398` | 4 | — |
+| 0x4b | `0x0800243c` | 3 | — |
+| 0x4c | `0x08003c98` | 2 | — |
+| 0x4d | `0x08003cbc` | 6 | set interaction record |
+| 0x4e | `0x08003d50` | 5 | — |
+| 0x4f | `0x08003d2c` | 3 | — |
+| 0x50 | `0x08003db0` | 8 | var = random |
+| 0x51 | `0x08003e14` | 5 | — |
+| 0x52 | `0x08003e68` | 2 | — |
+| 0x53 | `0x08003240` | 7 | pointer register = u32 |
+| 0x54 | `0x08002994` | 3 | — |
+| 0x55 | `0x08002cd8` | 2 | — |
+| 0x56 | `0x08001aa4` | 5 | — |
+| 0x57 | `0x08001b94` | 3 | — |
+| 0x58 | `0x08003ae4` | 3 | — |
+| 0x59 | `0x08002c1c` | 5 | — |
+| 0x5a | `0x08003e94` | 1 | — |
+| 0x5b | `0x08003eb8` | 3 | — |
+| 0x5c | `0x08001c30` | 12 | — |
+| 0x5d | `0x08002d04` | 3 | — |
+| 0x5e | `0x08001ce8` | 4 | — |
+| 0x5f | `0x08003b08` | 1 | — |
+| 0x60 | `0x08003b24` | 1 | — |
+
+Branch commands store advance zero when they jump and skip their operands otherwise.
+Commands 0x43 and 0x60 can also load a scene; 0x0d/0x0e always do.
+
+### Native calls (0x1c)
+
+`1c ptr ...`: the handler calls the Thumb function `ptr` with a pointer to the bytes
+after it. The function returns how many **extra** operand bytes it used (length = 5 + n).
+A function can also jump: it writes `gEventCursor` and returns −4, cancelling the +4.
+[event_natives.csv](event_natives.csv) lists every native reached by the walk:
+602 functions, 593 with a fixed extra count (559 likely, 34 guesses), 2 conditional jumps
+(`0x08020768`: jump unless variable == value; `0x08018858`: jump if entity animation
+matches; both 9 extra bytes, target at extra +5), and 7 that load a scene and end the script.
+Counts were read from each function's return instructions or its decompiled return
+value, then checked: decoding after every call site must stay valid. All 602 pass.
+
+### Script quirks a decoder must handle
+
+- **0x00 is a one-byte no-op.** Its handler is the fetch routine, and the dispatcher keeps
+  fetching until a handler yields. Scripts sometimes store a 4-byte operand where a native
+  reads one byte (e.g. `0x0801165c`), and the leftover zero bytes run as no-ops.
+- **Switch tables can be longer than N.** 0x1d does not bounds-check: selector *k* reads
+  entry *k*, even past N, and selector 0 falls through after N entries. Two scripts
+  (`0x080afbf7`, `0x080afc87`) have N=3 with a fourth valid target. Their fall-through would
+  execute pointer bytes, so the selector there is never 0.
+- **Pointer operands below 0x10** are pointer-register indexes in some handlers (call,
+  branches, text). Only 3 such uses occur in reachable scripts.
+
+### Whole-ROM walk (static validation)
+
+A recursive-descent walk starting from all 148 scene/subscene entry scripts (scene table
+`0x08466944`, 12 scenes) follows jumps, calls, branches, switch targets, background
+contexts and native jumps. It decodes **98,214 commands with zero invalid opcodes** and
+reaches **3,599 distinct show-text targets** (0x1a/0x1b). Byte patterns shaped like
+show-text commands occur at 4,257 places in the ROM, and the walk covers 4,144 of them
+(97%). The remainder may be false matches or scripts reached only from native code or
+tables; that is the coverage-sweep step of text extraction.
+
+**Live check:** in the emulator, breakpoint sampling of the fetch routine (`0x08001542`,
+`r1` = opcode address) plus per-frame cursor polling over three savestates (clubhouse Boss
+menu routes, Sunny Peaks, the bedroom) observed 28 distinct executing command addresses.
+All 28 are addresses the static walk decoded. A wrong length would misalign later addresses,
+so this is discriminating, but the sample is small: the table stays **likely**, not confirmed.
+
+## Operand formats of mapped commands
 
 Lengths include the one-byte opcode. `ptr` is an unaligned u32, `idx` a u16.
-These formats are static conclusions, not a complete opcode specification.
+Operand meanings below are static conclusions for the commands mapped so far.
 
 | Opcode | Handler | Length | Operands and behavior |
 |---|---|---|---|
@@ -170,9 +323,12 @@ These formats are static conclusions, not a complete opcode specification.
 | 0x19 | `0x080025f0` | 3 | u8 text slot, u8 open/close; zero closes |
 | 0x1a | `0x080027a8` | 6 | u8 slot, ptr text; apply window template, show, wait |
 | 0x1b | `0x080028e0` | 6 | u8 slot, ptr text; start/wait without initial template setup |
-| 0x1c | `0x080029bc` | variable | ptr native function; pass following operand pointer; function returns additional operand count |
+| 0x1c | `0x080029bc` | 5 + n | ptr native function; it receives the following operand pointer and returns n (see Native calls) |
 | 0x1d | `0x080029fc` | 2 + 4*N | u8 N, N absolute targets; selector 1 chooses first; selector zero falls through |
 | 0x1e | `0x08002a70` | 5 | ptr event subroutine; push operand address, redirect |
+| 0x22 | `0x08002d40` | 9 | ptr item, ptr target; jump if menu-item predicate `0x0800810c` accepts item |
+| 0x26 | `0x08002fb4` | 6 | u8 context slot, ptr entry; start background script (`0xffffffff` stops it) |
+| 0x28 | `0x080030a0` | 5 | ptr; selector = byte at ptr (indirectable) |
 | 0x1f | `0x08002af8` | 1 | return using stored operand address +4 |
 | 0x21 | `0x08002c60` | 1 | player/interaction loop until a result |
 | 0x24 | `0x08002e10` | 10 | u8 count, ptr menu item IDs, ptr item predicates; result to selector |
@@ -358,8 +514,12 @@ decoder, and `trace.json` in the main checkout's `extracted/event-selection-clau
 Decompiled output and decoded scripts are not tracked. Ghidra misidentifies some
 function boundaries; `0x08003db0` (opcode 0x50) had to be created as a Thumb function.
 
-Still open: story meanings of flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191; the
-opcode lengths not listed above (a full-script decoder needs them all); the progression
+Command-length evidence (local, gitignored) is in the opcode-lengths worktree's
+`extracted/opcode-lengths/`: per-handler decompiles, the walker, native tables, and
+runtime-check results.
+
+Still open: story meanings of flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191; meanings of
+most commands in the length table; 34 guessed native counts (single call sites); the progression
 routine `0x08051baa` and the `0x0804f4af` gate, which need later-game savestates;
 and other NPCs' routes, which should follow the same pattern from the selector
 dispatch at `0x0804efbf`.
