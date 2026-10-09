@@ -2,6 +2,19 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Text control lengths verified (Codex glyph-controls analyst; Claude Opus 5.5)
+
+- Codex statically mapped all 32 text controls plus prefixes `0x5e`/`0xff`
+  ([text_controls.md](text_controls.md)); imported from its uncommitted worktree.
+- Static check: all 3,599 script-referenced streams decode and terminate with those
+  lengths, with no overruns; length sensitivity pins down the common controls.
+- Emulator: redirected the live dialogue cursor onto real occurrences of each rarer
+  control with read watchpoints on the following bytes. Lengths of every control used
+  in script text are confirmed (only unused `f7`/`fe` and context-bound `ef`/`f5`
+  remain likely). `ea` red, `e9` blue, `e8` normal colour seen on screen.
+- Found a developer font-test stream among script-referenced text.
+- Next: build the text decoder and the event walker as `hamtools` commands.
+
 ## 2026-10-09 — All event command lengths; whole-ROM script walk (Claude Opus 5.5)
 
 - Handler table `0x08467434` has 97 entries (0x00–0x60); `0x084675b8` onward is a
