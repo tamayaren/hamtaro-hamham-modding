@@ -2,36 +2,16 @@
 
 Each const byte array is a named text node. Branching, choices and tree mapping stay
 in the game's event scripts; this helper does not implement arbitrary branches.
-Only the supplied supported alphabet is accepted. Control bytes stay explicit in C.
+The native printable alphabet is accepted. Control bytes stay explicit in C.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-_GLYPHS = {
-    " ": 0x01,
-    **{str(i): 0x02 + i for i in range(10)},
-    **{chr(ord("A") + i): 0x0C + i for i in range(26)},
-    **{chr(c): c for c in range(ord("a"), ord("z") + 1)},
-    ".": 0xCA,
-    "-": 0xCB,
-    "_": 0xCC,
-    "“": 0xCD,
-    "”": 0xCE,
-    ",": 0xCF,
-    "'": 0xD1,
-    "’": 0xD1,
-    "(": 0xD2,
-    ")": 0xD3,
-    "<": 0xD4,
-    ">": 0xD5,
-    "/": 0xD6,
-    "\\": 0xD7,
-    "!": 0xD8,
-    "?": 0xD9,
-    "\n": 0xE2,
-}
+from .glyphs import CHAR_TO_BYTE
+
+_GLYPHS = {**CHAR_TO_BYTE, "\n": 0xE2}
 _SIMPLE_ESCAPES = {
     "'": "'", '"': '"', "?": "?", "\\": "\\",
     "a": "\a", "b": "\b", "f": "\f", "n": "\n",

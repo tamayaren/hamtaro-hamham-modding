@@ -17,7 +17,7 @@ def test_supported_alphabet_and_explicit_controls():
     assert dialogue.encode_text("") == b""  # encoding never adds an end control
 
 
-@pytest.mark.parametrize("char", ["&", ";", ":", "%", "=", '"', "^", "\t", "\r", "é", "♥", "\0"])
+@pytest.mark.parametrize("char", ["=", "@", "$", "~", "^", "\t", "\r", "\u20ac", "\0"])
 def test_unknown_glyphs_are_conservative_errors(char):
     with pytest.raises(dialogue.DialogueError, match="unsupported dialogue glyph"):
         dialogue.encode_text(char)
@@ -90,7 +90,7 @@ def test_malformed_or_nonliteral_calls_have_source_positions(call, message):
     assert message in str(error.value)
 
 
-@pytest.mark.parametrize("escape", [r"\t", r"\0", r"\"", r"\x00", r"\a", r"\b", r"\f", r"\r", r"\v"])
+@pytest.mark.parametrize("escape", [r"\t", r"\0", r"\x00", r"\a", r"\b", r"\f", r"\r", r"\v"])
 def test_valid_c_escapes_can_still_be_unsupported_glyphs(escape):
     with pytest.raises(dialogue.DialogueError, match="unsupported dialogue glyph"):
         dialogue.expand_source(f'DIALOGUE_TEXT("{escape}")')
@@ -100,16 +100,17 @@ def test_numeric_escape_is_a_character_not_a_raw_game_byte():
     # C's 'A' (0x41) encodes as uppercase A (0x0c); raw controls stay outside text.
     assert dialogue.expand_source(r'DIALOGUE_TEXT("\101\x41")') == "0x0c, 0x0c"
     with pytest.raises(dialogue.DialogueError, match="unsupported dialogue glyph"):
-        dialogue.expand_source(r'DIALOGUE_TEXT("\xe0")')
+        dialogue.expand_source(r'DIALOGUE_TEXT("\x7e")')
 
 
 def test_verified_digits_punctuation_and_escaped_backslash():
     assert dialogue.encode_text("0123456789") == bytes(range(0x02, 0x0C))
     source = r'''DIALOGUE_TEXT("0,9-_()<>/\\'\u201cHi\u201d")'''
     expected = [0x02, 0xCF, 0x0B, 0xCB, 0xCC, 0xD2, 0xD3, 0xD4,
-                0xD5, 0xD6, 0xD7, 0xD1, 0xCD, 0x13, 0x69, 0xCE]
+                0xD5, 0xD6, 0xD7, 0xD0, 0xCD, 0x13, 0x69, 0xCE]
     assert dialogue.expand_source(source) == ", ".join(f"0x{value:02x}" for value in expected)
-    assert dialogue.encode_text("’") == b"\xd1"
+    assert dialogue.encode_text("’") == b"\xd0"
+    assert dialogue.encode_text("…") == b"\xd1"
 
 
 def test_hex_escape_consumes_all_digits_like_c():
@@ -120,8 +121,8 @@ def test_hex_escape_consumes_all_digits_like_c():
 
 def test_error_points_to_glyph_in_adjacent_literal_and_escape():
     with pytest.raises(dialogue.DialogueError) as error:
-        dialogue.expand_source('DIALOGUE_TEXT("Hi"\n    "&")', "node.c")
-    assert str(error.value) == "node.c:2:6: unsupported dialogue glyph '&' (U+0026)"
+        dialogue.expand_source('DIALOGUE_TEXT("Hi"\n    "=")', "node.c")
+    assert str(error.value) == "node.c:2:6: unsupported dialogue glyph '=' (U+003D)"
     with pytest.raises(dialogue.DialogueError) as error:
         dialogue.expand_source('DIALOGUE_TEXT("Hi"\n    "\\t")', "node.c")
     assert str(error.value) == r"node.c:2:6: unsupported dialogue glyph '\t' (U+0009)"
@@ -129,8 +130,8 @@ def test_error_points_to_glyph_in_adjacent_literal_and_escape():
 
 def test_spliced_error_points_to_original_source():
     with pytest.raises(dialogue.DialogueError) as error:
-        dialogue.expand_source('DIALOGUE_\\\nTEXT("&")', "node.c")
-    assert str(error.value) == "node.c:2:7: unsupported dialogue glyph '&' (U+0026)"
+        dialogue.expand_source('DIALOGUE_\\\nTEXT("=")', "node.c")
+    assert str(error.value) == "node.c:2:7: unsupported dialogue glyph '=' (U+003D)"
 
 
 def test_prepare_generated_copy_preserves_original_and_line_numbers(tmp_path):
@@ -168,7 +169,7 @@ def test_compile_step_reports_editable_source_error(tmp_path, monkeypatch):
     mod = tmp_path / "mods" / "bad"
     mod.mkdir(parents=True)
     source = mod / "main.c"
-    source.write_text('const char node[] = { DIALOGUE_TEXT("&") };')
+    source.write_text('const char node[] = { DIALOGUE_TEXT("=") };')
     monkeypatch.setattr(patch.paths, "arm_tool", lambda name: Path(name))
 
     def unexpected_compile(*args):
@@ -177,9 +178,16 @@ def test_compile_step_reports_editable_source_error(tmp_path, monkeypatch):
     monkeypatch.setattr(patch, "_run", unexpected_compile)
     with pytest.raises(patch.PatchError) as error:
         patch.compile_code([patch.Mod(name="bad", path=mod, sources=[source])], tmp_path / "obj")
-    assert str(error.value) == f"{source}:1:38: unsupported dialogue glyph '&' (U+0026)"
+    assert str(error.value) == f"{source}:1:38: unsupported dialogue glyph '=' (U+003D)"
 
 
 def test_multiline_macro_definition_keeps_its_trailing_controls():
     source = '#define NODE DIALOGUE_TEXT("A" \\\n"B"), DIALOGUE_END()\n'
     assert dialogue.expand_source(source) == '#define NODE 0x0c, 0x0d\\\n, DIALOGUE_END()\n'
+
+
+def test_native_accents_symbols_and_named_glyphs():
+    from hamtools.glyphs import GLYPH_TABLE, NAMED_GLYPHS
+    assert dialogue.encode_text("Éé&;:%\"♥") == bytes([0x33, 0x88, 0xDB, 0xC0, 0xC9, 0xC6, 0xCE, 0xDC])
+    assert GLYPH_TABLE[NAMED_GLYPHS["OUTLINE_CROSS"]].char is None
+    assert GLYPH_TABLE[0x5E].kind == "prefix" and GLYPH_TABLE[0xE0].kind == "control"

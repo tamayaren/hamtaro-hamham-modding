@@ -2,6 +2,14 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-09 — Complete text glyph table verified (Claude Opus 5.5)
+
+- Ran a labelled probe of every byte `0x01`–`0xdf` in both font banks via the
+  Boss/Hamha response pointer (`0x0804ffb6`); all pages displayed and closed.
+- Full table with accents, symbols and blank slots in [glyphs.md](glyphs.md);
+  `tools/hamtools/glyphs.py` drives the dialogue helper. Confidence: confirmed.
+- Correction: `0xd0` is the apostrophe, `0xd1` is `…` (previously misrecorded).
+
 ## 2026-10-09 — Boss portraits located; readable dialogue C helper verified (GPT-6.1; Harvey re-engineer)
 
 - Corrected the earlier `0xf4` portrait label: it consumes a scene callback ID.

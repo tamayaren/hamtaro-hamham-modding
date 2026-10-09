@@ -66,7 +66,8 @@ but complete sentences cannot be treated as ordinary ASCII strings.
 | `0xcb`, `0xcc` | Hyphen, underscore | confirmed by labelled glyph probe |
 | `0xcd`, `0xce` | Opening/closing double quote glyphs; helper uses curly double quotes | confirmed by labelled glyph probe |
 | `0xcf` | Comma | confirmed by labelled glyph probe |
-| `0xd1` | Apostrophe/closing single quote; helper accepts ASCII apostrophe or `’` | confirmed displayed glyph; aliases are authoring choices |
+| `0xd0` | Apostrophe/closing single quote; helper accepts ASCII `'` or `’` | confirmed by full glyph-table probe |
+| `0xd1` | Ellipsis `…` (earlier entry called this the apostrophe; corrected) | confirmed by full glyph-table probe |
 | `0xd2`, `0xd3` | Opening/closing parentheses | confirmed by labelled glyph probe |
 | `0xd4`, `0xd5` | Less-than/greater-than signs | confirmed by labelled glyph probe |
 | `0xd6`, `0xd7` | Forward slash/backslash | confirmed by labelled glyph probe |
@@ -79,8 +80,8 @@ but complete sentences cannot be treated as ordinary ASCII strings.
 | `0xf4` plus one argument | Invoke a scene callback; `0x08` sets Boss's idle animation in this scene | confirmed callback table read and resulting animation/portrait |
 
 The reader handles `0x5e` separately. Do not assume it is an ordinary printable
-ASCII caret. Other substitutions, punctuation, font modes, and control operands
-are still incompletely mapped.
+ASCII caret. The full glyph table is in [glyphs.md](glyphs.md). Font modes and control
+operands are still incompletely mapped.
 
 The earlier portrait-selection label for `0xf4` was too narrow. Callback IDs
 depend on the current scene, and the portrait loads through an animation
@@ -100,21 +101,11 @@ end controls, and scene callback helpers. `tools/hamtools/dialogue.py` expands
 authored strings before the patch compiler runs, writing generated source only
 under `build/`. It does not extract game dialogue.
 
-The supported alphabet is space, A-Z, a-z, 0-9, newline, `.`, `!`, `?`, `-`,
-`_`, comma, apostrophe, parentheses, angle signs, slashes, curly double quotes,
-and closing single quote. ASCII double quote is not aliased automatically;
-use curly double quotes to choose opening/closing glyphs explicitly.
-Unsupported glyphs and malformed calls are errors with source positions; raw
-initializers remain compatible. This is an authoring subset, not evidence
-that every supported glyph was dynamically verified. The confidence table
-above distinguishes tested glyphs from expected ranges.
-
-Digits and the punctuation above were probed directly in the supplied dialogue
-scene, with labels for `0xca` through `0xd9`. The helper's expanded alphabet
-was then compiled and displayed from readable strings, reaching its final
-wait and closing normally. The quote-like glyph at `0xd0` remains unexposed
-pending a clearer orientation/style mapping. Colons, semicolons, accented
-letters, and many symbols remain unmapped.
+The helper accepts the full native alphabet in [glyphs.md](glyphs.md):
+letters with accents, digits, punctuation and symbols, plus newline. Characters
+outside the font are errors with source positions; raw initializers remain
+compatible. Rows there carry their own confidence; every printable row was displayed
+by the full-range probe in both font banks.
 
 Each `const u8` array names a stream. Its TOML pointer binding determines which
 located event operand reaches it; adjacent arrays do not imply branching.
