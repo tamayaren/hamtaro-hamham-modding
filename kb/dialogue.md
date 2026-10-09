@@ -80,8 +80,9 @@ but complete sentences cannot be treated as ordinary ASCII strings.
 | `0xf4` plus one argument | Invoke a scene callback; `0x08` sets Boss's idle animation in this scene | confirmed callback table read and resulting animation/portrait |
 
 The reader handles `0x5e` separately. Do not assume it is an ordinary printable
-ASCII caret. The full glyph table is in [glyphs.md](glyphs.md). Font modes and control
-operands are still incompletely mapped.
+ASCII caret. The full glyph table is in [glyphs.md](glyphs.md). All 32 controls and the
+two prefixes, with emulator-confirmed byte lengths and colours, are in
+[text_controls.md](text_controls.md).
 
 The earlier portrait-selection label for `0xf4` was too narrow. Callback IDs
 depend on the current scene, and the portrait loads through an animation

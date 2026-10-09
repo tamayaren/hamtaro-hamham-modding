@@ -42,7 +42,7 @@ best re-checked if a mod depends on one.
 | `0xda`, `0xdb` | `#`, `&` | confirmed |
 | `0xdc`–`0xde` | Heart, star, music note | confirmed |
 | `0xdf` | Outlined cross (no Unicode equivalent) | confirmed |
-| `0xe0`–`0xff` | Controls; see [dialogue.md](dialogue.md) | partly confirmed |
+| `0xe0`–`0xff` | Controls; see [text_controls.md](text_controls.md) | lengths confirmed |
 
 ## Authoring
 
@@ -54,5 +54,5 @@ best re-checked if a mod depends on one.
 
 ## Still open
 
-- Operands of controls `0xe4`–`0xff` other than `0xe6`/`0xf4`; the probe used
-  `0xeb`/`0xee` around pages but their exact semantics are not recorded here.
+- Control operands are now mapped and length-verified in
+  [text_controls.md](text_controls.md).
