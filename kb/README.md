@@ -9,6 +9,7 @@ the `kb-update` skill (`.agents/skills/kb-update/SKILL.md`).
 - [structs.md](structs.md) — data structures
 - [dialogue.md](dialogue.md) — dialogue locations, live text state, encoding, and a verified text mod
 - [glyphs.md](glyphs.md) — full one-byte text glyph table with per-row confidence
+- [event_scripts.md](event_scripts.md) — event-script interpreter, opcodes, and how NPC responses are selected
 - [findings.md](findings.md) — dated log of discoveries
 - [questions.md](questions.md) — open questions
 

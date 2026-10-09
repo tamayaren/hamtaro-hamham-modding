@@ -21,6 +21,17 @@ Hamtaro index 10 → entity `0x02022c1c`, so:
 | `0x02022c40` | Entity+0x24 | X velocity, zeroed after each update | confirmed |
 | `0x02022c48` | Entity+0x2c | Y velocity | confirmed |
 
+### Event script variables
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x02003990` | u8 array | `gEventByteVars` | Event byte variables, indexed by u16 (`0x02003990 + idx`) | confirmed |
+| `0x020039cb` | u8 | `gBossHintCounter` | Byte var 0x003b: Boss repeat-greeting hint index 0–3 | confirmed |
+| `0x0201d0b0` | u16 array | `gEventWordVars` | Event word variables (`0x0201d0b0 + idx*2`) | likely |
+
+Byte var 0x0060 is a scratch result reused by several routines; byte var 0x0012 is
+set to 16 before Boss's lines. See [event_scripts.md](event_scripts.md).
+
 Don't hard-code the `0x0202xxxx` addresses in mods — the array pointer may differ per
 scene; go through `gEntityArray` / `gPlayerEntityIndex`. Copies of the position also exist
 (`0x02022c6a`, `0x02023636`, `0x0202363e` tracked it during the search) — unexplained.
@@ -46,6 +57,27 @@ The Boss portrait is loaded into EWRAM `0x0201d2b0` in this scene. Both normal
 and alternate `0x480`-byte tile blocks matched their independently decompressed
 ROM assets. The loader chooses slot 2 for entity index 16; this is not a single
 universal portrait buffer. See [portraits.md](portraits.md).
+
+### Event interpreter and progression flags
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x03000010` | u8 | `gEventOpcode` | Current event opcode; 0 = fetch next | confirmed |
+| `0x03000014` | u32 | `gEventOperandAdvance` | Operand bytes to skip at next fetch | likely |
+| `0x03000018` | u8 | `gEventPhase` | Phase of a multi-frame command | likely |
+| `0x03001f58` | u8 | `gSubsceneId` | Current subscene | likely |
+| `0x03001fac` | u16 | `gEventSelector` | Interaction/menu result consumed by dispatch commands | likely |
+| `0x03002170` | bit array | `gEventFlags` | Progression flags: byte `0x03002170 + (id>>3)`, bit `id&7` | confirmed |
+| `0x030021e0` | 32 pointers | `gInteractionRecords` | NPC/object interaction records for the room | likely |
+| `0x03002ba0` | 16 u32 | `gEventPtrRegs` | Pointer registers for indirect pointer operands | likely |
+| `0x03002be0` | u8 | `gEventCallDepth` | Event call-stack depth | likely |
+| `0x03002c00` | 16 u32 | `gEventCallStack` | Saved call operand addresses | likely |
+| `0x03002c48` | u8 | `gSceneId` | Current scene | likely |
+| `0x03002c50` | u32 ptr | `gEventCursor` | Operand cursor; equals running opcode address + 1 | confirmed |
+
+Poking a flag bit changes which event branch runs (flag 0x0010 = byte `0x03002172`
+bit 0). Background contexts and the full field list are in
+[event_scripts.md](event_scripts.md).
 
 ### Entity bookkeeping
 

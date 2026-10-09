@@ -2,13 +2,22 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
-## 2026-10-09 — Complete text glyph table verified (Claude Opus 5.5)
+## 2026-10-09 — Event scripts: how Boss's Hamha response is chosen (GPT-6-astra re-lead; Claude Opus 5.5)
 
-- Ran a labelled probe of every byte `0x01`–`0xdf` in both font banks via the
-  Boss/Hamha response pointer (`0x0804ffb6`); all pages displayed and closed.
-- Full table with accents, symbols and blank slots in [glyphs.md](glyphs.md);
-  `tools/hamtools/glyphs.py` drives the dialogue helper. Confidence: confirmed.
-- Correction: `0xd0` is the apostrophe, `0xd1` is `…` (previously misrecorded).
+- Codex (re-lead) mapped statically the scene descriptor -> room event -> interaction
+  record -> selector dispatch -> Ham-Chat menu -> flag branches -> show-text chain,
+  interpreter state, call/return convention, and ~30 opcode formats.
+  See [event_scripts.md](event_scripts.md).
+- Claude confirmed it in mGBA from `states/dialogue-state.ss0`: scene 1/subscene 1,
+  idle cursor `0x0804ef8f`; the reply cursor is opcode address + 1 (`0x0804ffb5`).
+  Flag 0x0010 (byte `0x03002172` bit 0) clear -> `0x0804ffb4`; set with 0x007e ->
+  first-time line `0x08050010`, which sets flag 0x017d (store `0x08003bec`).
+- Found the repeat route `0x08050079`: byte var 0x003b (`0x020039cb`) is a hint
+  counter stepping lines `0x080500c0` -> `0x080500e6` -> `0x08050104`, then opcode
+  0x50 (`0x08003db0`, random in range) picks one. Preset counter 2 -> third hint,
+  confirmed. Added opcodes 0x10, 0x11, 0x50.
+- Method: per-frame cursor/opcode tracing over flag/variable pokes, plus static decode.
+- Next: flag story meanings and other NPCs need later-game savestates.
 
 ## 2026-10-09 — Boss portraits located; readable dialogue C helper verified (GPT-6.1; Harvey re-engineer)
 
