@@ -4,8 +4,10 @@ address,name,kind,size,mode,confidence,notes
 0x02003990,gEventByteVars,ram,,,confirmed,Event byte variables indexed by u16; var 0x003b poke changed Boss route
 0x020039cb,gBossHintCounter,ram,0x1,,confirmed,Event byte var 0x003b; Boss repeat-greeting hint index 0-3; preset 2 selected third hint
 0x020039f0,gRuntimeDialogueChoice,ram,0x1,,likely,Byte variable 0x0060 selects runtime dialogue in native 0x0803b2d0
-0x02007710,gBossDialoguePortraitTileShadow,ram,0x480,,confirmed,Left BG portrait shadow; exact decoded image match and DMA source to 0x06003b80
-0x0201bbf0,gBossDialoguePortraitPaletteShadow,ram,0x20,,confirmed,Left BG palette shadow; original and recoloured palette matches; DMA source
+0x02007290,gDialoguePortraitRightTileShadow,ram,0x480,,confirmed,Bijou decoded tiles matched; DMA source to 0x06003700
+0x02007710,gDialoguePortraitLeftTileShadow,ram,0x480,,confirmed,Renamed from Boss-specific symbol; Hamtaro and Boss match; DMA source
+0x0201bbd0,gDialoguePortraitRightPaletteShadow,ram,0x20,,confirmed,Bijou original and authored palettes matched; DMA source to 0x05000040
+0x0201bbf0,gDialoguePortraitLeftPaletteShadow,ram,0x20,,confirmed,Renamed from Boss-specific symbol; Hamtaro and Boss palette matches
 0x0201d0b0,gEventWordVars,ram,,,likely,Event u16 variables indexed by u16; static only
 0x0201d2b0,gRoomHeadTilesSlot2,ram,0x480,,confirmed,Boss room-head decompression buffer; previously gDialoguePortraitTilesSlot2; separate from BG portrait
 0x03000010,gEventOpcode,ram,0x1,,confirmed,Current event opcode; 0 means fetch next; observed 0x1a during Boss reply
@@ -46,13 +48,17 @@ address,name,kind,size,mode,confidence,notes
 0x03003ad0,gRuntimeDialogueTransformBuffer,ram,0x20,,likely,Native 0x0803b2d0 produces selected text here and forces final byte zero
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
-0x05000060,gBossDialogueBgPalette,ram,0x20,,confirmed,Left portrait BG palette bank 3; recolour and original matched expected decoded palettes
-0x06003b80,gBossDialogueBgTiles,ram,0x480,,confirmed,Left dialogue face tiles; original image matched exactly before and after recolour
+0x05000040,gDialoguePortraitRightBgPalette,ram,0x20,,confirmed,BG bank 2; Bijou original and authored palettes matched
+0x05000060,gDialoguePortraitLeftBgPalette,ram,0x20,,confirmed,BG bank 3; original and authored Hamtaro/Boss palettes matched
+0x06003700,gDialoguePortraitRightBgTiles,ram,0x480,,confirmed,Bijou right face decoded bytes matched; DMA3 upload watched
+0x06003b80,gDialoguePortraitLeftBgTiles,ram,0x480,,confirmed,Left 48x48 BG face; original and authored Hamtaro/Boss matches
 0x0600bd42,gBossDialogueBgTilemapFirst,ram,0x2,,confirmed,Observed BG3 map row 21 column 1; tile 0x1dc palette bank 3; scene specific
+0x0600bd6e,gDialoguePortraitRightBgTilemapFirst,ram,0x2,,confirmed,Observed BG3 map row 21 column 23; right Bijou tile 0x1b8 palette bank 2
 0x06010e20,gBossRoomHeadObjTileBase,ram,,,confirmed,Room-head slot 2 OBJ base; six 0xc0-byte source rows uploaded with 0x400-byte VRAM stride
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x08000984,Event_UpdateScene,func,,thumb,likely,Static caller of Event_RunCommands; also updates entities contexts and text
 0x080009f8,Scene_Load,func,,thumb,likely,Loads 0x10-byte scene descriptor; sets event entry and callbacks
 0x08000d74,Event_RunCommands,func,,thumb,confirmed,Dispatches event handlers through a command table; observed handler LR 0x08000d91
 0x08000dbc,Event_RunContexts,func,,thumb,likely,Schedules background event contexts 1-16 around the main one
@@ -139,9 +145,195 @@ address,name,kind,size,mode,confidence,notes
 0x080e2150,kBossInteractionRecord,data,0x10,,likely,Interaction record entity 16 selector 9 circle radius 40
 0x080e21a0,kClubhouseInteractionList,data,0x80,,likely,Clubhouse interaction-record pointer list; slot 4 is Boss
 0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,confirmed,swi 0x11 then bx lr; observed execution and exact room-head/BG decompression matches
+0x080e57f0,Util_CallThumbR1,func,0x2,thumb,likely,Indirect bx r1 dispatch thunk; event runner passes handler and cursor
 0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
+0x080e9e38,kHamtaroDialoguePortraitTilesLz,data,0x2d8,,confirmed,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ea110,kBijouDialoguePortraitTilesLz,data,0x2cf,,confirmed,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ea3e0,kDialoguePortraitTilesLz002,data,0x309,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ea6ec,kDialoguePortraitTilesLz003,data,0x379,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eaa68,kDialoguePortraitTilesLz004,data,0x331,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ead9c,kDialoguePortraitTilesLz005,data,0x2cc,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eb068,kDialoguePortraitTilesLz006,data,0x320,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eb388,kDialoguePortraitTilesLz007,data,0x2ec,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eb674,kDialoguePortraitTilesLz008,data,0x347,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
 0x080eb9bc,kBossDialoguePortraitTilesLz,data,0x33a,,confirmed,Actual dialogue BG face; 0x480 decoded bytes; 48x48 4bpp row-major tiles; live VRAM match
+0x080ebcf8,kDialoguePortraitTilesLz010,data,0x2a0,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ebf98,kDialoguePortraitTilesLz011,data,0x324,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ec2bc,kDialoguePortraitTilesLz012,data,0x30c,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ec5c8,kDialoguePortraitTilesLz013,data,0x2ac,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ec874,kDialoguePortraitTilesLz014,data,0x34d,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ecbc4,kDialoguePortraitTilesLz015,data,0x34c,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ecf10,kDialoguePortraitTilesLz016,data,0x2e2,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ed1f4,kDialoguePortraitTilesLz017,data,0x2ed,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ed4e4,kDialoguePortraitTilesLz018,data,0x359,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ed840,kDialoguePortraitTilesLz019,data,0x2ce,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080edb10,kDialoguePortraitTilesLz020,data,0x301,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ede14,kDialoguePortraitTilesLz021,data,0x2f3,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ee108,kDialoguePortraitTilesLz022,data,0x30c,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ee414,kDialoguePortraitTilesLz023,data,0x358,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ee76c,kDialoguePortraitTilesLz024,data,0x313,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eea80,kDialoguePortraitTilesLz025,data,0x2c0,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eed40,kDialoguePortraitTilesLz026,data,0x274,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080eefb4,kDialoguePortraitTilesLz027,data,0x2b3,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ef268,kDialoguePortraitTilesLz028,data,0x2d4,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ef53c,kDialoguePortraitTilesLz029,data,0x28d,,likely,LZ77 -> 0x480 bytes; 7 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080ef7cc,kDialoguePortraitTilesLz030,data,0x2c2,,likely,LZ77 -> 0x480 bytes; 16 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080efa90,kDialoguePortraitTilesLz031,data,0x30d,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080efda0,kDialoguePortraitTilesLz032,data,0x2ec,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f008c,kDialoguePortraitTilesLz033,data,0x2fb,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f0388,kDialoguePortraitTilesLz034,data,0x2e8,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f0670,kDialoguePortraitTilesLz035,data,0x2ea,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f095c,kDialoguePortraitTilesLz036,data,0x2cd,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f0c2c,kDialoguePortraitTilesLz037,data,0x2c7,,likely,LZ77 -> 0x480 bytes; 11 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f0ef4,kDialoguePortraitTilesLz038,data,0x2b0,,likely,LZ77 -> 0x480 bytes; 11 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f11a4,kDialoguePortraitTilesLz039,data,0x283,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f1428,kDialoguePortraitTilesLz040,data,0x295,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f16c0,kDialoguePortraitTilesLz041,data,0x27a,,likely,LZ77 -> 0x480 bytes; 8 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f193c,kDialoguePortraitTilesLz042,data,0x2ad,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f1bec,kDialoguePortraitTilesLz043,data,0x2a6,,likely,LZ77 -> 0x480 bytes; 5 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f1e94,kDialoguePortraitTilesLz044,data,0x282,,likely,LZ77 -> 0x480 bytes; 4 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f2118,kDialoguePortraitTilesLz045,data,0x2b9,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f23d4,kDialoguePortraitTilesLz046,data,0x2a8,,likely,LZ77 -> 0x480 bytes; 16 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f267c,kDialoguePortraitTilesLz047,data,0x2c6,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f2944,kDialoguePortraitTilesLz048,data,0x2ce,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f2c14,kDialoguePortraitTilesLz049,data,0x28a,,likely,LZ77 -> 0x480 bytes; 5 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f2ea0,kDialoguePortraitTilesLz050,data,0x2fa,,likely,LZ77 -> 0x480 bytes; 3 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f319c,kDialoguePortraitTilesLz051,data,0x294,,likely,LZ77 -> 0x480 bytes; 3 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f3430,kDialoguePortraitTilesLz052,data,0x32a,,likely,LZ77 -> 0x480 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f375c,kDialoguePortraitTilesLz053,data,0x31d,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f3a7c,kDialoguePortraitTilesLz054,data,0x33c,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f3db8,kDialoguePortraitTilesLz055,data,0x2d8,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4090,kDialoguePortraitTilesLz056,data,0x194,,likely,LZ77 -> 0x480 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4224,kHamtaroDialoguePortraitPaletteLz,data,0x20,,confirmed,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4244,kBijouDialoguePortraitPaletteLz,data,0x23,,confirmed,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4268,kDialoguePortraitPaletteLz002,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f428c,kDialoguePortraitPaletteLz003,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f42b4,kDialoguePortraitPaletteLz004,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f42dc,kDialoguePortraitPaletteLz005,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4304,kDialoguePortraitPaletteLz006,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f432c,kDialoguePortraitPaletteLz007,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4354,kDialoguePortraitPaletteLz008,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
 0x080f437c,kBossDialoguePortraitPaletteLz,data,0x26,,confirmed,Actual dialogue palette; 32 decoded bytes; palette-only relocation and recolour verified
+0x080f43a4,kDialoguePortraitPaletteLz010,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f43c8,kDialoguePortraitPaletteLz011,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f43f0,kDialoguePortraitPaletteLz012,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4418,kDialoguePortraitPaletteLz013,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4440,kDialoguePortraitPaletteLz014,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4468,kDialoguePortraitPaletteLz015,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4490,kDialoguePortraitPaletteLz016,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f44b4,kDialoguePortraitPaletteLz017,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f44dc,kDialoguePortraitPaletteLz018,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4504,kDialoguePortraitPaletteLz019,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4528,kDialoguePortraitPaletteLz020,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f454c,kDialoguePortraitPaletteLz021,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4574,kDialoguePortraitPaletteLz022,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f459c,kDialoguePortraitPaletteLz023,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f45c4,kDialoguePortraitPaletteLz024,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f45ec,kDialoguePortraitPaletteLz025,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4610,kDialoguePortraitPaletteLz026,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4638,kDialoguePortraitPaletteLz027,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4660,kDialoguePortraitPaletteLz028,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4684,kDialoguePortraitPaletteLz029,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f46a4,kDialoguePortraitPaletteLz030,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f46c4,kDialoguePortraitPaletteLz031,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f46e4,kDialoguePortraitPaletteLz032,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f470c,kDialoguePortraitPaletteLz033,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f472c,kDialoguePortraitPaletteLz034,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4754,kDialoguePortraitPaletteLz035,data,0x24,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4778,kDialoguePortraitPaletteLz036,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4798,kDialoguePortraitPaletteLz037,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f47c0,kDialoguePortraitPaletteLz038,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f47e8,kDialoguePortraitPaletteLz039,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4810,kDialoguePortraitPaletteLz040,data,0x28,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4838,kDialoguePortraitPaletteLz041,data,0x28,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4860,kDialoguePortraitPaletteLz042,data,0x28,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4888,kDialoguePortraitPaletteLz043,data,0x28,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f48b0,kDialoguePortraitPaletteLz044,data,0x28,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f48d8,kDialoguePortraitPaletteLz045,data,0x22,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f48fc,kDialoguePortraitPaletteLz046,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4920,kDialoguePortraitPaletteLz047,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4940,kDialoguePortraitPaletteLz048,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4960,kDialoguePortraitPaletteLz049,data,0x27,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4988,kDialoguePortraitPaletteLz050,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f49ac,kDialoguePortraitPaletteLz051,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f49cc,kDialoguePortraitPaletteLz052,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f49f0,kDialoguePortraitPaletteLz053,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4a18,kDialoguePortraitPaletteLz054,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4a40,kDialoguePortraitPaletteLz055,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4a68,kDialoguePortraitPaletteLz056,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4a90,kDialoguePortraitPaletteLz057,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ab8,kDialoguePortraitPaletteLz058,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ae0,kDialoguePortraitPaletteLz059,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4b08,kDialoguePortraitPaletteLz060,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4b30,kDialoguePortraitPaletteLz061,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4b58,kDialoguePortraitPaletteLz062,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4b80,kDialoguePortraitPaletteLz063,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ba8,kDialoguePortraitPaletteLz064,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4bcc,kDialoguePortraitPaletteLz065,data,0x21,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4bf0,kDialoguePortraitPaletteLz066,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4c10,kDialoguePortraitPaletteLz067,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4c34,kDialoguePortraitPaletteLz068,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4c50,kDialoguePortraitPaletteLz069,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4c74,kDialoguePortraitPaletteLz070,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4c98,kDialoguePortraitPaletteLz071,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4cbc,kDialoguePortraitPaletteLz072,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ce0,kDialoguePortraitPaletteLz073,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4d04,kDialoguePortraitPaletteLz074,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4d28,kDialoguePortraitPaletteLz075,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4d4c,kDialoguePortraitPaletteLz076,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4d6c,kDialoguePortraitPaletteLz077,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4d90,kDialoguePortraitPaletteLz078,data,0x1e,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4db0,kDialoguePortraitPaletteLz079,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4dd8,kDialoguePortraitPaletteLz080,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4dfc,kDialoguePortraitPaletteLz081,data,0x21,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4e20,kDialoguePortraitPaletteLz082,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4e44,kDialoguePortraitPaletteLz083,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4e64,kDialoguePortraitPaletteLz084,data,0x1e,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4e84,kDialoguePortraitPaletteLz085,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ea4,kDialoguePortraitPaletteLz086,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ec4,kDialoguePortraitPaletteLz087,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ee0,kDialoguePortraitPaletteLz088,data,0x1e,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f00,kDialoguePortraitPaletteLz089,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f1c,kDialoguePortraitPaletteLz090,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f38,kDialoguePortraitPaletteLz091,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f58,kDialoguePortraitPaletteLz092,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f78,kDialoguePortraitPaletteLz093,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4f98,kDialoguePortraitPaletteLz094,data,0x1b,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4fb4,kDialoguePortraitPaletteLz095,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4fd0,kDialoguePortraitPaletteLz096,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f4ff0,kDialoguePortraitPaletteLz097,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f500c,kDialoguePortraitPaletteLz098,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f502c,kDialoguePortraitPaletteLz099,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5048,kDialoguePortraitPaletteLz100,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5064,kDialoguePortraitPaletteLz101,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5080,kDialoguePortraitPaletteLz102,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f509c,kDialoguePortraitPaletteLz103,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f50b8,kDialoguePortraitPaletteLz104,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f50d4,kDialoguePortraitPaletteLz105,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f50f0,kDialoguePortraitPaletteLz106,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f510c,kDialoguePortraitPaletteLz107,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5128,kDialoguePortraitPaletteLz108,data,0x1f,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5148,kDialoguePortraitPaletteLz109,data,0x1b,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5164,kDialoguePortraitPaletteLz110,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5180,kDialoguePortraitPaletteLz111,data,0x1a,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f519c,kDialoguePortraitPaletteLz112,data,0x26,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f51c4,kDialoguePortraitPaletteLz113,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f51e8,kDialoguePortraitPaletteLz114,data,0x22,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f520c,kDialoguePortraitPaletteLz115,data,0x25,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5234,kDialoguePortraitPaletteLz116,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5258,kDialoguePortraitPaletteLz117,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f527c,kDialoguePortraitPaletteLz118,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f52a0,kDialoguePortraitPaletteLz119,data,0x24,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f52c4,kDialoguePortraitPaletteLz120,data,0x24,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f52e8,kDialoguePortraitPaletteLz121,data,0x24,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f530c,kDialoguePortraitPaletteLz122,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f532c,kDialoguePortraitPaletteLz123,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f534c,kDialoguePortraitPaletteLz124,data,0x20,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f536c,kDialoguePortraitPaletteLz125,data,0x24,,likely,LZ77 -> 0x20 bytes; 2 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5390,kDialoguePortraitPaletteLz126,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f53b4,kDialoguePortraitPaletteLz127,data,0x28,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f53dc,kDialoguePortraitPaletteLz128,data,0x23,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
+0x080f5400,kDialoguePortraitPaletteLz129,data,0x19,,likely,LZ77 -> 0x20 bytes; 1 catalogue definition(s); speaker labels separate in portrait_catalogue.csv
 0x081b9f74,kBossRoomHeadPaletteLz,data,0x24,,likely,32 decoded bytes uniquely match live OBJ bank 4; source load not replayed
 0x081b9f98,kBossGreetingRoomHeadTilesLz,data,0x222,,confirmed,Greeting room-head frame; raw buffer and row-strided VRAM match; separate from dialogue face
 0x081bfa60,kBossAlternateRoomHeadTilesLz,data,0x213,,confirmed,Previously kBossAlternatePortraitTilesLz; whole room-head frame; alternate animation replay tested
@@ -156,6 +348,7 @@ address,name,kind,size,mode,confidence,notes
 0x08466944,kSceneTable,data,0x2c,,likely,11 scene pointers to 0x10-byte descriptor arrays; next word at 0x08466970 is already a descriptor
 0x084669a0,kSceneDescClubhouse,data,0x10,,confirmed,Scene 1 subscene 1 descriptor; event entry 0x0804ef60 matches live cursor
 0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; 97 entries 0x00-0x60; entry 0x1a at 0x0846749c targets observed 0x080027a8
+0x0846744c,kEventLoadLzGraphicsHandler,data,0x4,,likely,Handler-table slot 0x06 contains Thumb pointer 0x08001659
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
@@ -173,12 +366,286 @@ address,name,kind,size,mode,confidence,notes
 0x084a92c1,kNativeRecordFallbackSecondary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038ef0 and 0x08038fc0
 0x084a9b60,kNativePresentationTextPtrs,data,0x214,,likely,19 by 7 pointer slots; 73 nulls retained; native 0x0803fd28 checks null entries
 0x084aa740,kTextInsertTable,data,,,confirmed,String pointers used by text controls 0xf0/0xfa; entry 0x38 displayed via 0xf0; 248 entries (count likely)
+0x084b1c65,kDialoguePortraitLoad000Left,data,0x13,,confirmed,Inline palette and tile loads then return; catalogue hamtaro-portrait; name confirmed
+0x084b1c66,kHamtaroDialoguePortraitLeftPalettePointer,data,0x4,,confirmed,Unaligned inline source; left upload and exact decoded match; authored relocation verified
+0x084b1c6f,kHamtaroDialoguePortraitLeftTilePointer,data,0x4,,confirmed,Unaligned inline source; left upload and exact decoded match; authored relocation verified
+0x084b1c78,kDialoguePortraitLoad000Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue hamtaro-portrait; name confirmed
+0x084b1c8b,kDialoguePortraitLoad001Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue bijou-portrait; name confirmed
+0x084b1c9e,kDialoguePortraitLoad001Right,data,0x13,,confirmed,Inline palette and tile loads then return; catalogue bijou-portrait; name confirmed
+0x084b1c9f,kBijouDialoguePortraitRightPalettePointer,data,0x4,,confirmed,Unaligned inline source; right upload and exact decoded match; authored relocation verified
+0x084b1ca8,kBijouDialoguePortraitRightTilePointer,data,0x4,,confirmed,Unaligned inline source; right upload and exact decoded match; authored relocation verified
+0x084b1cb1,kDialoguePortraitLoad002Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue oxnard-portrait; name guess
+0x084b1cc4,kDialoguePortraitLoad002Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue oxnard-portrait; name guess
+0x084b1cd7,kDialoguePortraitLoad003Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue maxwell-portrait; name guess
+0x084b1cea,kDialoguePortraitLoad003Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue maxwell-portrait; name guess
+0x084b1cfd,kDialoguePortraitLoad004Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue pashmina-portrait; name guess
+0x084b1d10,kDialoguePortraitLoad004Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue pashmina-portrait; name guess
+0x084b1d23,kDialoguePortraitLoad005Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue cappy-portrait; name guess
+0x084b1d36,kDialoguePortraitLoad005Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue cappy-portrait; name guess
+0x084b1d49,kDialoguePortraitLoad006Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue jingle-portrait; name guess
+0x084b1d5c,kDialoguePortraitLoad006Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue jingle-portrait; name guess
+0x084b1d6f,kDialoguePortraitLoad007Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue panda-portrait; name guess
+0x084b1d82,kDialoguePortraitLoad007Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue panda-portrait; name guess
+0x084b1d95,kDialoguePortraitLoad008Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dexter-portrait; name guess
+0x084b1da8,kDialoguePortraitLoad008Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dexter-portrait; name guess
 0x084b1dbb,kBossDialoguePortraitLeftLoad,data,0x13,,confirmed,Event palette and tile load pair then return; left-window portrait path observed
 0x084b1dbc,kBossDialoguePortraitLeftPalettePointer,data,0x4,,confirmed,Unaligned event palette operand; checked redirect to recoloured palette at 0x086d0000 verified
 0x084b1dc5,kBossDialoguePortraitLeftTilePointer,data,0x4,,confirmed,Unaligned event image operand; source read and exact 0x06003b80 VRAM image match
 0x084b1dce,kBossDialoguePortraitRightLoad,data,0x13,,likely,Other-slot palette and tile pair; destinations 0x05000040 and 0x06003700; static only
 0x084b1dcf,kBossDialoguePortraitRightPalettePointer,data,0x4,,likely,Other-slot operand for same Boss palette; original bytes checked and repointed; slot not displayed
 0x084b1dd8,kBossDialoguePortraitRightTilePointer,data,0x4,,likely,Other-slot operand for same Boss image; static decode; slot not displayed
+0x084b1de1,kDialoguePortraitLoad010Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue howdy-portrait; name guess
+0x084b1df4,kDialoguePortraitLoad010Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue howdy-portrait; name guess
+0x084b1e07,kDialoguePortraitLoad011Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue sandy-portrait; name guess
+0x084b1e1a,kDialoguePortraitLoad011Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue sandy-portrait; name guess
+0x084b1e2d,kDialoguePortraitLoad012Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue stan-portrait; name guess
+0x084b1e40,kDialoguePortraitLoad012Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue stan-portrait; name guess
+0x084b1e53,kDialoguePortraitLoad013Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue snoozer-portrait; name guess
+0x084b1e66,kDialoguePortraitLoad013Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue snoozer-portrait; name guess
+0x084b1e79,kDialoguePortraitLoad014Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue spat-portrait; name guess
+0x084b1e8c,kDialoguePortraitLoad014Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue spat-portrait; name guess
+0x084b1e9f,kDialoguePortraitLoad015Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue harmony-portrait; name guess
+0x084b1eb2,kDialoguePortraitLoad015Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue harmony-portrait; name guess
+0x084b1ec5,kDialoguePortraitLoad016Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue elder-ham-portrait; name guess
+0x084b1ed8,kDialoguePortraitLoad016Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue elder-ham-portrait; name guess
+0x084b1eeb,kDialoguePortraitLoad017Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue hot-spring-hamster-portrait; name guess
+0x084b1efe,kDialoguePortraitLoad017Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue hot-spring-hamster-portrait; name guess
+0x084b1f11,kDialoguePortraitLoad018Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue barrette-portrait; name guess
+0x084b1f24,kDialoguePortraitLoad018Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue barrette-portrait; name guess
+0x084b1f37,kDialoguePortraitLoad019Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue penelope-portrait; name guess
+0x084b1f4a,kDialoguePortraitLoad019Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue penelope-portrait; name guess
+0x084b1f5d,kDialoguePortraitLoad020Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-020-portrait; name guess
+0x084b1f70,kDialoguePortraitLoad020Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-020-portrait; name guess
+0x084b1f83,kDialoguePortraitLoad021Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-021-portrait; name guess
+0x084b1f96,kDialoguePortraitLoad021Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-021-portrait; name guess
+0x084b1fa9,kDialoguePortraitLoad022Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue broski-rival-portrait; name guess
+0x084b1fbc,kDialoguePortraitLoad022Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue broski-rival-portrait; name guess
+0x084b1fcf,kDialoguePortraitLoad023Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue harmony-variant-portrait; name guess
+0x084b1fe2,kDialoguePortraitLoad023Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue harmony-variant-portrait; name guess
+0x084b1ff5,kDialoguePortraitLoad024Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue sweethearts-portrait; name guess
+0x084b2008,kDialoguePortraitLoad024Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue sweethearts-portrait; name guess
+0x084b201b,kDialoguePortraitLoad025Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue broski-portrait; name guess
+0x084b202e,kDialoguePortraitLoad025Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue broski-portrait; name guess
+0x084b2041,kDialoguePortraitLoad026Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue business-hamster-portrait; name guess
+0x084b2054,kDialoguePortraitLoad026Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue business-hamster-portrait; name guess
+0x084b2067,kDialoguePortraitLoad027Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue reporter-portrait; name guess
+0x084b207a,kDialoguePortraitLoad027Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue reporter-portrait; name guess
+0x084b208d,kDialoguePortraitLoad028Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dark-hamster-portrait; name guess
+0x084b20a0,kDialoguePortraitLoad028Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dark-hamster-portrait; name guess
+0x084b20b3,kDialoguePortraitLoad029Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue turn-taking-hamster-portrait; name guess
+0x084b20c6,kDialoguePortraitLoad029Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue turn-taking-hamster-portrait; name guess
+0x084b20d9,kDialoguePortraitLoad030Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue rope-helper-portrait; name guess
+0x084b20ec,kDialoguePortraitLoad030Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue rope-helper-portrait; name guess
+0x084b20ff,kDialoguePortraitLoad031Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue rough-hamster-portrait; name guess
+0x084b2112,kDialoguePortraitLoad031Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue rough-hamster-portrait; name guess
+0x084b2125,kDialoguePortraitLoad032Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-032-portrait; name guess
+0x084b2138,kDialoguePortraitLoad032Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-032-portrait; name guess
+0x084b214b,kDialoguePortraitLoad033Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-033-portrait; name guess
+0x084b215e,kDialoguePortraitLoad033Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-033-portrait; name guess
+0x084b2171,kDialoguePortraitLoad034Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue embarrassed-hamster-portrait; name guess
+0x084b2184,kDialoguePortraitLoad034Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue embarrassed-hamster-portrait; name guess
+0x084b2197,kDialoguePortraitLoad035Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-035-portrait; name guess
+0x084b21aa,kDialoguePortraitLoad035Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-035-portrait; name guess
+0x084b21bd,kDialoguePortraitLoad036Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue laughing-hamster-portrait; name guess
+0x084b21d0,kDialoguePortraitLoad036Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue laughing-hamster-portrait; name guess
+0x084b21e3,kDialoguePortraitLoad037Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue shy-hamster-portrait; name guess
+0x084b21f6,kDialoguePortraitLoad037Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue shy-hamster-portrait; name guess
+0x084b2209,kDialoguePortraitLoad038Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-o-matic-operator-portrait; name guess
+0x084b221c,kDialoguePortraitLoad038Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-o-matic-operator-portrait; name guess
+0x084b222f,kDialoguePortraitLoad039Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue control-room-operator-portrait; name guess
+0x084b2242,kDialoguePortraitLoad039Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue control-room-operator-portrait; name guess
+0x084b2255,kDialoguePortraitLoad040Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-040-portrait; name guess
+0x084b2268,kDialoguePortraitLoad040Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-040-portrait; name guess
+0x084b227b,kDialoguePortraitLoad041Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-041-portrait; name guess
+0x084b228e,kDialoguePortraitLoad041Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-041-portrait; name guess
+0x084b22a1,kDialoguePortraitLoad042Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-042-portrait; name guess
+0x084b22b4,kDialoguePortraitLoad042Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-042-portrait; name guess
+0x084b22c7,kDialoguePortraitLoad043Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue surprised-hamster-portrait; name guess
+0x084b22da,kDialoguePortraitLoad043Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue surprised-hamster-portrait; name guess
+0x084b22ed,kDialoguePortraitLoad044Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-044-portrait; name guess
+0x084b2300,kDialoguePortraitLoad044Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-044-portrait; name guess
+0x084b2313,kDialoguePortraitLoad045Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue researcher-portrait; name guess
+0x084b2326,kDialoguePortraitLoad045Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue researcher-portrait; name guess
+0x084b2339,kDialoguePortraitLoad046Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue wedding-hamster-portrait; name guess
+0x084b234c,kDialoguePortraitLoad046Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue wedding-hamster-portrait; name guess
+0x084b235f,kDialoguePortraitLoad047Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-047-portrait; name guess
+0x084b2372,kDialoguePortraitLoad047Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-047-portrait; name guess
+0x084b2385,kDialoguePortraitLoad048Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-048-portrait; name guess
+0x084b2398,kDialoguePortraitLoad048Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-048-portrait; name guess
+0x084b23ab,kDialoguePortraitLoad049Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue beach-tanner-portrait; name guess
+0x084b23be,kDialoguePortraitLoad049Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue beach-tanner-portrait; name guess
+0x084b23d1,kDialoguePortraitLoad050Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-050-portrait; name guess
+0x084b23e4,kDialoguePortraitLoad050Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-050-portrait; name guess
+0x084b23f7,kDialoguePortraitLoad051Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-051-portrait; name guess
+0x084b240a,kDialoguePortraitLoad051Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-051-portrait; name guess
+0x084b241d,kDialoguePortraitLoad052Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue tower-painter-portrait; name guess
+0x084b2430,kDialoguePortraitLoad052Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue tower-painter-portrait; name guess
+0x084b2443,kDialoguePortraitLoad053Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue accessory-clerk-portrait; name guess
+0x084b2456,kDialoguePortraitLoad053Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue accessory-clerk-portrait; name guess
+0x084b2469,kDialoguePortraitLoad054Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue game-explainer-portrait; name guess
+0x084b247c,kDialoguePortraitLoad054Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue game-explainer-portrait; name guess
+0x084b248f,kDialoguePortraitLoad055Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue final-test-host-portrait; name guess
+0x084b24a2,kDialoguePortraitLoad055Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue final-test-host-portrait; name guess
+0x084b24b5,kDialoguePortraitLoad056Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue test-host-portrait; name guess
+0x084b24c8,kDialoguePortraitLoad056Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue test-host-portrait; name guess
+0x084b24db,kDialoguePortraitLoad057Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue coaster-clerk-portrait; name guess
+0x084b24ee,kDialoguePortraitLoad057Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue coaster-clerk-portrait; name guess
+0x084b2501,kDialoguePortraitLoad058Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue tea-cups-clerk-portrait; name guess
+0x084b2514,kDialoguePortraitLoad058Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue tea-cups-clerk-portrait; name guess
+0x084b2527,kDialoguePortraitLoad059Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ferris-wheel-clerk-portrait; name guess
+0x084b253a,kDialoguePortraitLoad059Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ferris-wheel-clerk-portrait; name guess
+0x084b254d,kDialoguePortraitLoad060Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-ranger-recruiter-portrait; name guess
+0x084b2560,kDialoguePortraitLoad060Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-ranger-recruiter-portrait; name guess
+0x084b2573,kDialoguePortraitLoad061Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue popcorn-vendor-portrait; name guess
+0x084b2586,kDialoguePortraitLoad061Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue popcorn-vendor-portrait; name guess
+0x084b2599,kDialoguePortraitLoad062Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue test-host-variant-portrait; name guess
+0x084b25ac,kDialoguePortraitLoad062Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue test-host-variant-portrait; name guess
+0x084b25bf,kDialoguePortraitLoad063Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-063-portrait; name guess
+0x084b25d2,kDialoguePortraitLoad063Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-063-portrait; name guess
+0x084b25e5,kDialoguePortraitLoad064Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue handkerchief-hamster-portrait; name guess
+0x084b25f8,kDialoguePortraitLoad064Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue handkerchief-hamster-portrait; name guess
+0x084b260b,kDialoguePortraitLoad065Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue soccer-hamster-portrait; name guess
+0x084b261e,kDialoguePortraitLoad065Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue soccer-hamster-portrait; name guess
+0x084b2631,kDialoguePortraitLoad066Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue sweetheart-portrait; name guess
+0x084b2644,kDialoguePortraitLoad066Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue sweetheart-portrait; name guess
+0x084b2657,kDialoguePortraitLoad067Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue shouting-hamster-portrait; name guess
+0x084b266a,kDialoguePortraitLoad067Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue shouting-hamster-portrait; name guess
+0x084b267d,kDialoguePortraitLoad068Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-068-portrait; name guess
+0x084b2690,kDialoguePortraitLoad068Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-068-portrait; name guess
+0x084b26a3,kDialoguePortraitLoad069Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue restroom-date-portrait; name guess
+0x084b26b6,kDialoguePortraitLoad069Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue restroom-date-portrait; name guess
+0x084b26c9,kDialoguePortraitLoad070Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-070-portrait; name guess
+0x084b26dc,kDialoguePortraitLoad070Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-070-portrait; name guess
+0x084b26ef,kDialoguePortraitLoad071Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue bossy-hamster-portrait; name guess
+0x084b2702,kDialoguePortraitLoad071Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue bossy-hamster-portrait; name guess
+0x084b2715,kDialoguePortraitLoad072Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-072-portrait; name guess
+0x084b2728,kDialoguePortraitLoad072Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-072-portrait; name guess
+0x084b273b,kDialoguePortraitLoad073Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue persistent-hamster-portrait; name guess
+0x084b274e,kDialoguePortraitLoad073Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue persistent-hamster-portrait; name guess
+0x084b2761,kDialoguePortraitLoad074Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue shop-clerk-portrait; name guess
+0x084b2774,kDialoguePortraitLoad074Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue shop-clerk-portrait; name guess
+0x084b2787,kDialoguePortraitLoad075Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue wife-portrait; name guess
+0x084b279a,kDialoguePortraitLoad075Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue wife-portrait; name guess
+0x084b27ad,kDialoguePortraitLoad076Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue frightened-hamster-portrait; name guess
+0x084b27c0,kDialoguePortraitLoad076Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue frightened-hamster-portrait; name guess
+0x084b27d3,kDialoguePortraitLoad077Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue big-brother-portrait; name guess
+0x084b27e6,kDialoguePortraitLoad077Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue big-brother-portrait; name guess
+0x084b27f9,kDialoguePortraitLoad078Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue worried-parent-portrait; name guess
+0x084b280c,kDialoguePortraitLoad078Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue worried-parent-portrait; name guess
+0x084b281f,kDialoguePortraitLoad079Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-mother-portrait; name guess
+0x084b2832,kDialoguePortraitLoad079Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-mother-portrait; name guess
+0x084b2845,kDialoguePortraitLoad080Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue work-supervisor-portrait; name guess
+0x084b2858,kDialoguePortraitLoad080Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue work-supervisor-portrait; name guess
+0x084b286b,kDialoguePortraitLoad081Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue drowning-hamster-portrait; name guess
+0x084b287e,kDialoguePortraitLoad081Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue drowning-hamster-portrait; name guess
+0x084b2891,kDialoguePortraitLoad082Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue sad-wife-portrait; name guess
+0x084b28a4,kDialoguePortraitLoad082Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue sad-wife-portrait; name guess
+0x084b28b7,kDialoguePortraitLoad083Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue researchers-wife-portrait; name guess
+0x084b28ca,kDialoguePortraitLoad083Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue researchers-wife-portrait; name guess
+0x084b28dd,kDialoguePortraitLoad084Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue home-guard-portrait; name guess
+0x084b28f0,kDialoguePortraitLoad084Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue home-guard-portrait; name guess
+0x084b2903,kDialoguePortraitLoad085Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue georges-partner-portrait; name guess
+0x084b2916,kDialoguePortraitLoad085Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue georges-partner-portrait; name guess
+0x084b2929,kDialoguePortraitLoad086Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue arnies-friend-portrait; name guess
+0x084b293c,kDialoguePortraitLoad086Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue arnies-friend-portrait; name guess
+0x084b294f,kDialoguePortraitLoad087Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-son-portrait; name guess
+0x084b2962,kDialoguePortraitLoad087Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-son-portrait; name guess
+0x084b2975,kDialoguePortraitLoad088Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue piano-teacher-portrait; name guess
+0x084b2988,kDialoguePortraitLoad088Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue piano-teacher-portrait; name guess
+0x084b299b,kDialoguePortraitLoad089Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue gem-digger-portrait; name guess
+0x084b29ae,kDialoguePortraitLoad089Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue gem-digger-portrait; name guess
+0x084b29c1,kDialoguePortraitLoad090Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue gem-digger-variant-portrait; name guess
+0x084b29d4,kDialoguePortraitLoad090Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue gem-digger-variant-portrait; name guess
+0x084b29e7,kDialoguePortraitLoad091Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-091-portrait; name guess
+0x084b29fa,kDialoguePortraitLoad091Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-091-portrait; name guess
+0x084b2a0d,kDialoguePortraitLoad092Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue secret-room-hamster-portrait; name guess
+0x084b2a20,kDialoguePortraitLoad092Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue secret-room-hamster-portrait; name guess
+0x084b2a33,kDialoguePortraitLoad093Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue daughter-portrait; name guess
+0x084b2a46,kDialoguePortraitLoad093Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue daughter-portrait; name guess
+0x084b2a59,kDialoguePortraitLoad094Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue nyuh-hamster-portrait; name guess
+0x084b2a6c,kDialoguePortraitLoad094Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue nyuh-hamster-portrait; name guess
+0x084b2a7f,kDialoguePortraitLoad095Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-095-portrait; name guess
+0x084b2a92,kDialoguePortraitLoad095Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-095-portrait; name guess
+0x084b2aa5,kDialoguePortraitLoad096Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue letter-recipient-portrait; name guess
+0x084b2ab8,kDialoguePortraitLoad096Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue letter-recipient-portrait; name guess
+0x084b2acb,kDialoguePortraitLoad097Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue heidis-admirer-portrait; name guess
+0x084b2ade,kDialoguePortraitLoad097Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue heidis-admirer-portrait; name guess
+0x084b2af1,kDialoguePortraitLoad098Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue bold-hamster-portrait; name guess
+0x084b2b04,kDialoguePortraitLoad098Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue bold-hamster-portrait; name guess
+0x084b2b17,kDialoguePortraitLoad099Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-floor-hamster-portrait; name guess
+0x084b2b2a,kDialoguePortraitLoad099Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-floor-hamster-portrait; name guess
+0x084b2b3d,kDialoguePortraitLoad100Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-100-portrait; name guess
+0x084b2b50,kDialoguePortraitLoad100Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-100-portrait; name guess
+0x084b2b63,kDialoguePortraitLoad101Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-greeter-portrait; name guess
+0x084b2b76,kDialoguePortraitLoad101Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-greeter-portrait; name guess
+0x084b2b89,kDialoguePortraitLoad102Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-host-portrait; name guess
+0x084b2b9c,kDialoguePortraitLoad102Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dance-host-portrait; name guess
+0x084b2baf,kDialoguePortraitLoad103Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue hula-judge-portrait; name guess
+0x084b2bc2,kDialoguePortraitLoad103Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue hula-judge-portrait; name guess
+0x084b2bd5,kDialoguePortraitLoad104Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue originality-judge-portrait; name guess
+0x084b2be8,kDialoguePortraitLoad104Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue originality-judge-portrait; name guess
+0x084b2bfb,kDialoguePortraitLoad105Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-105-portrait; name guess
+0x084b2c0e,kDialoguePortraitLoad105Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-105-portrait; name guess
+0x084b2c21,kDialoguePortraitLoad106Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue timing-judge-portrait; name guess
+0x084b2c34,kDialoguePortraitLoad106Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue timing-judge-portrait; name guess
+0x084b2c47,kDialoguePortraitLoad107Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue performance-host-portrait; name guess
+0x084b2c5a,kDialoguePortraitLoad107Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue performance-host-portrait; name guess
+0x084b2c6d,kDialoguePortraitLoad108Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue emotional-hamster-portrait; name guess
+0x084b2c80,kDialoguePortraitLoad108Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue emotional-hamster-portrait; name guess
+0x084b2c93,kDialoguePortraitLoad109Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue woods-native-portrait; name guess
+0x084b2ca6,kDialoguePortraitLoad109Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue woods-native-portrait; name guess
+0x084b2cb9,kDialoguePortraitLoad110Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue mansion-guard-one-portrait; name guess
+0x084b2ccc,kDialoguePortraitLoad110Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue mansion-guard-one-portrait; name guess
+0x084b2cdf,kDialoguePortraitLoad111Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue mansion-guard-two-portrait; name guess
+0x084b2cf2,kDialoguePortraitLoad111Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue mansion-guard-two-portrait; name guess
+0x084b2d05,kDialoguePortraitLoad112Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue robot-portrait; name guess
+0x084b2d18,kDialoguePortraitLoad112Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue robot-portrait; name guess
+0x084b2d2b,kDialoguePortraitLoad113Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue accessory-clerk-variant-portrait; name guess
+0x084b2d3e,kDialoguePortraitLoad113Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue accessory-clerk-variant-portrait; name guess
+0x084b2d51,kDialoguePortraitLoad114Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue shouting-elder-portrait; name guess
+0x084b2d64,kDialoguePortraitLoad114Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue shouting-elder-portrait; name guess
+0x084b2d77,kDialoguePortraitLoad115Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-115-portrait; name guess
+0x084b2d8a,kDialoguePortraitLoad115Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-115-portrait; name guess
+0x084b2d9d,kDialoguePortraitLoad116Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue warm-hamster-portrait; name guess
+0x084b2db0,kDialoguePortraitLoad116Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue warm-hamster-portrait; name guess
+0x084b2dc3,kDialoguePortraitLoad117Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ghost-portrait; name guess
+0x084b2dd6,kDialoguePortraitLoad117Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ghost-portrait; name guess
+0x084b2de9,kDialoguePortraitLoad118Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue wedding-officiant-portrait; name guess
+0x084b2dfc,kDialoguePortraitLoad118Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue wedding-officiant-portrait; name guess
+0x084b2e0f,kDialoguePortraitLoad119Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue deal-vendor-portrait; name guess
+0x084b2e22,kDialoguePortraitLoad119Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue deal-vendor-portrait; name guess
+0x084b2e35,kDialoguePortraitLoad120Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-swap-clerk-portrait; name guess
+0x084b2e48,kDialoguePortraitLoad120Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-swap-clerk-portrait; name guess
+0x084b2e5b,kDialoguePortraitLoad121Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-121-portrait; name guess
+0x084b2e6e,kDialoguePortraitLoad121Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue unidentified-121-portrait; name guess
+0x084b2e81,kDialoguePortraitLoad122Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue dig-game-host-portrait; name guess
+0x084b2e94,kDialoguePortraitLoad122Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue dig-game-host-portrait; name guess
+0x084b2ea7,kDialoguePortraitLoad123Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue husband-portrait; name guess
+0x084b2eba,kDialoguePortraitLoad123Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue husband-portrait; name guess
+0x084b2ecd,kDialoguePortraitLoad124Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue heyhoo-hamster-portrait; name guess
+0x084b2ee0,kDialoguePortraitLoad124Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue heyhoo-hamster-portrait; name guess
+0x084b2ef3,kDialoguePortraitLoad125Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue hungry-monkey-portrait; name guess
+0x084b2f06,kDialoguePortraitLoad125Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue hungry-monkey-portrait; name guess
+0x084b2f19,kDialoguePortraitLoad126Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue riddle-author-portrait; name guess
+0x084b2f2c,kDialoguePortraitLoad126Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue riddle-author-portrait; name guess
+0x084b2f3f,kDialoguePortraitLoad127Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue village-elder-portrait; name guess
+0x084b2f52,kDialoguePortraitLoad127Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue village-elder-portrait; name guess
+0x084b2f65,kDialoguePortraitLoad128Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ghost-variant-portrait; name guess
+0x084b2f78,kDialoguePortraitLoad128Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ghost-variant-portrait; name guess
+0x084b2f8b,kDialoguePortraitLoad129Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue chick-portrait; name guess
+0x084b2f9e,kDialoguePortraitLoad129Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue chick-portrait; name guess
+0x084b2fb1,kDialoguePortraitLoad130Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue monkey-variant-portrait; name guess
+0x084b2fc4,kDialoguePortraitLoad130Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue monkey-variant-portrait; name guess
+0x084b2fd7,kDialoguePortraitLoad131Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-blue-portrait; name guess
+0x084b2fea,kDialoguePortraitLoad131Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-blue-portrait; name guess
+0x084b2ffd,kDialoguePortraitLoad132Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-green-portrait; name guess
+0x084b3010,kDialoguePortraitLoad132Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-green-portrait; name guess
+0x084b3023,kDialoguePortraitLoad133Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-yellow-portrait; name guess
+0x084b3036,kDialoguePortraitLoad133Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-yellow-portrait; name guess
+0x084b3049,kDialoguePortraitLoad134Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-pink-portrait; name guess
+0x084b305c,kDialoguePortraitLoad134Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-pink-portrait; name guess
+0x084b306f,kDialoguePortraitLoad135Left,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-portrait; name guess
+0x084b3082,kDialoguePortraitLoad135Right,data,0x13,,likely,Inline palette and tile loads then return; catalogue ham-red-portrait; name guess
 0x08653040,kTextGlyphWidths,data,0x200,,confirmed,Normal-bank advance plus spacing verified against live cursor; alternate-bank indexing and full extent likely
 0x086538d4,kRoomHeadSlot2FirstPose,data,0x8,,confirmed,One 64x64 4bpp OBJ; relative -12/-20; tile 0x50 palette 4; matches live OAM
 0x08687dde,kBossAlternateAnimation,data,,,confirmed,Alternate Boss room-head Entity script; operand at 0x08687ddf; replay tested

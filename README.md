@@ -116,7 +116,8 @@ example with `uv run hamtools patch build boss-recolor`.
 
 ## Verification and remaining work
 
-Current automated suite: **350 tests passed**, including graphics roundtrips, literal encoding,
+Current automated suite: **401 tests passed**, including the complete portrait catalogue,
+shared-reference checks, graphics roundtrips, literal encoding,
 diagnostics, generated-source handling, real ARM compilation, checked edits,
 linked text/control bytes, and BPS round-trips.
 
@@ -128,8 +129,12 @@ choose Hamha with A. Wait for the greeting and response, then press A to close
 and repeat. Room transitions and longer play sessions still need playtesting.
 
 Next research: complete the glyph/control table; map more NPC entry operands
-and event branches/choices; map other NPC graphics and later-scene expressions.
-Boss's dialogue image, palette and tilemap are now editable. [Open questions](kb/questions.md)
+and event branches/choices; confirm guessed portrait speaker/role names and
+later-scene expressions. All 136 standard-bank dialogue portrait definitions
+are editable by name; Hamtaro's left slot and Bijou's right slot have imported-edit
+checks. Try `uv run hamtools patch build portrait-catalogue-demo` and follow
+[the two-speaker checklist](patches/portrait-catalogue-demo/README.md).
+[Open questions](kb/questions.md)
 and [the findings log](kb/findings.md) track confidence and evidence.
 
 ROMs, saves, screenshots, graphics, and extracted text stay in gitignored local

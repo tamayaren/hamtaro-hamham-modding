@@ -10,6 +10,7 @@ from __future__ import annotations
 import bisect
 import csv
 import struct
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -117,6 +118,7 @@ class Walk:
     problems: list[tuple[int, str]] = field(default_factory=list)
     indirect: list[int] = field(default_factory=list)          # commands using a pointer register
     unknown_natives: dict[int, list[int]] = field(default_factory=dict)
+    edges: dict[int, set[int]] = field(default_factory=dict)   # conservative command flow
 
 
 def walk(data: bytes, natives: dict[int, Native] | None = None,
@@ -144,6 +146,7 @@ def walk(data: bytes, natives: dict[int, Native] | None = None,
             if target < POINTER_REGISTERS:
                 result.indirect.append(command)
             elif rom.ok(target):
+                result.edges.setdefault(command, set()).add(target)
                 pending.append((target, label))
             else:
                 result.problems.append((command, f"target {target:#x} outside ROM"))
@@ -222,10 +225,37 @@ def walk(data: bytes, natives: dict[int, Native] | None = None,
                 follow(addr, rom.u32(addr + 2))
             if stop:
                 break
+            result.edges.setdefault(addr, set()).add(addr + length)
             addr += length
         # Depth-first in program order: the first target found is decoded next.
         todo.extend(reversed(pending))
     return result
+
+
+def command_roots(walked: Walk) -> dict[int, tuple[str, ...]]:
+    """All scene roots that can reach each decoded command, including shared calls.
+
+    The original walk records the first root visiting a command. Flow edges let
+    catalogue tools retain every caller's provenance without decoding scripts
+    again. Calls and contexts conservatively include target and continuation;
+    this describes possible static use, not the currently selected game path.
+    """
+    labels = tuple(walked.roots.values())
+    masks: dict[int, int] = {}
+    pending = deque((address, 1 << index)
+                    for index, address in enumerate(walked.roots))
+    while pending:
+        address, mask = pending.popleft()
+        if address not in walked.commands:
+            continue
+        previous = masks.get(address, 0)
+        added = mask & ~previous
+        if not added:
+            continue
+        masks[address] = previous | added
+        pending.extend((target, added) for target in walked.edges.get(address, ()))
+    return {address: tuple(sorted({label for i, label in enumerate(labels) if mask & (1 << i)}))
+            for address, mask in masks.items()}
 
 
 @dataclass(frozen=True)

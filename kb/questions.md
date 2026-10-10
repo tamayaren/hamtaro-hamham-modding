@@ -19,10 +19,14 @@
   and the runtime dialogue pointer arrays remain contextual. See [text_tables.md](text_tables.md).
 - Story meanings of event flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191 and of
   `0x08051baa`'s progression result; needs later-game savestates.
-- Map other dialogue portraits and expression changes in later scenes, plus the
-  remaining room-head pose/animation commands. Boss's dialogue image, palette,
-  BG tilemap and upload are now editable; the old Entity assets are room heads.
-  See [portraits.md](portraits.md) and [graphics.md](graphics.md).
+- Confirm the guessed speaker/role names and expression meanings in the 136-entry
+  [portrait catalogue](portraits.md), especially shared-image palette variants.
+  Every standard-bank definition and every reached `0x06` portrait load is mapped;
+  Hamtaro's left slot and Bijou's right slot now have exact live comparisons and
+  imported-edit tests. Boss's specific right routine remains likely. Six definitions
+  have no reached root; their existence is static evidence, not runtime reachability.
+  Native/computed portrait loads outside this evidence, other window geometry, later
+  scenes, and remaining room-head pose/animation commands still need mapping.
 - Where is the main loop (`swi 0x05` VBlankIntrWait callers)?
 - Resolve remaining computed/unmapped accesses before claiming the entire padding
   universally unused. The startup end-bound and pointer-window audit are recorded

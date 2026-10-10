@@ -187,8 +187,15 @@ def _add_gfx(sub) -> None:
 
 def cmd_gfx_list(args: argparse.Namespace) -> int:
     from . import gfx
+    _verified_rom()
+    if not gfx.ASSETS:
+        raise gfx.GfxError("portrait catalogue is unavailable or empty; install the portraits module and catalogue")
     for asset in gfx.ASSETS.values():
         print(f"{asset.name}: {asset.width}x{asset.height}, 4bpp, LZ77 tiles + 16-colour palette")
+        print(f"  slots: {', '.join(asset.slots) or 'unspecified'}; "
+              f"name confidence: {asset.name_confidence}; roots: {', '.join(asset.roots) or 'none'}")
+        for kind in ("tiles", "palette"):
+            print("  " + gfx.describe_sharing(asset.name, kind))
     return 0
 
 
@@ -204,6 +211,8 @@ def cmd_gfx_export(args: argparse.Namespace) -> int:
         raise gfx.GfxError(f"export already exists: {path}; use --force to replace it")
     gfx.export_asset(data, args.asset, path)
     print(f"wrote {path} (asset metadata: {sidecar})")
+    for kind in ("tiles", "palette"):
+        print(gfx.describe_sharing(args.asset, kind))
     return 0
 
 
@@ -216,7 +225,11 @@ def cmd_gfx_import(args: argparse.Namespace) -> int:
         raise gfx.GfxError("import output must be a patches/<mod>/mod.toml file")
     pixels, colors = gfx.write_import(data, asset, args.png, out, args.palette, args.force)
     print(f"wrote {out}: {pixels} changed pixels, {colors} changed colours")
-    print("re-encoded streams: extracted/gfx/imports/; build explicitly with hamtools patch build " + out.parent.name)
+    for kind, count in (("tiles", pixels), ("palette", colors)):
+        if count:
+            print(gfx.describe_sharing(asset, kind))
+    print("re-encoded streams and sharing metadata: extracted/gfx/imports/; "
+          "build explicitly with hamtools patch build " + out.parent.name)
     return 0
 
 
