@@ -2,21 +2,60 @@ address,name,kind,size,mode,confidence,notes
 0x02001ab4,gRuntimeDialoguePrimaryPtrs,ram,,,likely,RAM pointer array read by native 0x0803b2d0 for event text slot 0; bounds unknown
 0x02001c6c,gRuntimeDialogueSecondaryPtrs,ram,,,likely,RAM pointer array read by native 0x0803b2d0 for event text slot 1; bounds unknown
 0x02003990,gEventByteVars,ram,,,confirmed,Event byte variables indexed by u16; var 0x003b poke changed Boss route
+0x02003997,gDigdigMatchedPairs,ram,0x1,,likely,Scene3.5 byte7; reset0 and increment on matched pair; perfect4
+0x0200399c,gPlayerIdleInputPolls,ram,0x1,,likely,Byte0x000c reused by scripts; ordinary player polls reach0x80 then stop
 0x020039cb,gBossHintCounter,ram,0x1,,confirmed,Event byte var 0x003b; Boss repeat-greeting hint index 0-3; preset 2 selected third hint
-0x020039f0,gRuntimeDialogueChoice,ram,0x1,,likely,Byte variable 0x0060 selects runtime dialogue in native 0x0803b2d0
+0x020039f0,gEventScratchResult,ram,0x1,,confirmed,Event byte0x0060 reused for menu/page count and Boss random hint; native byte-result write verified
+0x020039f1,gRescueAwardPhase,ram,0x1,,likely,Byte0x0061 reused scratch; rescue native phases0-10 and script phase11
+0x02003a06,gHamChatPendingWord,ram,0x1,,likely,Byte0x0076; one-based learned-word ID or special request; normal initializer static
+0x02003a09,gRescueAwardSelector,ram,0x1,,likely,Byte0x0079 indexes award weights; full allowed selector range unproved
+0x02003b10,gInventorySelectedSlot,ram,0x1,,likely,Byte0x0180; menu item selection position
+0x02003b30,gStickieDifficultyPhase,ram,0x1,,likely,Scene3.4 byte0x01a0; elapsed boundaries1800 and3000
+0x02003b33,gStickiePlayerStep,ram,0x1,,likely,Scene3.4 byte0x01a3; initial1; direct horizontal player step
+0x02003b34,gStickiePaperMotionMultiplier,ram,0x1,,likely,Scene3.4 byte0x01a4; initial2; paper velocities and accelerations
+0x02003b35,gDigdigCompletedSymbols,ram,0x1,,likely,Scene3.5 byte0x01a5; matched symbol bit mask
+0x02003b36,gDigdigPatchContents,ram,0x9,,likely,Scene3.5 nine patch IDs; removed sentinel0xff
+0x02003b3f,gDigdigAttemptsUsed,ram,0x1,,likely,Scene3.5 byte0x01af; reset0; completion after fourth increment
+0x02003b41,gDigdigPlayerPatch,ram,0x1,,likely,Scene3.5 byte0x01b1; one-based patch selector
+0x02003b42,gDigdigPartnerPatch,ram,0x1,,likely,Scene3.5 byte0x01b2; generated partner patch selector
+0x02003b46,gTicTackQBallsRemaining,ram,0x1,,likely,Scene3.6 byte0x01b6; initial4; decremented on ball launch
+0x02003b52,gTicTackQLineScore,ram,0x1,,likely,Scene3.6 byte0x01c2; recomputed line total0-8; prize thresholds1 3 5 6 and perfect8
+0x02003b53,gTicTackQActorCountdownA,ram,0x1,,likely,Scene3.6 byte0x01c3; random60 inclusive to180 exclusive
+0x02003b54,gTicTackQActorCountdownB,ram,0x1,,likely,Scene3.6 byte0x01c4; initial random180 inclusive to250 exclusive
+0x02003b55,gTicTackQActorCountdownC,ram,0x1,,likely,Scene3.6 byte0x01c5; spawn random180 to250 exclusive; helper60 to180 exclusive
 0x02007710,gBossDialoguePortraitTileShadow,ram,0x480,,confirmed,Left BG portrait shadow; exact decoded image match and DMA source to 0x06003b80
 0x0201bbf0,gBossDialoguePortraitPaletteShadow,ram,0x20,,confirmed,Left BG palette shadow; original and recoloured palette matches; DMA source
-0x0201d0b0,gEventWordVars,ram,,,likely,Event u16 variables indexed by u16; static only
+0x0201bf90,gRockRecords,ram,0x100,,likely,64 records with stride 4; nonzero five-bit state marks occupied
+0x0201d0b0,gEventWordVars,ram,,,confirmed,Event u16 array; word vars9-11 status pokes and width2 reads confirmed; 256 saved words static
+0x0201d0bc,gCounterTransactionQuantity,ram,0x2,,likely,Event word var 0x0006 reused by several gain and spend natives
+0x0201d0be,gCounterAnimationTarget,ram,0x2,,likely,Event word var 0x0007 shared display target
+0x0201d0c2,gSunflowerSeeds,ram,0x2,,confirmed,Status seed wallet; u16 poke above255; save/reload at SRAM0x0e0003b8; gain cap999 likely
+0x0201d0c4,gAcornCount,ram,0x2,,confirmed,Analyst status poke; gain cap 50 remains likely
+0x0201d0c6,gRockCount,ram,0x2,,confirmed,Analyst status poke; record recomputation remains likely
+0x0201d0c8,gLoveMeterLevel,ram,0x2,,confirmed,Word0x000c; level0/4 poke changed meter appearance; normal thresholds14 28 42 56 likely
+0x0201d0ca,gLoveMeterPoints,ram,0x2,,confirmed,Word0x000d; poke28/56 changed meter fullness; natural award cap56 likely
+0x0201d0cc,gLovesRescued,ram,0x2,,confirmed,Word0x000e; poke0 to7 changed Status Loves Rescued; width2 read at08003a3c
+0x0201d0f4,gStatusCounterCopy,ram,0x2,,likely,Word0x0022 reused counter display/award copy; three rendered digits not storage cap
+0x0201d0f8,gRescueAwardAnimationTimer,ram,0x2,,likely,Word0x0024 reused scratch; rescue count increment when timer48; time unit untested
+0x0201d134,gStickieHighScore,ram,0x2,,likely,Word0x0042; shown860 when zero; update above859 and prior record
+0x0201d270,gStickieElapsedTicks,ram,0x2,,likely,Word0x00e0; reset0; timer end when greater than3599
+0x0201d272,gStickieScore,ram,0x2,,likely,Word0x00e1; reset0; collection adds50 30 or10
 0x0201d2b0,gRoomHeadTilesSlot2,ram,0x480,,confirmed,Boss room-head decompression buffer; previously gDialoguePortraitTilesSlot2; separate from BG portrait
+0x03000000,gRngStateA,ram,0x4,,confirmed,RNG componentA; native write old*171 mod30269 verified; zero state absorbing
+0x03000004,gRngStateB,ram,0x4,,confirmed,RNG componentB; native write old*172 mod30307 verified; zero state absorbing
+0x03000008,gRngStateC,ram,0x4,,confirmed,RNG componentC; native write old*176 mod30323 verified; zero state absorbing
 0x03000010,gEventOpcode,ram,0x1,,confirmed,Current event opcode; 0 means fetch next; observed 0x1a during Boss reply
 0x03000014,gEventOperandAdvance,ram,0x4,,likely,Operand bytes to skip on next fetch
 0x03000018,gEventPhase,ram,0x1,,likely,Phase of current multi-frame event command
+0x0300001a,gEventWaitFrames,ram,0x2,,likely,Opcode0x02 command-local wait; u16 decrement; zero underflow static
 0x030005f0,gEventTextState,ram,0x4,,confirmed,TextState pointer owned by dialogue event; write 0x0800264c; clear 0x08002734
 0x03000608,gTextStateList,ram,0x4,,confirmed,Generic text-state list head; empty value 0x03000610; active clubhouse state 0x0202447c
 0x03000610,gTextStateSentinel,ram,,,confirmed,TextState list endpoint; empty head value verified after dialogue close; size 0x34 likely
 0x03000646,gTextVariantSelect,ram,0x1,,likely,Substitution variant M set by text prefixes 0xff (1) and 0x5e (2); reset by insert controls
 0x03000648,gTextGeneratedStream,ram,,,confirmed,Stream generated by text controls 0xf2/0xf3; live cursor observed inside it
 0x03000658,gTextTransformedStream,ram,,,confirmed,RAM copy produced by text controls 0xfa-0xfd before display; live cursor observed inside it
+0x03000778,gPlayerMoveCadenceValue,ram,0x4,,guess,Assigned8 walking4 running0 idle; precise consumer meaning unresolved
+0x03000785,gPlayerInteractionRequest,ram,0x1,,likely,Per-poll request bit0x08 from A; not selected Ham-Chat word
 0x03000820,gKeysHeld,ram,0x2,,confirmed,InputState base; u16 active-high held keys; store 0x08009638
 0x03000822,gKeysPressed,ram,0x2,,confirmed,InputState+0x2; u16 newly pressed this poll; excludes repeat; store 0x08009630
 0x03000824,gKeysPressedRepeat,ram,0x2,,confirmed,InputState+0x4; u16 new presses plus held mask on repeat; stores 0x08009632 and 0x08009652
@@ -31,11 +70,14 @@ address,name,kind,size,mode,confidence,notes
 0x03001f58,gSubsceneId,ram,0x1,,likely,Current subscene; observed 1 in clubhouse Boss state
 0x03001fac,gEventSelector,ram,0x2,,likely,Shared selector/result register for interaction hits menus and 0x1d dispatch
 0x03001fb0,gSceneCallbacks,ram,,,confirmed,Scene callback pointer table; text 0xf4 callback 0x08 read at 0x03001fd0; entry count unknown
-0x03002170,gEventFlags,ram,,,confirmed,Packed progression flags byte id>>3 bit id&7; flag 0x0010 and 0x017d tested
+0x03002158,gSaveBlockStatus,ram,0x5,,confirmed,Five save statuses; gameplay blocks1-3 primary1 then backup2 after checksum corruption; 0 invalid static
+0x03002170,gEventFlags,ram,,,confirmed,Packed gameplay flags include learned words and ownership; byte id>>3 bit id&7; 96 saved bytes static
+0x030021d0,gPlayerControlFlags,ram,0x1,,likely,Bit1 run/B gate; bit3 A gate; bit2 one-poll reset
 0x030021e0,gInteractionRecords,ram,0x80,,likely,32 interaction-record pointers installed by event 0x20 or 0x4d
 0x03002b90,gTextInsertStreamE7,ram,,,confirmed,RAM stream inserted by text control 0xe7; live cursor observed inside it
 0x03002ba0,gEventPtrRegs,ram,0x40,,likely,16 pointer registers; pointer operands below 0x10 index this in some handlers
 0x03002be0,gEventCallDepth,ram,0x1,,likely,Event call-stack depth
+0x03002be4,gSaveForceInitialize,ram,0x4,,likely,Nonzero selects destructive save initialization
 0x03002bf4,gClubhouseBossEntityIndex,ram,0x1,,confirmed,Boss index used by clubhouse callbacks; observed 16; scene reuse elsewhere unknown
 0x03002bfc,gPlayerEntityIndex,ram,0x1,,confirmed,u8 index of Hamtaro in gEntityArray; 10 in clubhouse bedroom
 0x03002c00,gEventCallStack,ram,0x40,,likely,Event call stack of operand addresses
@@ -43,7 +85,16 @@ address,name,kind,size,mode,confidence,notes
 0x03002c50,gEventCursor,ram,0x4,,confirmed,Event operand cursor = opcode address + 1; 0x0804ffb5 during Boss reply
 0x03002d88,gEntityArray,ram,0x4,,confirmed,u32 pointer to array of 0x68-byte Entity structs; 0x0202280c in clubhouse bedroom
 0x03002e24,gGfxCopyQueueWriteIndex,ram,0x1,,likely,Byte word-index cursor advanced by 3 per queued copy; row-copy helper 0x08009b80
+0x03003560,gTicTackQCardMarks,ram,0x9,,likely,Scene3.6 nine marks; zero unmarked and normal mark number1-9; nonzero completes line
+0x030037c0,gHamChatLearnedOrder,ram,0x56,,likely,86 one-based word IDs in acquisition order; save mapping static; natural learning/order poke pending
+0x030038d0,gInventoryMenuSlotIds,ram,0x30,,confirmed,Analyst slot 0 test; full 48-byte extent static
 0x03003ad0,gRuntimeDialogueTransformBuffer,ram,0x20,,likely,Native 0x0803b2d0 produces selected text here and forces final byte zero
+0x03003af0,gTicTackQCardNumberLabels,ram,0x9,,likely,Scene3.6 shuffled zero-based number labels; one-based lookup subtracts1
+0x03003d60,gStickiePaperStates,ram,0x50,,likely,Scene3.4 ten records stride8
+0x03003db0,gHamChatLearnedCount,ram,0x1,,confirmed,Analyst count-only poke; native maintenance remains likely; normal exit and Continue persistence confirmed
+0x03003e20,gStickieSpawnerStates,ram,0x18,,likely,Scene3.4 three records stride8
+0x03005130,gSaveSramReadFunction,ram,0x4,,likely,Thumb pointer to installed SRAM reader at 0x03001a98
+0x03005134,gSaveSramVerifyFunction,ram,0x4,,likely,Thumb pointer to installed verifier at 0x030019f8
 0x04000000,REG_DISPCNT,io,0x2,,confirmed,display control
 0x04000130,REG_KEYINPUT,io,0x2,,confirmed,buttons; active low
 0x05000060,gBossDialogueBgPalette,ram,0x20,,confirmed,Left portrait BG palette bank 3; recolour and original matched expected decoded palettes
@@ -53,15 +104,33 @@ address,name,kind,size,mode,confidence,notes
 0x08000000,RomHeader_Entry,func,0x4,arm,confirmed,branch to 0x080000c0
 0x080000a0,kRomHeaderTitle,data,0xc,,confirmed,HAMUTARO3
 0x080000c0,Main_Start,func,,arm,likely,code after header; target of entry branch
+0x08000298,Main_InitHardwareAndRng,func,,thumb,likely,Hardware setup and three boot RNG seeds
+0x08000388,kRngBootSeedA,data,0x4,,likely,15042
+0x08000390,kRngBootSeedB,data,0x4,,likely,19955
+0x080003d8,Util_AdvanceRng,func,,thumb,confirmed,Native modular updates of three RNG words verified; weighted return arithmetic static
+0x0800042c,kRngModulusA,data,0x4,,confirmed,30269; positive native transition verified
+0x08000434,kRngModulusB,data,0x4,,confirmed,30307; positive native transition verified
+0x0800043c,kRngModulusC,data,0x4,,confirmed,30323; positive native transition verified
+0x08000440,kRngOutputWeightA,data,0x4,,likely,70946; weighted draw return
+0x08000444,kRngOutputWeightB,data,0x4,,likely,70857; weighted draw return
+0x08000448,kRngOutputWeightC,data,0x4,,likely,70820; weighted draw return
+0x0800044c,Save_Checksum16,func,,thumb,confirmed,Folded complemented u16 sum; actual gameplay blocks1-3 checksum zero in both banks; odd-byte case static
+0x08000744,Main_InitSaveAndTitle,func,,thumb,likely,Initialize save and load blocks2 and3 then title scene
+0x0800078c,Save_InitializeOrRepair,func,,thumb,likely,Repair signatures or initialize two banks and51 records
 0x080009f8,Scene_Load,func,,thumb,likely,Loads 0x10-byte scene descriptor; sets event entry and callbacks
 0x08000d74,Event_RunCommands,func,,thumb,confirmed,Dispatches event handlers through a command table; observed handler LR 0x08000d91
 0x08000dbc,Event_RunContexts,func,,thumb,likely,Schedules background event contexts 1-16 around the main one
+0x08000ff4,Save_WriteBlock,func,,thumb,likely,Pack header checksum and write both bank copies
+0x0800108c,Save_WriteGameplayBlocks,func,,thumb,confirmed,Exit-to-title called once; twelve verified SRAM writes saved blocks1-3 in both copies
+0x080011b4,Save_LoadBlock,func,,thumb,likely,Per-block checksum loader; normal Continue uses bank loader0x08001320; single-block path unexercised
+0x08001320,Save_LoadGameplayBank,func,,thumb,confirmed,Continue restored gameplay; primary block1 corruption selected backup for all three blocks
 0x08001440,Scene_InvokeCallback,func,,thumb,confirmed,Dispatches through gSceneCallbacks; exact table load 0x0800144a observed from text callback
 0x08001458,Event_GetFlag,func,,thumb,likely,Reads packed flag from gEventFlags
 0x08001478,Event_SetFlag,func,,thumb,likely,Writes packed flag in gEventFlags
-0x08001508,Util_RandomRange,func,,thumb,likely,Returns random value in [low high) scaled from 0x080003d8
+0x08001508,Util_RandomRange,func,,thumb,confirmed,Returns random value in [low high) scaled from 0x080003d8; mapped Boss byte-result route verified; general and word-route arithmetic static
 0x08001530,Event_FetchOpcode,func,,thumb,likely,Opcode 0 handler; applies advance then reads next opcode
 0x08001658,Event_CmdLoadLzGraphics,func,,thumb,confirmed,Event 0x06 reads source and destination pointers bytewise; WRAM shadow decompression then graphics DMA
+0x08001dbc,Event_ChangeSubsceneAndMaybeSave,func,,thumb,likely,Subscene transition can save when scene1-9 and flag1 set
 0x080027a8,Event_ShowTextAndWait,func,,thumb,confirmed,Configures slot text template then starts stream and waits; operand read 0x08002876 observed
 0x080029fc,Event_CmdSwitch,func,,thumb,likely,Opcode 0x1d; u8 N then N absolute targets chosen by selector
 0x08002a70,Event_CmdCall,func,,thumb,likely,Opcode 0x1e; pushes operand address and jumps
@@ -70,8 +139,14 @@ address,name,kind,size,mode,confidence,notes
 0x08002e10,Event_CmdMenu,func,,thumb,confirmed,Opcode 0x24 Ham-Chat menu; observed running at 0x0804f48e
 0x080030a0,Event_CmdSelectorFromPtr,func,,thumb,likely,Opcode 0x28; ptr operand; selector = byte at ptr; Ghidra had an ARM island here
 0x080034d4,Event_CmdBranchFlag,func,,thumb,confirmed,Opcode 0x33; u8 wanted u16 flag ptr target; flag 0x0010 poke switched branch
+0x08003978,Event_CopyByteVarsFromMemory,func,,thumb,likely,Opcode 0x41; count-byte read at 0x080039c8
+0x080039e8,Event_CopyWordVarsFromMemory,func,,thumb,likely,Opcode 0x42; counter u16 reads at 0x08003a3c
+0x08003a5c,Event_CmdLoadSaveBlock,func,,thumb,likely,Opcode0x43 loads selected save block
+0x08003ae4,Event_CmdWriteSaveBlock,func,,thumb,likely,Opcode0x58 saves selected block and subindex
+0x08003b08,Event_SaveGameplay,func,,thumb,confirmed,Opcode0x5f; normal EndGame reached writer with LR0x08003b0f
+0x08003b24,Event_LoadGameplay,func,,thumb,confirmed,Opcode0x60; normal Continue reached bank loader with LR0x08003b2d
 0x08003b8c,Event_CmdSetFlag,func,,thumb,confirmed,Opcode 0x46; u16 flag u8 value; flag 0x017d store at 0x08003bec observed
-0x08003db0,Event_CmdRandomVar,func,,thumb,likely,Opcode 0x50; variable = random in [low high); static only
+0x08003db0,Event_CmdRandomVar,func,,thumb,confirmed,Opcode 0x50; variable = random in [low high); static only; mapped Boss byte-result route verified; general and word-route arithmetic static
 0x08004258,Text_SetString,func,,thumb,confirmed,Sets TextState+0x10 stream and processing status; cursor write 0x0800425c observed
 0x08004284,Text_CreateState,func,,thumb,confirmed,Allocates and appends a TextState; list insertion 0x080042b6 observed; allocation size 0x34 static
 0x08004500,Text_DestroyState,func,,thumb,confirmed,Unlinks and frees TextState; observed root update at 0x0800451c
@@ -112,11 +187,18 @@ address,name,kind,size,mode,confidence,notes
 0x080058e0,Text_CtrlInsertVariantFE,func,,thumb,likely,Control 0xfe u8; unused in script-referenced text
 0x0800631c,Player_Update,func,,thumb,likely,calls Player_HandleMovementInput then adds velocity to position; writes pos at 0x080063c8/0x080063d0
 0x08006508,Player_HandleMovementInput,func,,thumb,confirmed,D-pad -> direction 1-4; B held -> run; velocity from kPlayerMoveVelocityTable
+0x080067d4,Player_PollInteractionButtons,func,,thumb,likely,Translate permitted new button presses to requests
+0x0800689c,Player_ScanInteractionTargets,func,,thumb,likely,Calls map and nearby actor interaction scanners
+0x08009194,Menu_AllocateRockRecord,func,,thumb,likely,Returns free slot or minus one after 64 records
+0x08009210,Menu_CountOccupiedRockRecords,func,,thumb,likely,Counts nonzero five-bit state fields across 64 records
+0x0800923c,Menu_GetRockRecordInfo,func,,thumb,likely,Returns state and optionally resolves text metadata
 0x08009614,Input_Update,func,,thumb,confirmed,polls KEYINPUT and writes InputState; caller 0x080001a4; lr 0x08000231; 128 code bytes with internal literals
 0x08009824,Gfx_FlushCopyQueue,func,,thumb,confirmed,Queued copy flush; Boss tile and palette DMA observed at instruction 0x08009928
 0x08009ac8,Gfx_QueueCopy,func,,thumb,likely,Event graphics loader queues source destination and byte count when display is active; static call
 0x08009b80,Gfx_QueueTileRows,func,,thumb,likely,Queues 4bpp rows; source stride width*32; destination stride 0x400; room-head command 0xcc caller
+0x0800af00,Entity_SetPosition,func,,thumb,likely,Index and three s32 values to Entity position fields
 0x0800af1c,Entity_SetVelocity,func,,thumb,confirmed,(index vx vz vy) -> Entity +0x24/+0x28/+0x2c
+0x0800af38,Entity_SetAcceleration,func,,thumb,likely,Index and three s32 values to Entity acceleration fields
 0x0800af54,Entity_SetAnimation,func,,thumb,likely,Sets Entity+0x04 script pointer and resets +0x4c offset plus animation counters; Boss callback 0x08 target
 0x0800b1c0,Entity_GetIndex,func,,thumb,likely,Finds entity pointer in gEntityArray and returns u8 index or 0xff; static code
 0x0800b2f0,Entity_ApplyPhysics,func,,thumb,likely,pos += vel; vel += accel; +0x3c..+0x48 shorts clamp at 0x200
@@ -124,11 +206,61 @@ address,name,kind,size,mode,confidence,notes
 0x0800d074,Anim_CtrlUploadRoomHeadTiles,func,,thumb,likely,0xcc uses slot record buffer destination and width/height bytes; calls 0x08009b80
 0x0800d0c8,Anim_CtrlSetRoomHeadPose,func,,thumb,likely,0xcd delay and pose index select slot-record descriptor into Entity+0x00; static interpretation
 0x08018858,Event_NativeJumpIfEntityAnim,func,,thumb,likely,0x1c native; 9 extra bytes; jump to target if entity is active and animation matches
+0x0801b39c,Challenge_StickieHandlePlayer,func,,thumb,likely,Scene3.4 player stepping and collection state
+0x0801b560,Challenge_StickieReset,func,,thumb,likely,Reset elapsed score and paper/spawner records
+0x0801b790,kStickieRecordGate,data,0x4,,likely,859; record update requires higher current score
+0x0801b7ac,Challenge_StickieTickTimer,func,,thumb,likely,Increment elapsed; update difficulty and ending flag
+0x0801b83c,kStickieEndThresholdShifted,data,0x4,,likely,3599 shifted left16; elapsed also shifted before unsigned compare
+0x0801bb80,Challenge_StickieSetPaperMotion,func,,thumb,likely,Choose drifting paper velocity and opposing acceleration
+0x0801c05c,Challenge_StickieUpdatePapers,func,,thumb,likely,Paper collection and point/timer effects
+0x0801c358,kStickieElapsedBonusDelta,data,0x4,,likely,Signed-600; collection subtracts elapsed ticks without inspected underflow guard
+0x0801c404,Challenge_StickieDrawTime,func,,thumb,likely,Draw countdown derived from3600 minus elapsed
+0x0801c46c,Challenge_StickieDrawScore,func,,thumb,likely,Render four decimal score digits
+0x0801c7e4,Challenge_DigdigBuildBoard,func,,thumb,likely,Place four symbol pairs and one special patch
+0x0801c8c4,Challenge_DigdigChoosePartnerPatch,func,,thumb,likely,Random ordinary-symbol patch with exclusion checks
+0x0801c988,Challenge_DigdigCheckPair,func,,thumb,likely,Pair/wildcard check; increment matched-pair count
+0x0801c9e4,Challenge_DigdigRemovePair,func,,thumb,likely,Mark selected patches removed and check board completion
+0x0801ca90,Challenge_DigdigCountAttempt,func,,thumb,likely,Increment attempt counter and report fourth-attempt completion
+0x0801cfe8,Challenge_TicTackQInitialize,func,,thumb,likely,Initialize four balls and zero line score; set balloon motion
+0x0801d61c,Challenge_TicTackQUpdateBall,func,,thumb,likely,Ball state sequence; consume ball and end at zero
+0x0801d858,Challenge_TicTackQUpdateActorC,func,,thumb,likely,Actor states0-3; spawn countdown180 to250 exclusive; pause flag0x02a6
+0x0801da4c,Challenge_TicTackQUpdateBalloons,func,,thumb,likely,Balloon collision processing; calls line recount after player-ball hit
+0x0801e134,Challenge_TicTackQSpawnBalloon,func,,thumb,likely,Free balloon slot with difficulty-indexed horizontal velocity
+0x0801e524,Challenge_TicTackQUpdateDisplayPhase,func,,thumb,likely,Countdown and cyclic display phase with ROM reload values
+0x0801e810,Challenge_TicTackQSetCardMark,func,,thumb,likely,Map one-based number to shuffled card cell and store supplied mark
+0x0801e834,Challenge_TicTackQFindNumberCell,func,,thumb,likely,Find zero-based label matching number minus1
+0x0801e870,Challenge_TicTackQRecountLines,func,,thumb,likely,Recompute three rows three columns two diagonals; write byte0x01c2
 0x08020768,Event_NativeJumpIfVarNotEqual,func,,thumb,likely,0x1c native; 9 extra bytes (bank idx value target); jump unless variable == value
+0x080331fc,Ham_UpdateWordPageCount,func,,thumb,likely,Alphabetical 24 pages or ceil of learned count divided by four
+0x0803344c,Ham_PositionPendingWordCursor,func,,thumb,likely,Uses pending ID and sort flag to set category page and row
+0x0803369c,Ham_ApplyPendingLearnedWord,func,,thumb,likely,New-word bit order count update; starter branch for pending 0xff
+0x08033858,Ham_SelectLearnedWord,func,,thumb,likely,Resolves current selection and tests learned bit
+0x08033ba4,Menu_DrawStatusCounter,func,,thumb,likely,Draw three decimal digits from word0x0022; row0 Loves Rescued
+0x08033e30,Menu_DrawLoveMeterFrame,func,,thumb,confirmed,Read watch and level0/4 poke showed level-specific meter appearance
+0x08033f94,Menu_PositionLoveMeterSprites,func,,thumb,confirmed,Read watch and points/level pokes; spriteY formula110 minus twice low7 points static
+0x0803426c,Menu_DrawLoveMeterFill,func,,thumb,confirmed,Read watch and points28/56 poke changed meter fill; clipping details static
+0x08034490,Event_UpdateRescueAward,func,,thumb,likely,Increment rescue count; commit weighted points capped56; level14-step thresholds
+0x08034c78,Menu_BuildOwnedItemList,func,,thumb,confirmed,Rebuilt Oilcan ID1 from flag0x009f on reopen; 48-entry extent static
 0x0803b2d0,Event_NativeSelectTextSlots,func,,thumb,likely,Fills pointer registers 0 and 1 from RAM tables before show sites 0x080d9762 and 0x080d9772
 0x080418b8,Boss_CallbackGreetingAnimation,func,,thumb,likely,Clubhouse callback 0x09 sets script 0x08679610 and requests event wait; static only
 0x080418dc,Boss_CallbackAlternateAnimation,func,,thumb,likely,Clubhouse callback 0x16 sets script 0x08687dde; callback itself untested
 0x0804193c,Boss_CallbackIdleAnimation,func,,thumb,confirmed,Callback 0x08 sets Boss room-head Entity animation 0x08687e17; dialogue BG portrait independent
+0x08048f94,Save_PackCoreBlock,func,,thumb,likely,Core event state packer for blocks0 and1 in table
+0x08049088,Save_PackExtendedBlock,func,,thumb,likely,Extended event arrays flags and name bytes
+0x08049140,Save_PackAuxBlock,func,,thumb,likely,Auxiliary RAM regions and three bytes
+0x080491ac,Save_PackRecord,func,,thumb,likely,Copy0x80 staging bytes for block4 record
+0x080491d0,Save_UnpackCoreBlock,func,,thumb,likely,Inverse core event packer
+0x080492b4,Save_UnpackExtendedBlock,func,,thumb,likely,Inverse extended event packer
+0x08049360,Save_UnpackAuxBlock,func,,thumb,likely,Inverse auxiliary packer
+0x080493cc,Save_UnpackRecords,func,,thumb,likely,51 records stride0xdc copied to current destination pointer
+0x0804adc8,Event_AddSeedsAnimated,func,,thumb,likely,Clamp quantity against 999-current then update seed count
+0x0804ae10,kSeedGainCap,data,0x4,,likely,999; add-seeds quantity clamped against cap minus current
+0x0804ae88,Event_RemoveSeedsAnimated,func,,thumb,likely,Reject overlarge request by accepting zero
+0x0804af40,Event_AddRockAnimated,func,,thumb,likely,Allocate one rock record and animate updated total
+0x0804aff0,Event_RefreshRockCounter,func,,thumb,likely,Recount occupied rock records into displayed total
+0x0804b1e8,Event_AddRocksAnimated,func,,thumb,likely,Limit batch to remaining space among 64 records
+0x0804b2fc,Event_RemoveAcornsAnimated,func,,thumb,likely,Subtract accepted quantity from acorn total
+0x0804b3b4,Event_AddAcornsAnimated,func,,thumb,likely,Clamp quantity against 50-current then update acorn count
 0x0804ef60,kClubhouseRoomEvent,data,,,likely,Scene 1 subscene 1 event entry from descriptor 0x084669a0
 0x0804ef8e,kClubhouseInteractionLoop,data,0x1,,confirmed,Event 0x21 wait; idle cursor 0x0804ef8f observed
 0x0804ff99,kBossHamhaRoute,data,,,confirmed,Boss Hamha event route; reached via menu dispatch 0x0804f49a
@@ -136,9 +268,19 @@ address,name,kind,size,mode,confidence,notes
 0x0804ffb6,kBossClubhouseDialoguePointer,data,0x4,,confirmed,Unaligned event-script text pointer; redirect to authored ROM text verified in emulator
 0x08050010,kBossHamhaFirstAltText,data,0x6,,confirmed,Show-text 0x1a reached with flags 0x0010 0x007e set and 0x017d clear; operand 0x08050012
 0x08050079,kBossHamhaHintRoute,data,,,confirmed,Repeat-greeting route; hint counter byte var 0x003b then random choice
+0x080500a2,kBossHintRandomLowerBound,data,0x2,,confirmed,0; checked demo changes to2; mapped byte result route confirmed
+0x080500a4,kBossHintRandomExclusiveUpperBound,data,0x2,,confirmed,3; original and demo helper bound verified
+0x08051baa,kLoveWordProgressionScript,data,0x61,,likely,Event script gates selector0-4 using learned words and meter level; not Thumb code
+0x08055186,kRubrubLevelActionSelectorScript,data,,,likely,Event script chooses four action scripts for love meter levels0-1 2 3 4
 0x080e2150,kBossInteractionRecord,data,0x10,,likely,Interaction record entity 16 selector 9 circle radius 40
 0x080e21a0,kClubhouseInteractionList,data,0x80,,likely,Clubhouse interaction-record pointer list; slot 4 is Boss
+0x080e5608,Util_BiosSignedRemainder,func,0x6,thumb,likely,BIOS Div remainder moved from r1 to r0
 0x080e5614,Bios_LZ77UnCompWram,func,0x4,thumb,confirmed,swi 0x11 then bx lr; observed execution and exact room-head/BG decompression matches
+0x080e5644,Save_ReadSramBytes,func,,thumb,likely,Byte reader copied to RAM at startup
+0x080e5684,Save_WriteSramBytes,func,,thumb,likely,Byte writer; SRAM strb at0x080e56a8
+0x080e56c4,Save_VerifySramBytes,func,,thumb,likely,Return zero for identical byte spans
+0x080e5710,Save_InitSramLibrary,func,,thumb,likely,Install RAM reader verifier and function pointers
+0x080e57ac,Save_WriteSramVerified,func,,thumb,confirmed,Twelve writes captured during normal save; max-three retries static
 0x080e5828,Math_DivSigned,func,,thumb,likely,Static signed integer division routine; portrait slot calculation (entity index - 10) / 3
 0x080eb9bc,kBossDialoguePortraitTilesLz,data,0x33a,,confirmed,Actual dialogue BG face; 0x480 decoded bytes; 48x48 4bpp row-major tiles; live VRAM match
 0x080f437c,kBossDialoguePortraitPaletteLz,data,0x26,,confirmed,Actual dialogue palette; 32 decoded bytes; palette-only relocation and recolour verified
@@ -153,12 +295,19 @@ address,name,kind,size,mode,confidence,notes
 0x08465e1c,kTextVariantF8Rows,data,0xc,,likely,Three logical rows used by f8/fe; rows 1 and 2 share storage; 82 slots per physical row
 0x08465e28,kTextVariantF1Rows,data,0xc,,likely,Three rows used by f1/fb; 45 stored pointer slots per row
 0x08465e34,kTextVariantFamilyDirectory,data,0x14,,likely,Five pointers to variant family roots; literal references 0x080060e4 and 0x0800612c
+0x08465e48,kRockTypeMetadata,data,,,likely,Four-byte packed type metadata; total span unresolved
 0x08466944,kSceneTable,data,0x2c,,likely,11 scene pointers to 0x10-byte descriptor arrays; next word at 0x08466970 is already a descriptor
 0x084669a0,kSceneDescClubhouse,data,0x10,,confirmed,Scene 1 subscene 1 descriptor; event entry 0x0804ef60 matches live cursor
+0x084673d0,kSaveChecksumSizes,data,0x14,,likely,Five block allocation checksum and read lengths
+0x084673e4,kSavePrimaryBlockAddresses,data,0x14,,likely,Five first-bank SRAM bases
+0x084673f8,kSaveBackupBlockAddresses,data,0x14,,likely,Five second-bank SRAM bases at primary plus0x4000
+0x0846740c,kSaveBlockPackers,data,0x14,,likely,Five Thumb packer pointers
+0x08467420,kSaveBlockUnpackers,data,0x14,,likely,Five Thumb unpacker pointers
 0x08467434,kEventCommandHandlers,data,,,confirmed,Event command function pointers; 97 entries 0x00-0x60; entry 0x1a at 0x0846749c targets observed 0x080027a8
 0x084677f0,kTextControlHandlersE0Ef,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xe0 through 0xef
 0x08467830,kTextControlHandlersF0Ff,data,0x40,,confirmed,Sixteen Thumb handlers for text bytes 0xf0 through 0xff
 0x08467af0,kPlayerMoveVelocityTable,data,0x40,,confirmed,[run][dir Up/Down/Left/Right] = (vx vy) s32 16.16; walk 1 px/frame run 2
+0x08467b10,kPlayerRunVelocityRow,data,0x20,,confirmed,Subrow of kPlayerMoveVelocityTable plus0x20; four signed16.16 direction pairs; original2 demo3
 0x08469cdc,kRoomHeadSlotRecords,data,,,likely,Previously kDialoguePortraitSlotRecords; stride 0x11c; buffers OBJ destinations poses and dimensions
 0x0846c67a,kNativeSelectedVariantWrapper,data,,,likely,Native-rendered wrapper using fe with selected-index fallback; literals 0x08013cf4 and 0x08036918
 0x0846cc6b,kBossClubhouseDialogue,data,0x58,,confirmed,Uncompressed custom glyph/control stream; final wait 0x0846ccc2; reached by 0x0804ffb6
@@ -166,8 +315,17 @@ address,name,kind,size,mode,confidence,notes
 0x0847a9e5,kNativePairedLabelSecondary,data,,,likely,Fixed native text selected by 0x0801c560; literal 0x0801c5dc
 0x084a35bd,kNativeRecordActionLabel,data,,,likely,Fixed native record action label; literal 0x08038ec4
 0x084a35c4,kNativeRecordUnavailableLabel,data,,,likely,Fixed native unavailable-selection label; literal 0x08038fa8
+0x084a681c,kTicTackQBalloonSpeedByDifficulty,data,0x6,,likely,Three u16 values128 192 256; horizontal velocity magnitude entry times0x100
+0x084a6822,kTicTackQCycleStepByDifficulty,data,0x3,,likely,Difficulty-indexed u8 cycle increments2 3 4
+0x084a683a,kTicTackQDisplayPhaseDurations,data,,,likely,Difficulty rows stride8; u8 display timer reloads
+0x084a77bc,kHamChatAlphabeticalRanks,data,0x56,,likely,One display-rank byte per word ID minus one
 0x084a7840,kHamChatListTextPtrs,data,0x15c,,likely,87 stored text pointers; fallback plus 86 list entries; native literal 0x08032ec4
 0x084a799c,kHamChatCompanionTextPtrs,data,0x15c,,likely,87 companion text pointers; native literals 0x08033034 and 0x080330a0
+0x084a7b88,kLoveAwardPointWeights,data,,,likely,Selector-indexed bytes; positive indexes1-21 sum56; complete selector bounds unproved
+0x084a7ba0,kInventoryItemOrder,data,0x30,,likely,Ordered menu item IDs
+0x084a7bd0,kInventoryItemFlags,data,0x30,,likely,Item ID to ownership flag ID
+0x084a7e1c,kItemDescriptionScrollLimits,data,0x2d,,likely,Description scroll-limit bytes for 45 IDs
+0x084a7e4a,kItemDescriptionOffsets,data,0x5c,,likely,45 start offsets plus terminal offset 211
 0x084a7ea8,kMenuItemLineTextPtrs,data,0x34c,,likely,211 item-description line pointers; terminal offset and independent next table bound storage
 0x084a92b8,kNativeRecordFallbackPrimary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038c7c and 0x08038d6c
 0x084a92c1,kNativeRecordFallbackSecondary,data,,,likely,Fixed padded record-menu fallback; native literals 0x08038ef0 and 0x08038fc0

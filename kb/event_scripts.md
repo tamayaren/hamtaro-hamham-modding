@@ -7,7 +7,9 @@ analysis cross-checked against ROM operands. The Boss Hamha selection chain, the
 operand-cursor convention, flag storage, the flag 0x0010 and 0x017d branches, and
 the byte-variable 0x003b hint counter were **confirmed** in the emulator
 (see [Emulator verification](#emulator-verification)). Story meanings of numbered
-flags are deliberately unnamed until separately tested.
+flags are deliberately unnamed until separately tested. The gameplay hunt
+identified learned-word and item-ownership subsets; see
+[items_words.md](items_words.md) and [gameplay.md](gameplay.md).
 
 ## How a line is chosen
 
@@ -426,7 +428,7 @@ When clear the familiar response is selected; when set execution reaches:
 
 **Confirmed example:** with flag 0x0010=1, 0x007e=1, 0x017d=0, 0x0190=0, Boss's
 reply runs at `0x08050010` and the event 0x46 handler (`0x08003b8c`, store at
-`0x08003bec`) sets flag 0x017d (byte `0x0300219f` 0x00 -> 0x20). The next greeting
+`0x08003be8`, reported PC `0x08003bec`) sets flag 0x017d (byte `0x0300219f` 0x00 -> 0x20). The next greeting
 under the same conditions sees 0x017d=1 and diverts through `0x0805001e` to
 `0x08050079`. This is a concrete **first-time versus subsequent-time gate**; what
 story event flag 0x017d represents is still unknown. Setting flag 0x0010 also put a
@@ -484,6 +486,10 @@ Preserve window open/close, animation waits, call-stack balance, and completion
 jumps when replacing event sequences. A pointer-only authored-text mod is simpler
 than rewriting the entire event route. No gameplay patch was built for this study.
 
+The later gameplay hunt built and verified `gameplay-boss-hint`: its range
+operand changes the randomized repeat route to [2,3). This leaves the earlier
+counter-driven hints and gates intact. See [gameplay.md](gameplay.md).
+
 ## Emulator verification
 
 All trials reload a local copy of `states/dialogue-state.ss0` (Hamtaro facing Boss),
@@ -505,7 +511,12 @@ Each run first shows Hamtaro's own greeting from the shared subroutine
 (`0x084ad620`, called at `0x0804ff99`), then the menu at `0x0804f48e` is the
 observed `0x24` command. These are discriminating tests: each poke changes which
 show-text command runs, exactly as the decoded branches predict. Randomized
-selection (counter >= 3) and the 0x007e-set/0x0190-set paths were not exercised.
+selection (counter >= 3) was subsequently exercised by the gameplay hunt:
+original bounds [0,3) with zero RNG selected `0x080500c0`; checked patch
+bounds [2,3) selected `0x08050104`. The range helper received r0=2/r1=3
+and byte result 2 was written at instruction `0x08003df4` (reported PC
+`0x08003df8`). Both conversations returned to `0x0804ef8f`.
+The 0x007e-set/0x0190-set one-off path remains unexercised.
 
 Note for future tracing: sampling the cursor and opcode in two separate bridge
 reads can pair a stale opcode with a new cursor (an apparent "text" at the yield
@@ -523,8 +534,38 @@ Command-length evidence (local, gitignored) is in the opcode-lengths worktree's
 `extracted/opcode-lengths/`: per-handler decompiles, the walker, native tables, and
 runtime-check results.
 
-Still open: story meanings of flags 0x0010, 0x007e, 0x017d, 0x0190, 0x0191; meanings of
+Still open: story meanings of flags 0x0010, 0x017d, 0x0190, 0x0191; meanings of
 most commands in the length table; 34 guessed native counts (single call sites); the progression
-routine `0x08051baa` and the `0x0804f4af` gate, which need later-game savestates;
+script `0x08051baa`'s exact story result and the `0x0804f4af` gate, which need later-game savestates;
 and other NPCs' routes, which should follow the same pattern from the selector
 dispatch at `0x0804efbf`.
+
+## Gameplay flag subsets and RAM addresses
+
+[gameplay_event_flags.csv](gameplay_event_flags.csv) maps 455 distinct flag
+IDs from reached script commands 0x33/0x46 to their RAM byte, mask and
+read/write sites. It includes address metadata only. Static references
+remain likely; this inventory does not cover every native-code access.
+Save packers cover 96 flag bytes (768 bits), which is a saved extent rather
+than proof that every accessor rejects larger IDs.
+
+| Flag / subset | RAM byte / mask | Meaning or concrete gate | Confidence |
+|---|---|---|---|
+| 0x0010 | `0x03002172`, 0x01 | Boss alternate greeting and second companion portrait | confirmed effects; story name unresolved |
+| 0x0047..0x009c | `0x03002178` bit 7 through `0x03002183` bit 4 | Learned words: one-based ID +0x46 | complete formula likely |
+| 0x008a | `0x03002181`, 0x04 | Bestest learned, word ID 0x44 | confirmed dictionary poke |
+| 0x007e | `0x0300217f`, 0x40 | Rubrub learned, word ID 0x38; branches at `0x0804ffe7` / `0x08050135` | word identity likely; previously tested branch behavior |
+| 0x009d..0x00cc | Packed flag formula | Key-item ownership; ID 47 uses 0x009d, IDs 0..46 use 0x009e..0x00cc | complete table likely |
+| 0x009f | `0x03002183`, 0x80 | Oilcan ID 1; rebuilding Items includes it | confirmed flag-only reopen test |
+| 0x00f8 | `0x0300218f`, 0x01 | 0 Order Learned, 1 Alphabetical | confirmed Sort menu action |
+| 0x017d | `0x0300219f`, 0x20 | Boss first-time/subsequent-time gate at `0x0804ffef` | confirmed route; story name unresolved |
+| 0x0190 | `0x030021a2`, 0x01 | Boss hint-2 diversion and one-off scene conditions | likely |
+| 0x0191 | `0x030021a2`, 0x02 | Boss repeat route chooses separate line at `0x08050122` | likely |
+
+Flags 0x0091/0x0099/0x009a/0x009b used by `0x08051baa` are learned
+word IDs 0x4b/0x53/0x54/0x55, rather than unnamed chapter flags. Its
+result combines those words with love-meter level (word C) gates 1..4.
+It is an event script, not a Thumb function; its exact result still needs
+context before assigning a story name. Rubrub helper `0x08055186` selects
+four action scripts by meter level. See [love.md](love.md). Word and ownership
+bits share endpoint bytes, so preserve unrelated bits when editing them.

@@ -7,6 +7,12 @@ the `kb-update` skill (`.agents/skills/kb-update/SKILL.md`).
 - [rom_map.md](rom_map.md) — ROM layout
 - [ram.md](ram.md) — RAM layout
 - [structs.md](structs.md) — data structures
+- [gameplay.md](gameplay.md) — gameplay values, ROM modding points, confidence and demo playtests
+- [items_words.md](items_words.md) — Ham-Chat flags/order/count, item ownership and resource gain/spend limits
+- [challenges.md](challenges.md) — movement actions and static challenge timer/score candidates
+- [love.md](love.md) — rescue count, meter points/level, award weights and progression gates
+- [save.md](save.md) — SRAM banks, checksums, packed RAM mappings and RNG arithmetic
+- [gameplay_event_flags.csv](gameplay_event_flags.csv) — reached-script flags mapped to RAM bytes/masks and sites
 - [dialogue.md](dialogue.md) — dialogue locations, live text state, encoding, and a verified text mod
 - [glyphs.md](glyphs.md) — full one-byte text glyph table with per-row confidence
 - [text_controls.md](text_controls.md) — text control bytes `0xe0`–`0xff` and prefixes, verified byte lengths, colours

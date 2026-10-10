@@ -1,5 +1,129 @@
 # Structs
 
+## SavedEventArrays (persistence extents, likely)
+
+The paired save packers/unpackers describe how many bytes are saved, rather
+than one contiguous C struct or proven accessor limits. [save.md](save.md)
+has the individual block offsets and inverse mappings.
+
+| RAM start | Saved extent | Representation | Confidence |
+|---|---|---|---|
+| `0x02003990` | `0x200` bytes | 512 u8 event variables | likely persistence; indexed addressing confirmed |
+| `0x0201d0b0` | `0x200` bytes | 256 u16 event variables | likely persistence |
+| `0x03002170` | `0x60` bytes | 768 packed flags | likely persistence; indexed addressing confirmed |
+
+Sunflower seeds occupy word variable `0x0009`, byte offset `+0x12` from
+`0x0201d0b0`. Their status-screen meaning is confirmed by a poke. A saved
+array extent does not establish a seed cap or any menu's safe index range.
+
+## SaveBlockHeader (size 0x08; gameplay blocks 1-3 confirmed)
+
+Ordinary blocks in either SRAM bank use this header. Primary and backup
+block bases come from ROM tables `0x084673e4` and `0x084673f8`; the backups
+are `0x4000` bytes after the primaries. Block zero has special signature
+handling and must not be interpreted as an ordinary gameplay block.
+
+| Offset | Size | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `+0x00` | 4 | payloadLength | Number of bytes returned by the serializer | confirmed blocks 1-3 |
+| `+0x04` | 1 | blockId | Selects packer/unpacker and reserved checksum span | confirmed blocks 1-3 |
+| `+0x05` | 1 | subindex | Zero in tested gameplay blocks; record index for block 4 | confirmed zero; record meaning likely |
+| `+0x06` | 2 | checksum | Folded complemented sum; valid stored span calculates to zero | confirmed blocks 1-3 |
+| `+0x08` | variable | payload | Selected RAM regions packed in block-specific order | named fields confirmed; complete layout likely |
+
+The checksum covers the reserved size, which can be larger than the bytes
+actually written. A normal End Game save produced matching banks, valid
+checksums and zero tails for blocks 1-3. Continue restored edited fields;
+deliberate primary checksum corruption selected the backup bank. These
+tests confirm ordinary gameplay headers, rather than block-4 records or
+every abnormal recovery path. See [save.md](save.md) for exact evidence.
+
+## RngState (three separate s32 words; positive transitions confirmed)
+
+| Address | Field | Normal range | Update |
+|---|---|---|---|
+| `0x03000000` | A | 0..30268 | A * 171 modulo 30269 |
+| `0x03000004` | B | 0..30306 | B * 172 modulo 30307 |
+| `0x03000008` | C | 0..30322 | C * 176 modulo 30323 |
+
+`Util_AdvanceRng` (`0x080003d8`) updates these words and returns a weighted
+32-bit sum. Signed BIOS remainder is used; the ranges describe normal,
+nonnegative input, not guards against invalid pokes. The identified save
+packers do not include this state. See [save.md](save.md) for seeds, constants
+and the range helper.
+
+Native writes after a positive triple poke matched all three modular updates.
+The all-zero state remained zero after 30 idle frames. Signed edge cases,
+boot seeds and full draw arithmetic remain static conclusions.
+
+## HamChatLearnedState (split RAM regions)
+
+| Region | Representation | Meaning | Confidence |
+|---|---|---|---|
+| Flag IDs 0x0047..0x009c in `0x03002170` | 86 packed bits, endpoint bytes shared with other systems | One-based word ID +0x46 | Bestest bit confirmed; complete mapping likely |
+| `0x030037c0`, 0x56 bytes | u8 IDs | Acquisition order, not alphabetical rank | likely; save mapping static |
+| `0x03003db0` | u8 | Maintained learned count | confirmed poke and save/Continue |
+| Flag 0x00f8, `0x0300218f` mask 0x01 | bit | Dictionary sort mode | confirmed real menu action |
+
+The count and bits can disagree after pokes. The normal learning native
+updates bit, order and count together, with a duplicate-word check; that
+natural event remains untested. Preserve unrelated endpoint bits when
+editing learned flags. Alphabetical rank bytes are a separate ROM table
+at `0x084a77bc`. See [items_words.md](items_words.md).
+
+## RescueAndMeterState (three separate event words)
+
+| RAM | Event word | Representation / meaning | Confidence |
+|---|---|---|---|
+| `0x0201d0c8` | 0x000c | u16 maintained meter level; normal range 0..4 | appearance confirmed; normal progression likely |
+| `0x0201d0ca` | 0x000d | u16 weighted meter points; normal cap 56 | fullness confirmed; natural cap likely |
+| `0x0201d0cc` | 0x000e | u16 maintained rescue count | Status count confirmed; natural increment likely |
+
+These are saved event words, not a percentage derived from rescue count.
+Award native `0x08034490` adds one rescue and a selector-dependent weight,
+then raises level at 14-point boundaries. Status reads them separately;
+reopening did not reconcile deliberately inconsistent level/points pokes.
+No rescue-count cap is established. See [love.md](love.md).
+
+## InventoryMenuIds (48-byte display copy)
+
+At `0x030038d0`, u8 item IDs, 0xff empty. The builder clears and rebuilds
+the list using order table `0x084a7ba0` and item-to-flag table `0x084a7bd0`.
+IDs 0..46 map to flags 0x009e..0x00cc; ID 47 maps to 0x009d (likely).
+Oilcan ID 1 / flag 0x009f is confirmed by reopening after a flag-only poke.
+48 slots describe a menu allocation, rather than a consumable stack cap.
+
+## RockRecord (stride 0x04, likely)
+
+Array `0x0201bf90`, 64 records. Saved in block 2 payload +0x05d8.
+
+| Field | Representation | Interpretation | Confidence |
+|---|---|---|---|
+| First u16 bits 0..6 | 7-bit type ID | Indexes four-byte ROM metadata at `0x08465e48` | likely |
+| First u16 bits 7..11 | 5-bit state | Zero means free; nonzero counted as occupied | likely |
+| First u16 bits 12..15 | bits | Unclassified | unresolved |
+| `+0x02` | two bytes | Unclassified remaining record data | unresolved |
+
+The displayed rock count is separately stored at `0x0201d0c6`. Gain/recount
+natives derive it from occupied records. A count-only poke does not grant
+rocks. Polishing/gem meanings need the deferred Rubrub state; do not name
+the five-bit field durability without that test.
+
+## Challenge arrays (scene-specific, likely)
+
+| Region | Extent | Representation / use |
+|---|---|---|
+| `0x02003b36` | 9 bytes | Digdig patch IDs: four pairs 1..4 plus special 5/6; removed 0xff |
+| `0x03003560` | 9 bytes | Tic Tack-Q marks: zero unmarked, nonzero counts toward completed lines |
+| `0x03003af0` | 9 bytes | Shuffled zero-based Tic Tack-Q number labels; helper receives one-based number |
+| `0x030035c0` | 16 records, stride 8 | Tic Tack-Q balloon state; exact fields incomplete |
+| `0x03003d60` | 10 records, stride 8 | Stickie paper state; exact fields incomplete |
+| `0x03003e20` | 3 records, stride 8 | Stickie spawner state; exact fields incomplete |
+
+These are allocations seen in initializers, not interchangeable global
+inventories. Never apply one scene's interpretation after changing rooms.
+See [challenges.md](challenges.md); runtime structure tests are pending.
+
 ## TextState (allocation size 0x34, likely)
 
 Generic text object used by menus and dialogue. `Text_CreateState` at
@@ -52,6 +176,13 @@ Player velocity comes from `kPlayerMoveVelocityTable` (`0x08467af0`): 2 speed mo
 (walk, run while B held) × 4 directions (Up, Down, Left, Right) × (vx, vy) s32 16.16.
 Walk = 1 px/frame, run = 2 px/frame, measured against the frame counter. Only one direction
 applies at a time (Up > Down > Left > Right priority), so there is no diagonal movement.
+
+Ordinary input clears all three velocity fields before selecting a complete
+table value, and `Player_Update` clears X/Y velocity after the position update.
+This path does not build speed by accumulating acceleration. Generic entities
+can use acceleration through `Entity_SetAcceleration` (`0x0800af38`) and
+`Entity_ApplyPhysics`; that does not establish a separate player jump or dash.
+See [challenges.md](challenges.md) for scene-specific motion candidates.
 
 ## RoomHeadSlotRecord (stride 0x11c, likely format)
 

@@ -1,0 +1,27 @@
+name = "gameplay-run-boost"
+description = "Run at 3 pixels per frame while B is held; walking stays at the original speed."
+enabled = false
+
+[[edit]]
+address = 0x08467b14
+expect = "00 00 fe ff"
+hex = "00 00 fd ff"
+comment = "run Up vy: -2 to -3 pixels per frame"
+
+[[edit]]
+address = 0x08467b1c
+expect = "00 00 02 00"
+hex = "00 00 03 00"
+comment = "run Down vy: +2 to +3 pixels per frame"
+
+[[edit]]
+address = 0x08467b20
+expect = "00 00 fe ff"
+hex = "00 00 fd ff"
+comment = "run Left vx: -2 to -3 pixels per frame"
+
+[[edit]]
+address = 0x08467b28
+expect = "00 00 02 00"
+hex = "00 00 03 00"
+comment = "run Right vx: +2 to +3 pixels per frame"

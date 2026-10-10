@@ -38,16 +38,134 @@ The dialogue face uses a BG tilemap; room heads use OAM. See
 |---|---|---|---|---|
 | `0x02003990` | u8 array | `gEventByteVars` | Event byte variables, indexed by u16 (`0x02003990 + idx`) | confirmed |
 | `0x020039cb` | u8 | `gBossHintCounter` | Byte var 0x003b: Boss repeat-greeting hint index 0–3 | confirmed |
-| `0x0201d0b0` | u16 array | `gEventWordVars` | Event word variables (`0x0201d0b0 + idx*2`) | likely |
+| `0x020039f0` | u8 | `gEventScratchResult` | Byte var 0x0060: menu/page counts, Boss random hint, challenge results | confirmed mapped uses; scene meaning varies |
+| `0x0201d0b0` | u16 array | `gEventWordVars` | Event word variables (`0x0201d0b0 + idx*2`); counters 9..11 tested | confirmed addressing |
 
 Byte var 0x0060 is a scratch result reused by several routines; byte var 0x0012 is
 set to 16 before Boss's lines. See [event_scripts.md](event_scripts.md).
+
+### Gameplay counters and inventory — 2026-10-10/11
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x0201d0c2` | u16 | `gSunflowerSeeds` | Word variable `0x0009`; status screen seed wallet | confirmed |
+| `0x0201d0c4` | u16 | `gAcornCount` | Word variable `0x000a`; status screen acorns | confirmed |
+| `0x0201d0c6` | u16 | `gRockCount` | Word variable `0x000b`; displayed rocks, distinct from actual records | confirmed display |
+| `0x0201d0c8` | u16 | `gLoveMeterLevel` | Word variable `0x000c`; meter appearance and progression tier; normal 0..4 likely | confirmed appearance |
+| `0x0201d0ca` | u16 | `gLoveMeterPoints` | Word variable `0x000d`; weighted fullness, normal cap 56 likely | confirmed fullness |
+| `0x0201d0cc` | u16 | `gLovesRescued` | Word variable `0x000e`; Status Loves Rescued total | confirmed display |
+| `0x0201d0bc` | u16 | `gCounterTransactionQuantity` | Word variable `0x0006`; shared requested/accepted gain or spend amount | likely |
+| `0x0201d0be` | u16 | `gCounterAnimationTarget` | Word variable `0x0007`; shared counter animation target | likely |
+| `0x0201bf90` | 64 records, stride 4 | `gRockRecords` | Rock type/state records; first u16 has type in bits 0..6 and occupancy/state in bits 7..11 | likely |
+| `0x02003a06` | u8 | pending learned word | Byte variable `0x0076`; word ID or special learning request | likely |
+| `0x02003b10` | u8 | inventory selection | Byte variable `0x0180`; selected menu position | likely |
+
+From `inventory-screen.ss0`, separate pokes showed seeds 321, acorns 258,
+and rocks 515, proving these are distinct totals wider than one byte.
+Native width-2 reads occurred at instruction `0x08003a3c`, reported PC
+`0x08003a40`, in `Event_CopyWordVarsFromMemory` (`0x080039e8`). Neighbouring
+word variables 6, 7 and 8 did not change those totals or Loves Rescued.
+
+A later discriminating poke changed word 0x000e from 0 to 7; reopening
+Status showed Loves Rescued 7. The same width-2 memory-copy reader loaded
+it from the first Status parameter command at `0x080d11a5`. Natural rescue
+increment is statically traced to `0x08034554`; intended maximum remains unknown.
+
+Separate level/points pokes of 0/28, 0/56 and 4/56 changed meter fullness and
+appearance without changing rescue count. Reader traces reached meter natives
+`0x08033e30`, `0x08033f94` and `0x0803426c`. Award native `0x08034490`
+likely caps points at 56 and advances level at 14-point boundaries. Its
+selector byte `0x02003a09`, phase byte `0x020039f1`, animation timer word
+`0x0201d0f8` and displayed-counter copy `0x0201d0f4` are context-specific
+scratch. See [love.md](love.md) for ROM sources and test limits.
+
+The gain helpers limit seeds to 999 (`0x0804ae10`) and acorns to 50
+(`0x0804b3c4` / `0x0804b3cc`). These caps remain **likely**, pending a
+natural pickup/spending state. Rock helpers recount 64 record slots, so
+poking the displayed rock total does not grant matching records. Seed and
+acorn spending helpers accept zero when the requested quantity exceeds the
+wallet. See [items_words.md](items_words.md) for writers and ROM tables.
+
+On a disposable save copy, normal End Game -> Yep -> Continue preserved
+seeds 123, acorns 234, rocks 345, learned count 11 and the Bestest learned bit.
+Poked totals are not globally clamped on reload. Raw evidence stays in
+`extracted/gameplay-ram-hunts/` and `extracted/gameplay/`.
 
 Don't hard-code the `0x0202xxxx` addresses in mods — the array pointer may differ per
 scene; go through `gEntityArray` / `gPlayerEntityIndex`. Copies of the position also exist
 (`0x02022c6a`, `0x02023636`, `0x0202363e` tracked it during the search) — unexplained.
 
 ## IWRAM (0x03000000–0x03007FFF)
+
+### Random number state and save bookkeeping — 2026-10-10
+
+| Address | Type | Name | Meaning | Confidence |
+|---|---|---|---|---|
+| `0x03000000` | s32 | `gRngStateA` | First modular RNG component; normal modulus 30269 | confirmed |
+| `0x03000004` | s32 | `gRngStateB` | Second modular RNG component; normal modulus 30307 | confirmed |
+| `0x03000008` | s32 | `gRngStateC` | Third modular RNG component; normal modulus 30323 | confirmed |
+| `0x03002158` | u8[5] | `gSaveBlockStatus` | Loaded copy per block: 0 invalid, 1 primary, 2 backup | confirmed primary/backup; invalid meaning likely |
+| `0x03002be4` | u32 | `gSaveForceInitialize` | Nonzero selects destructive save initialization; not a normal save request | likely |
+| `0x03005130` | Thumb pointer | `gSaveSramReadFunction` | Installed SRAM reader at `0x03001a98` | likely |
+| `0x03005134` | Thumb pointer | `gSaveSramVerifyFunction` | Installed SRAM verifier at `0x030019f8` | likely |
+
+The RNG update at `0x080003d8` is called once per main loop and once per
+random-range request. The save packers cover selected regions, including
+512 event bytes, 256 event words and 768 flag bits; these are saved extents,
+not proven accessor guards. The three RNG words are outside those regions.
+See [save.md](save.md) for SRAM addresses and exact packed offsets. The
+selected counter/flag mappings, bank recovery and modular RNG updates were
+tested in the emulator. The complete saved extents and boot seed behavior
+remain static conclusions.
+
+After removing probes, a positive RNG triple was poked and native state
+writes were captured at `0x080003e8`, `0x080003f8`, `0x0800040a` (reported
+PCs +4). Each matched `old * multiplier % modulus`. A subsequent all-zero
+poke stayed zero after 30 idle frames. See [save.md](save.md) for arithmetic.
+
+### Ham-Chat and item menu state
+
+| Address / formula | Type | Name / meaning | Confidence |
+|---|---|---|---|
+| `0x030037c0` | u8[86] | `gHamChatLearnedOrder`; one-based word IDs in acquisition order | likely layout and persistence |
+| `0x03003db0` | u8 | `gHamChatLearnedCount`; maintained dictionary/header total | confirmed display and persistence |
+| `0x03002170 + ((wordId + 0x46) >> 3)` | packed bit | Learned flag for word IDs 1..86; mask `1 << ((wordId + 0x46) & 7)` | Bestest ID 0x44 confirmed; full formula likely |
+| `0x0300218f`, mask 0x01 | packed bit | Flag 0x00f8; 0 Order Learned, 1 Alphabetical | confirmed menu action |
+| `0x030038d0` | u8[48] | `gInventoryMenuSlotIds`; rebuilt item-ID list, 0xff empty | slot/rebuild confirmed; extent likely |
+| `0x03002183`, mask 0x80 | packed bit | Flag 0x009f; Oilcan ownership (menu ID 1) | confirmed reopen and description |
+
+Bestest's flag 0x008a is `0x03002181`, mask 0x04. Bit-only pokes revealed
+and hid that word without changing 10/86; a count-only poke changed the
+header to 11/86 without granting another word. Natural learning must maintain
+flags, acquisition order and count together. The count reader is byte load
+`0x080039c8`; selected-word flag reader is `0x08001462`, called from
+`Ham_SelectLearnedWord` (`0x08033858`).
+
+The item list is a display copy: slot-only Oilcan injection disappears on
+reopen. Setting its ownership flag instead causes `Menu_BuildOwnedItemList`
+(`0x08034c78`) to rebuild it. See [items_words.md](items_words.md) for the
+item-to-flag ROM table, dictionary tables and native writers.
+
+### Scene-specific challenge candidates (likely)
+
+These event variables are reused by other scenes. Use them only in the named
+challenge and trace its initializer/writer before a poke. No active challenge
+state was available in this pass. [challenges.md](challenges.md) records the
+source instructions, scores, prize gates and timing tables.
+
+| Scene/value | RAM | Type | Writer / ROM rule | Confidence |
+|---|---|---|---|---|
+| Stickie elapsed ticks | `0x0201d270` (word 0x00e0) | u16 | Tick native `0x0801b7ac`; end above 3599; display `(3600-elapsed)/60` | likely |
+| Stickie score | `0x0201d272` (word 0x00e1) | u16 | `0x0801c05c`; collections add 50/30/10 | likely |
+| Stickie high score | `0x0201d134` (word 0x0042) | u16 | Update above prior record and 859; zero displayed as 860 | likely |
+| Stickie difficulty / player step / paper multiplier | `0x02003b30` / `0x02003b33` / `0x02003b34` | u8 each | Phase 0..2; initial step 1, multiplier 2 | likely |
+| Digdig dirt contents | `0x02003b36` | u8[9] | Board `0x0801c7e4`; four pairs plus special patch; removed 0xff | likely |
+| Digdig attempts / matched pairs | `0x02003b3f` / `0x02003997` | u8 each | `0x0801ca90` / `0x0801c988`; fourth attempt, perfect 4 pairs | likely |
+| Tic Tack-Q balls / line score | `0x02003b46` / `0x02003b52` | u8 each | Initial balls 4; line recount `0x0801e870` gives 0..8 | likely |
+| Tic Tack-Q card marks / number labels | `0x03003560` / `0x03003af0` | u8[9] each | Setter `0x0801e810`; zero unmarked, nonzero participates in lines | likely |
+| Tic Tack-Q actor timers | `0x02003b53` / `0x02003b54` / `0x02003b55` | u8 each | Random ranges [60,180) or [180,250), with actor/state gates | likely |
+| Tic Tack-Q difficulty / cycle | `0x02003b45` / `0x02003b44` | u8 each | Difficulty 0..2 in inspected effects; ROM steps `0x084a6822` | likely |
+| Stickie paper / spawner states | `0x03003d60` / `0x03003e20` | 10 / 3 records, stride 8 | Paper/spawner helpers; field meanings incomplete | likely |
 
 ### Text and dialogue
 
@@ -82,7 +200,7 @@ universal portrait buffer. See [portraits.md](portraits.md).
 | `0x03000018` | u8 | `gEventPhase` | Phase of a multi-frame command | likely |
 | `0x03001f58` | u8 | `gSubsceneId` | Current subscene | likely |
 | `0x03001fac` | u16 | `gEventSelector` | Interaction/menu result consumed by dispatch commands | likely |
-| `0x03002170` | bit array | `gEventFlags` | Progression flags: byte `0x03002170 + (id>>3)`, bit `id&7` | confirmed |
+| `0x03002170` | bit array | `gEventFlags` | Gameplay flags, including learned words and ownership: byte `0x03002170 + (id>>3)`, bit `id&7` | confirmed addressing |
 | `0x030021e0` | 32 pointers | `gInteractionRecords` | NPC/object interaction records for the room | likely |
 | `0x03002ba0` | 16 u32 | `gEventPtrRegs` | Pointer registers for indirect pointer operands | likely |
 | `0x03002be0` | u8 | `gEventCallDepth` | Event call-stack depth | likely |

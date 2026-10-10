@@ -1,0 +1,9 @@
+name = "gameplay-boss-hint"
+description = "Boss's randomized repeat greeting always chooses the third mapped hint."
+enabled = false
+
+[[edit]]
+address = 0x080500a2
+expect = "00 00"
+hex = "02 00"
+comment = "random lower bound: 0 to 2; unchanged exclusive upper bound is 3"

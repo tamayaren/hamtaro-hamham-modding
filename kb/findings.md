@@ -2,6 +2,99 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-11 — Gameplay values, save recovery and two verified demos (Codex; Heisenberg re-analyst; Singer, Wegener, Mencius re-engineer)
+
+- Verified original AH3E SHA1 `2525cc23524068dfb3a2b4e0ce7b736f95023e82`.
+  `codex/gfx-portraits` was already included in main; work began on
+  `codex/gameplay-values` from main. The human's uncommitted faster-walk
+  recipe was preserved and excluded from the standalone demo builds.
+- Heisenberg's supplied-menu hunts confirmed u16 seeds `0x0201d0c2`,
+  acorns `0x0201d0c4`, displayed rocks `0x0201d0c6`, u8 learned count
+  `0x03003db0`, Bestest learned flag 0x008a (`0x03002181`, mask 0x04),
+  and sort flag 0x00f8. Distinct values above 255 verified the resource widths.
+  The parent additionally poked `0x0201d0cc` to 7 and observed Loves Rescued 7.
+  Word-counter reads are instruction `0x08003a3c`, reported PC +4.
+- Wegener traced native word learning, the ten-word starter branch,
+  acquisition order at `0x030037c0`, 86 dictionary IDs and their text/rank
+  tables. Bit-only and count-only pokes can disagree, so an all-words change
+  must maintain flags/order/count together. Complete mapping and natural
+  learning remain likely. Several earlier unnamed story flags are words;
+  0x007e is Rubrub ID 0x38 (likely). See [items_words.md](items_words.md).
+- Slot-only Oilcan injection into `0x030038d0` disappears on reopen.
+  A flag-only poke at `0x03002183`, mask 0x80 (flag 0x009f), instead caused
+  `Menu_BuildOwnedItemList` `0x08034c78` to rebuild ID 1 and show its icon
+  and description. This confirms ownership versus display-copy behavior.
+  The full 48-entry ownership table and 45 description spans remain likely.
+- Seed gain cap 999 (u32 literal `0x0804ae10`), acorn cap 50 (instruction
+  immediates `0x0804b3c4` / `0x0804b3cc`), and 64 rock records at
+  `0x0201bf90` are strong static findings. Spending rejects overlarge
+  requests by accepting zero. Gain/spend caps and rock type/state meanings
+  need the deferred acquisition/shop/polishing states; display pokes are
+  not proof of real record grants.
+- Singer mapped two 16 KiB SRAM banks, ordinary headers, selected RAM
+  packers/unpackers and the folded complemented word-sum checksum. On a
+  disposable original-ROM/save copy, End Game -> Yep saved edited resources,
+  Bestest's bit and count; Continue restored them. Actual gameplay blocks
+  1-3 in both banks matched predicted lengths/checksums and zero padding.
+  Corrupting only primary block-1 checksum byte `0x0e0000f4` caused
+  bank-wide backup recovery: statuses 1-3 at `0x03002158` became 2.
+  Normal save/Continue called `0x0800108c` / `0x08001320` from handlers
+  `0x08003b08` / `0x08003b24`. Special block-4 records remain untested.
+  See [save.md](save.md); no general save helper was added.
+- Confirmed RNG state words `0x03000000` / `0x03000004` / `0x03000008`:
+  captured positive transitions matched multipliers 171/172/176 and moduli
+  30269/30307/30323. After probe removal, an all-zero poke stayed zero for
+  30 idle frames. Seed literals, signed edge cases and complete weighted
+  draw arithmetic remain static. Idle updates and explicit requests share
+  this generator; Boss's byte result is scratch reused by other systems.
+- `gameplay-run-boost` changes four checked running components from 2 to
+  3 pixels/frame. Live rates confirmed all directions; walking stayed 1.
+  Four controlled collision endpoints matched the original. `gameplay-boss-hint`
+  changes one checked range operand to [2,3): helper bounds 2/3 produced
+  byte result 2 at `0x08003df4` and selected `0x08050104`; original zero RNG
+  selected result 0's `0x080500c0`. Both conversations closed normally.
+  Both mods cold-booted and ran 3,600 frames across four supplied states
+  with no observed freeze or garbled graphics. Natural room transitions,
+  other gates and longer sessions are explicit human playtests.
+- Both standalone ROMs/BPS patches were built under `build/<demo>/`;
+  BPS application to the original exactly reproduced each built ROM.
+  Only disabled expect-checked sources/READMEs are tracked. A local controlled
+  Boss state is `states/gameplay-boss-random-ready.ss0`; it sets repeat gates
+  and zero RNG and should be used with a test save copy.
+- Mencius mapped static Stickie elapsed/score/record, Digdig board/attempts,
+  and Tic Tack-Q balls/line recount/actor timers. Tick rate, scores and
+  completion behavior remain likely until active states exist. Ordinary
+  movement assigns complete velocities, with no accumulated acceleration
+  ramp in that path; generic acceleration does not establish a player jump.
+  The Stickie end literal stores 3599 shifted left 16, matching the shifted
+  timer comparison. See [challenges.md](challenges.md).
+- Mencius separated rescue count word E from meter points D and level C,
+  and traced award native `0x08034490`. Parent pokes of level/points 0/28,
+  0/56 and 4/56 confirmed independent fullness/appearance while Loves Rescued
+  stayed zero. Read watches reached meter frame/fill/sprite natives.
+  Natural weights `0x084a7b88`, point cap 56 and 14-point level boundaries
+  remain likely. Rubrub's four action tiers depend on level; its complete
+  polishing calculation and intended rescue maximum remain open.
+  `0x08051baa` is a word/level event script, not a Thumb function.
+  See [love.md](love.md); static evidence is in `extracted/gameplay-love/`.
+- Added [gameplay.md](gameplay.md), detailed menu/challenge/love/save documentation,
+  and an address-only inventory of 455 reached-script flag IDs. Renamed
+  `gRuntimeDialogueChoice` to `gEventScratchResult` at `0x020039f0`, because
+  menu/page counts, random hints and challenge results reuse byte 0x0060.
+  Corrected earlier flag-store instruction attribution: `0x08003be8` is the
+  store; `0x08003bec` was the native watchpoint's pipelined PC.
+- Evidence is local under `extracted/gameplay/`, `gameplay-ram-hunts/`,
+  `gameplay-items-20261010/`, `gameplay-actions/`, and `gameplay-save-rng/`.
+  Ghidra access and emulator ownership were serialized; temporary Ghidra
+  reconstructions were rolled back after export. Shop/challenge/dance/polishing
+  and later-meter states were deferred by the human; no blind navigation occurred.
+- Validation: **350 tests passed**; `tools/sync_agent_profile.py --check`
+  passed; 347 symbols are sorted with unique addresses and valid confidence/mode
+  fields, and were synced into the local Ghidra project. Original ROM and human save SHA1s were unchanged; faster-walk source
+  SHA256 remained `F867C26103077F0003036508867B09C96D4EF65E6220A05B70084F040045F443`.
+  The emulator was restored to the baseline Status screen on the disposable
+  original-ROM copy, with zero bridge-held keys and no probes. No game data is tracked.
+
 ## 2026-10-10 — Boss dialogue graphics tooling and blue portrait (Codex; Popper re-scout; Mill re-engineer)
 
 - Corrected the earlier visual identification: `0x081bfc74` / `0x081bfa60`
