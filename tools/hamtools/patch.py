@@ -149,17 +149,16 @@ def compile_code(mods: list[Mod], workdir: Path, root: Path = PATCHES_DIR) -> tu
         objs.append(obj)
 
     ld_script = workdir / "mod.ld"
+    # Keep growing KB symbol definitions out of Windows' bounded command line.
+    game_symbols = "".join(f"{name} = {value:#x};\n" for name, value in _game_symbols())
     ld_script.write_text(
-        "SECTIONS {\n"
+        game_symbols + "SECTIONS {\n"
         f"  . = {FREE_BASE:#x};\n"
         "  .text : { *(.text*) *(.rodata*) *(.data*) }\n"
         "  /DISCARD/ : { *(.bss*) *(COMMON) *(.ARM.attributes) *(.comment) }\n"
         "}\n", encoding="utf-8")
-    defsyms = []
-    for name, value in _game_symbols():
-        defsyms.append(f"-Wl,--defsym={name}={value:#x}")
     elf = workdir / "mod.elf"
-    _run([gcc, *CFLAGS, "-T", ld_script, *objs, *defsyms,
+    _run([gcc, *CFLAGS, "-T", ld_script, *objs,
           "-Wl,-Map=" + str(workdir / "mod.map"), "-o", elf, "-lgcc"], "link")
     blob_path = workdir / "mod.bin"
     _run([objcopy, "-O", "binary", "-j", ".text", elf, blob_path], "objcopy")

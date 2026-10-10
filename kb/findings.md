@@ -2,6 +2,40 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-10 — C linking after portrait symbol catalogue growth (Codex)
+
+- The full suite during the savestate filename fix exposed three C-link failures:
+  Windows `CreateProcess` reported error 206 (filename/extension too long).
+  Passing all 656 KB symbols as separate `--defsym` flags needed 33,004
+  characters before other arguments, exceeding Windows' command-line limit
+  after the portrait catalogue expanded `symbols.csv`.
+- Moved the same absolute symbol assignments into the generated `mod.ld` file.
+  This keeps the linker invocation short and preserves the existing Thumb
+  function pointer adjustment. No game symbol addresses were changed.
+- Added an ARM-toolchain test with 1,503 synthetic symbols and paths containing
+  spaces. It checks the linked bytes retain the exact odd Thumb function pointer,
+  ROM data pointer and RAM data pointer; no game data is involved.
+
+## 2026-10-10 — Savestate filenames for mGBA's GUI (Codex)
+
+- The human reported that mGBA's savestate file picker accepts `.ss0`, `.ss1`,
+  etc., but hides our bridge-generated `.ss` files. The bridge uses
+  `emu:saveStateFile` / `emu:loadStateFile`; our MCP filename helper supplied
+  `.ss` and also incorrectly appended `.ss` to explicit native slot filenames.
+- Created local `.ss0` copies of `portrait-catalogue-companion-base` and
+  `portrait-catalogue-demo-visible`; SHA256 comparisons verified identical
+  contents, preserving the original captures. Updated the playtest checklist.
+  The GUI filter observation comes from the human; this change does not claim
+  a new GUI-load or portrait confirmation.
+- Bare MCP saves now use `.ss0`. Explicit legacy `.ss` and native `.ss0` through
+  `.ss9` names are retained. Bare loads prefer `.ss0` and fall back to `.ss`;
+  listings include full filenames rather than duplicate stems. Synthetic tests
+  cover save/load/launch routing, legacy fallback and distinct explicit slots.
+- Added the established `UV_NO_SYNC=1` workaround to the demo build instructions
+  so uv does not try to replace the running Windows MCP executable.
+- Validation after both tooling fixes: `uv run pytest -q` passed all 431 tests;
+  `uv run python tools/sync_agent_profile.py --check` reported the profile in sync.
+
 ## 2026-10-10 — Complete standard dialogue portrait catalogue (Codex; Fermat re-scout; Socrates re-engineer)
 
 - Verified USA ROM SHA1 `2525cc23524068dfb3a2b4e0ce7b736f95023e82` before

@@ -8,6 +8,7 @@ on the left and palette relocation on the right.
 
 ```powershell
 $env:UV_CACHE_DIR = '.cache/uv'
+$env:UV_NO_SYNC = '1'
 uv run hamtools patch build portrait-catalogue-demo
 ```
 
@@ -18,7 +19,9 @@ the test independent of the local faster-walk edit. No ARM compiler is needed.
 ## Exact playtest checklist
 
 1. Cold boot the built ROM; confirm the title animates normally.
-2. Load `states/portrait-catalogue-companion-base.ss`. This is a separate
+2. Load `states/portrait-catalogue-companion-base.ss0` through mGBA's state-file
+   dialog. The `.ss0` copy has identical contents to the bridge's original `.ss`
+   file and is visible in the GUI's savestate filter. This is a separate
    Boss-front baseline with known flag 0x0010 temporarily set for the companion
    greeting; the original `dialogue-hunt-base.ss` was preserved.
 3. Press A to open Ham-Chat, then A to choose Hamha. During the greeting,
@@ -35,7 +38,7 @@ the test independent of the local faster-walk edit. No ARM compiler is needed.
    normal orange/white faces should return. Start a fresh conversation to load
    graphics from ROM; already-open savestates retain uploaded old graphics.
 
-`states/portrait-catalogue-demo-visible.ss` is the captured edited greeting.
+`states/portrait-catalogue-demo-visible.ss0` is the captured edited greeting.
 Evidence under `extracted/gfx/catalogue/` includes exact original/edited
 VRAM, palette and shadow comparisons. Neither those outputs nor savestates
 belong in the public repository. The temporary progression flag is a test

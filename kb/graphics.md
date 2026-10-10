@@ -107,6 +107,8 @@ the tested allocations; it does not establish that every game path ignores the t
 ## Two-speaker import demo and exact playtest
 
 ```powershell
+$env:UV_CACHE_DIR = '.cache/uv'
+$env:UV_NO_SYNC = '1'
 uv run hamtools patch build portrait-catalogue-demo
 ```
 
@@ -115,13 +117,19 @@ colours and one pixel) and green Bijou (two palette colours). It relocates three
 streams and checks six operands. Build it explicitly, so it runs without the
 human's unrelated faster-walk edit. See [the demo checklist](../patches/portrait-catalogue-demo/README.md).
 
-Load `states/portrait-catalogue-companion-base.ss` in the built ROM. Press A to
+Load `states/portrait-catalogue-companion-base.ss0` in the built ROM. Press A to
 open Ham-Chat, then A to select Hamha. During the greeting Hamtaro appears on the
 left and Bijou on the right; the window then hands over to Boss. The separate
-`states/portrait-catalogue-demo-visible.ss` captures the imported colours.
+`states/portrait-catalogue-demo-visible.ss0` captures the imported colours.
 The companion baseline has the known flag 0x0010 temporarily set for the test;
 it is separate from the preserved original Boss baseline. Do not use a state
 whose graphics were already uploaded to judge whether a new import loaded.
+
+The `.ss0` files are byte-identical copies of the original `.ss` captures for
+mGBA's GUI file picker, which the human reported filters out `.ss` files.
+The MCP helper now saves bare names with `.ss0`, accepts explicit `.ss0` through
+`.ss9` filenames, and falls back to existing `.ss` files when loading a bare
+name. State listings return full filenames so copies and slots remain distinct.
 
 Tests cover inline operands, shared root provenance, unvisited partners, reference
 unions, competing edits and unknown pointers using synthetic data. ROM-gated
