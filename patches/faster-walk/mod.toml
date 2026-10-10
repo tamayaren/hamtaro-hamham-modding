@@ -9,25 +9,25 @@ enabled = true
 [[edit]]
 address = 0x08467af4
 expect = "00 00 ff ff"
-hex = "00 00 fe ff"
+hex = "00 00 f6 ff"
 comment = "walk Up vy -1 -> -2"
 
 [[edit]]
 address = 0x08467afc
 expect = "00 00 01 00"
-hex = "00 00 02 00"
+hex = "00 00 0a 00"
 comment = "walk Down vy +1 -> +2"
 
 [[edit]]
 address = 0x08467b00
 expect = "00 00 ff ff"
-hex = "00 00 fe ff"
+hex = "00 00 f6 ff"
 comment = "walk Left vx -1 -> -2"
 
 [[edit]]
 address = 0x08467b08
 expect = "00 00 01 00"
-hex = "00 00 02 00"
+hex = "00 00 0a 00"
 comment = "walk Right vx +1 -> +2"
 
 [[edit]]
