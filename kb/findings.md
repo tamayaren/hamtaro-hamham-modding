@@ -2,6 +2,19 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-11 — Integrate completed branches into main (Codex)
+
+- Fast-forwarded main to gameplay-values and merged text-edit-helper plus
+  dialogue-portrait-catalogue. The helper implementation/tests were already
+  present; its merge retains the newer dump description and records ancestry.
+- Kept both research logs, the updated portrait questions, the gameplay flag
+  meanings and main-loop observations. Reconciled symbols by address against
+  their common base: 814 unique, sorted entries; no competing address meanings.
+- Validation: all 431 tests passed; the agent profile check and staged diff
+  check passed. The 455 flag mappings and both gameplay BPS round trips remain
+  valid. No extracted game data was added. Original ROM/save hashes and the
+  human's unstaged faster-walk source hash remained unchanged.
+
 ## 2026-10-11 — Gameplay values, save recovery and two verified demos (Codex; Heisenberg re-analyst; Singer, Wegener, Mencius re-engineer)
 
 - Verified original AH3E SHA1 `2525cc23524068dfb3a2b4e0ce7b736f95023e82`.
@@ -94,6 +107,118 @@ Newest first. See the `kb-update` skill for the entry format.
   SHA256 remained `F867C26103077F0003036508867B09C96D4EF65E6220A05B70084F040045F443`.
   The emulator was restored to the baseline Status screen on the disposable
   original-ROM copy, with zero bridge-held keys and no probes. No game data is tracked.
+
+## 2026-10-10 — C linking after portrait symbol catalogue growth (Codex)
+
+- The full suite during the savestate filename fix exposed three C-link failures:
+  Windows `CreateProcess` reported error 206 (filename/extension too long).
+  Passing all 656 KB symbols as separate `--defsym` flags needed 33,004
+  characters before other arguments, exceeding Windows' command-line limit
+  after the portrait catalogue expanded `symbols.csv`.
+- Moved the same absolute symbol assignments into the generated `mod.ld` file.
+  This keeps the linker invocation short and preserves the existing Thumb
+  function pointer adjustment. No game symbol addresses were changed.
+- Added an ARM-toolchain test with 1,503 synthetic symbols and paths containing
+  spaces. It checks the linked bytes retain the exact odd Thumb function pointer,
+  ROM data pointer and RAM data pointer; no game data is involved.
+
+## 2026-10-10 — Savestate filenames for mGBA's GUI (Codex)
+
+- The human reported that mGBA's savestate file picker accepts `.ss0`, `.ss1`,
+  etc., but hides our bridge-generated `.ss` files. The bridge uses
+  `emu:saveStateFile` / `emu:loadStateFile`; our MCP filename helper supplied
+  `.ss` and also incorrectly appended `.ss` to explicit native slot filenames.
+- Created local `.ss0` copies of `portrait-catalogue-companion-base` and
+  `portrait-catalogue-demo-visible`; SHA256 comparisons verified identical
+  contents, preserving the original captures. Updated the playtest checklist.
+  The GUI filter observation comes from the human; this change does not claim
+  a new GUI-load or portrait confirmation.
+- Bare MCP saves now use `.ss0`. Explicit legacy `.ss` and native `.ss0` through
+  `.ss9` names are retained. Bare loads prefer `.ss0` and fall back to `.ss`;
+  listings include full filenames rather than duplicate stems. Synthetic tests
+  cover save/load/launch routing, legacy fallback and distinct explicit slots.
+- Added the established `UV_NO_SYNC=1` workaround to the demo build instructions
+  so uv does not try to replace the running Windows MCP executable.
+- Validation after both tooling fixes: `uv run pytest -q` passed all 431 tests;
+  `uv run python tools/sync_agent_profile.py --check` reported the profile in sync.
+
+## 2026-10-10 — Complete standard dialogue portrait catalogue (Codex; Fermat re-scout; Socrates re-engineer)
+
+- Verified USA ROM SHA1 `2525cc23524068dfb3a2b4e0ce7b736f95023e82` before
+  address analysis. Fast-forwarded local `main` to the completed Boss graphics
+  commit, then created `codex/dialogue-portrait-catalogue`. The human's
+  `patches/faster-walk/mod.toml` edit remains untouched and uncommitted.
+- Ghidra decompiled `0x08001658`, dispatcher `0x08000d74`, fetcher `0x08001530`,
+  scene updater `0x08000984` and indirect `bx r1` thunk `0x080e57f0`.
+  Event `0x06` takes inline little-endian source/destination u32s at +1/+5,
+  assembled bytewise: **pointers, not table IDs**. Handler table slot
+  `0x0846744c` holds Thumb pointer `0x08001659`; dispatch/frame interpretation
+  is likely, with live LR `0x08000d91` corroboration. Bytewise operands are
+  confirmed by Boss and Bijou source-read probes.
+- Audited all **2,711 reached `0x06` commands** across 148 roots / 98,214
+  commands, with no walker problems or unknown natives. **336 loads** form
+  **168 distinct reached (tiles, palette, slot) sets**: 123 left and 45 right.
+  Every portrait tile/palette source LZ77-decodes to `0x480` / `0x20` bytes.
+  Five other graphics loads reuse portrait palette destinations and are
+  explicitly excluded; every other graphics stream was decoded at its own size.
+- Audited the whole standard loader bank `0x084b1c65`..`0x084b3095` exclusive:
+  **136 definitions / 135 distinct pairs**, **57 tile images / 130 palettes**,
+  two 19-byte slot routines each. 130 definitions are reached: 85 left-only,
+  seven right-only, 38 both; six definitions and many opposite-slot partners
+  are static-only. No invented roots or runtime claim for those definitions.
+  Every rooted portrait load is covered. See [portraits.md](portraits.md).
+- Added address-only `kb/portrait_catalogue.csv`, with names, both slot loaders,
+  per-slot/all scene roots, context text addresses and name confidence. Names
+  are **guess** except live Hamtaro, Bijou and Boss. Most later NPCs reuse
+  images with different palettes; two monkey definitions alias one pair.
+  Palette variants are not asserted to be facial expressions. The event walker
+  now records flow edges and propagates all possible roots through shared
+  routines, instead of recording only the first visitor.
+- **Confirmed non-Boss left face:** Hamtaro `0x080e9e38` / `0x080f4224`
+  matched complete live VRAM/palette bytes in the supplied Sunny Peaks scene.
+  **Confirmed right face:** Bijou `0x080ea110` / `0x080f4244` matched complete
+  tiles/palette and shadows at `0x02007290` / `0x0201bbd0`, uploaded to
+  `0x06003700` / `0x05000040`. Tested from a separate restored Boss baseline
+  with the already-mapped companion flag 0x0010 temporarily set; this is a
+  controlled test, not a naturally reached story-state claim.
+- Bijou right operands `0x084b1c9f` / `0x084b1ca8` recorded four byte reads
+  each at reported PCs `0x08001666/68/6e/74`, instructions `0x08001662/64/6a/70`.
+  DMA3 at instruction `0x08009928` (reported `0x0800992c`) recorded source/
+  destination/count: `0x02007290` / `0x06003700` / `0x480`, and `0x0201bbd0` /
+  `0x05000040` / `0x20`. BG3 screen-block-23 rows 21..26, columns 23..28 select
+  right tiles `0x1b8..0x1db`, bank 2; first word `0x0600bd6e`.
+  Boss's specific right loader `0x084b1dce` remains **likely**, not promoted.
+- Generalized `gfx list/export/import` to every catalogue name while retaining
+  Boss compatibility, changed-only pixel/colour recipes and original compressed
+  hashes. Sharing metadata shows affected definitions. Changed sources repoint
+  every mapped use across entries/both slots; unknown unaligned base/mirror
+  pointer occurrences and competing replacements are refused clearly. Per-speaker
+  splitting and computed/native-only consumers remain outside this evidence.
+- Added disabled `portrait-catalogue-demo`, authored through PNG import: one
+  Hamtaro pixel and two colours, two Bijou colours. Relocated tiles at
+  `0x086d0000`, palettes at `0x086d02dc` / `0x086d02fc`; six operands checked.
+  **Confirmed** title boot, visible blue left Hamtaro / green right Bijou,
+  complete expected raw tiles/palettes and both shadows per slot. Response pages,
+  reopened Ham-Chat and dictionary open/close worked; more than 3,600 frames
+  (one minute) elapsed across the two smoke observations. Room changes and long
+  sessions are explicit human checklist items. Original ROM remains unchanged.
+- Generalized Boss-specific left RAM/graphics symbols to shared slot names;
+  added right-slot symbols, all source streams and slot definitions. All rows
+  are sorted by address. Untested formats/definitions remain **likely** and
+  editorial names remain **guess** as appropriate.
+- Validation: **401 tests passed**, including synthetic inline/truncated operands,
+  shared/cyclic root flow, static partners, cross-asset tile/palette sharing,
+  hashes, stale/omitted/mirror pointers, conflicts and original-ROM protection.
+  ROM-gated tests audit every load/definition, export/import all 136 entries
+  unchanged in both palette modes, and check changed-reference completeness for
+  all 187 unique source streams. `tools/sync_agent_profile.py --check` passed.
+  Default sandbox temp permissions caused fixture setup errors; rerunning with
+  normal Windows temp/compiler access passed. No extracted data is committed.
+- Evidence: `extracted/gfx/catalogue/` holds catalogue audit, context inspection,
+  contact sheet, original/edited PNGs, full Ghidra outputs, source/upload traces,
+  byte comparison and smoke JSON. Separate local states include
+  `portrait-catalogue-companion-base.ss`, `portrait-catalogue-two-slot-visible.ss`
+  and `portrait-catalogue-demo-visible.ss`. These are all gitignored.
 
 ## 2026-10-10 — Boss dialogue graphics tooling and blue portrait (Codex; Popper re-scout; Mill re-engineer)
 

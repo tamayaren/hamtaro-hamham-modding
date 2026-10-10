@@ -1,7 +1,7 @@
 """Portrait export and source-only image deltas; game pixels stay in extracted/.
 
-The first supported asset is Boss's dialogue-window portrait. The similarly
-named Entity animation tiles in kb/portraits.md are a separate room sprite.
+The portrait catalogue supplies dialogue-window assets and every mapped loader.
+Shared streams are edited together; room-sprite animation tiles are separate.
 """
 
 from __future__ import annotations
@@ -25,13 +25,23 @@ class Asset:
     palette_references: tuple[int, ...]
     width: int = 48
     height: int = 48
+    slots: tuple[str, ...] = ()
+    roots: tuple[str, ...] = ()
+    name_confidence: str = "guess"
 
 
-ASSETS = {
-    "boss-portrait": Asset(
-        "boss-portrait", 0x080eb9bc, 0x080f437c,
-        (0x084b1dc5, 0x084b1dd8), (0x084b1dbc, 0x084b1dcf)),
-}
+def _catalogue_assets() -> dict[str, Asset]:
+    from . import portraits
+    return {
+        key: Asset(portrait.name, portrait.tiles_address, portrait.palette_address,
+                   portrait.tile_references, portrait.palette_references,
+                   slots=portrait.slots, roots=portrait.roots,
+                   name_confidence=portrait.name_confidence)
+        for key, portrait in portraits.load_catalogue().items()
+    }
+
+
+ASSETS = _catalogue_assets()
 
 
 @dataclass(frozen=True)
@@ -53,18 +63,114 @@ class Replacement:
 
 
 def get_asset(name: str) -> Asset:
+    if not ASSETS:
+        raise GfxError("portrait catalogue is unavailable or empty; install the portraits module and catalogue")
     try:
         return ASSETS[name]
     except KeyError:
         raise GfxError(f"unknown graphics asset {name!r}; supported: {', '.join(ASSETS)}") from None
 
 
+def source_assets(address: int) -> tuple[Asset, ...]:
+    """All defined uses, including other slots and loaders outside walked roots."""
+    return tuple(sorted((asset for asset in ASSETS.values()
+                         if address in (asset.tiles_address, asset.palette_address)),
+                        key=lambda asset: asset.name))
+
+
+def source_references(address: int) -> tuple[int, ...]:
+    references = set()
+    for asset in source_assets(address):
+        if asset.tiles_address == address:
+            references.update(asset.tile_references)
+        if asset.palette_address == address:
+            references.update(asset.palette_references)
+    return tuple(sorted(references))
+
+
+def asset_metadata(name: str) -> dict:
+    asset = get_asset(name)
+    sharing = {}
+    for kind, address in (("tiles", asset.tiles_address), ("palette", asset.palette_address)):
+        uses = source_assets(address)
+        references = source_references(address)
+        sharing[kind] = {
+            "source_address": f"{address:#010x}",
+            "affected_assets": [use.name for use in uses],
+            "affected_asset_count": len(uses),
+            "reference_count": len(references),
+            "references": [f"{ref:#010x}" for ref in references],
+            "uses": [{"asset": use.name, "slots": list(use.slots), "roots": list(use.roots),
+                      "name_confidence": use.name_confidence,
+                      "streams": [stream for stream, source in
+                                  (("tiles", use.tiles_address), ("palette", use.palette_address))
+                                  if source == address]}
+                     for use in uses],
+        }
+    return {
+        "asset": name, "width": asset.width, "height": asset.height,
+        "tiles_address": f"{asset.tiles_address:#010x}",
+        "palette_address": f"{asset.palette_address:#010x}",
+        "tile_references": [f"{ref:#010x}" for ref in asset.tile_references],
+        "palette_references": [f"{ref:#010x}" for ref in asset.palette_references],
+        "slots": list(asset.slots), "roots": list(asset.roots), "name_confidence": asset.name_confidence,
+        "sharing": sharing,
+    }
+
+
+def describe_sharing(name: str, kind: str) -> str:
+    asset = get_asset(name)
+    address = {"tiles": asset.tiles_address, "palette": asset.palette_address}[kind]
+    assets = source_assets(address)
+    uses = "; ".join(f"{use.name} (slots: {', '.join(use.slots) or 'unspecified'}; "
+                     f"name confidence: {use.name_confidence})" for use in assets)
+    return (f"{kind} {address:#010x}: {len(source_references(address))} mapped reference(s); "
+            f"affects {len(assets)} asset(s): {uses}")
+
+
+def _checked_references(data: bytes, name: str, address: int) -> tuple[int, ...]:
+    references = source_references(address)
+    for reference in references:
+        off = reference - rom.ROM_BASE
+        if not 0 <= off <= len(data) - 4 or data[off:off + 4] != address.to_bytes(4, "little"):
+            raise GfxError(f"{name}: original pointer mismatch at {reference:#010x} "
+                           f"for shared source {address:#010x}")
+    return references
+
+
+def _changed_references(data: bytes, name: str, kind: str, address: int) -> tuple[int, ...]:
+    references = _checked_references(data, name, address)
+    # GBA cartridge wait-state windows mirror the same 32 MB ROM address space.
+    # Search every byte, since event operands can be unaligned. An unclassified
+    # exact occurrence is conservatively unsafe even if it might be literal data.
+    occurrences = set()
+    for target in (address, address + 0x02000000, address + 0x04000000):
+        pattern = target.to_bytes(4, "little")
+        offset = data.find(pattern)
+        while offset != -1:
+            occurrences.add(rom.ROM_BASE + offset)
+            offset = data.find(pattern, offset + 1)
+    unknown = sorted(occurrences - set(references))
+    affected = ", ".join(asset.name for asset in source_assets(address))
+    if unknown:
+        locations = ", ".join(f"{ref:#010x}" for ref in unknown[:8])
+        if len(unknown) > 8:
+            locations += ", ..."
+        raise GfxError(f"{name}: changed {kind} source {address:#010x} has "
+                       f"{len(unknown)} unmapped pointer occurrence(s) at {locations}; "
+                       f"affected entries: {affected}. Map every reference before relocation")
+    if not references:
+        raise GfxError(f"{name}: changed {kind} source {address:#010x} has no mapped references; "
+                       f"affected entries: {affected}; cannot relocate")
+    return references
+
+
 def read_asset(data: bytes, name: str) -> AssetData:
     asset = get_asset(name)
     blocks = []
-    for address, references, size in (
-        (asset.tiles_address, asset.tile_references, asset.width * asset.height // 2),
-        (asset.palette_address, asset.palette_references, 32),
+    for address, size in (
+        (asset.tiles_address, asset.width * asset.height // 2),
+        (asset.palette_address, 32),
     ):
         offset = address - rom.ROM_BASE
         if not 0 <= offset < len(data):
@@ -72,10 +178,7 @@ def read_asset(data: bytes, name: str) -> AssetData:
         raw, consumed = codec.decompress_lz77(data, offset)
         if len(raw) != size:
             raise GfxError(f"{name}: {address:#010x} expands to {len(raw)} bytes; expected {size}")
-        for reference in references:
-            off = reference - rom.ROM_BASE
-            if not 0 <= off <= len(data) - 4 or data[off:off + 4] != address.to_bytes(4, "little"):
-                raise GfxError(f"{name}: original pointer mismatch at {reference:#010x}")
+        _checked_references(data, name, address)
         blocks.append((raw, data[offset:offset + consumed]))
     return AssetData(asset, blocks[0][0], blocks[1][0], blocks[0][1], blocks[1][1])
 
@@ -87,7 +190,7 @@ def export_asset(data: bytes, name: str, path: Path) -> AssetData:
     path.parent.mkdir(parents=True, exist_ok=True)
     codec.export_png(source.tiles, source.palette, source.asset.width, source.asset.height, path)
     sidecar = {
-        "schema": 1, "asset": name, "width": source.asset.width, "height": source.asset.height,
+        **asset_metadata(name), "schema": 1,
         "rom_sha1": rom.sha1(data),
         "tiles_sha1": rom.sha1(source.compressed_tiles),
         "palette_sha1": rom.sha1(source.compressed_palette),
@@ -107,7 +210,7 @@ def infer_asset(path: Path) -> str:
             raise GfxError(f"invalid asset sidecar {sidecar}: {exc}") from exc
     if path.stem in ASSETS:
         return path.stem
-    raise GfxError("cannot identify the PNG; specify --asset boss-portrait")
+    raise GfxError("cannot identify the PNG; specify --asset <name> from hamtools gfx list")
 
 
 def import_image(data: bytes, name: str, path: Path, palette_mode: str = "original") -> tuple[dict, AssetData]:
@@ -179,12 +282,12 @@ def prepare_entry(data: bytes, entry: dict) -> tuple[Replacement, ...]:
             selected.add(offset)
     raw = codec.encode_tiles_4bpp(bytes(indices), source.asset.width, source.asset.height)
     replacements = []
-    for kind, address, old_raw, new_raw, old_compressed, refs in (
-        ("tiles", source.asset.tiles_address, source.tiles, raw, source.compressed_tiles, source.asset.tile_references),
-        ("palette", source.asset.palette_address, source.palette, bytes(palette),
-         source.compressed_palette, source.asset.palette_references),
+    for kind, address, old_raw, new_raw, old_compressed in (
+        ("tiles", source.asset.tiles_address, source.tiles, raw, source.compressed_tiles),
+        ("palette", source.asset.palette_address, source.palette, bytes(palette), source.compressed_palette),
     ):
         if old_raw != new_raw:
+            refs = _changed_references(data, source.asset.name, kind, address)
             replacements.append(Replacement(kind, address, old_compressed, codec.compress_lz77(new_raw), refs))
     return tuple(replacements)
 
@@ -192,7 +295,7 @@ def prepare_entry(data: bytes, entry: dict) -> tuple[Replacement, ...]:
 def format_mod(entry: dict, name: str) -> str:
     if re.fullmatch(r"[A-Za-z0-9_-]{1,80}", name) is None:
         raise GfxError("mod name must use 1..80 letters, digits, '-' or '_'")
-    lines = [f"name = {json.dumps(name)}", 'description = "Authored Boss dialogue portrait image/palette edits."',
+    lines = [f"name = {json.dumps(name)}", 'description = "Authored dialogue portrait image/palette edits."',
              "enabled = false", "", "# Generated changed-only graphics recipe. No game image or original bytes are embedded.",
              "# The builder reconstructs it from your verified original ROM, then allocates and repoints.",
              "[[gfx]]"]
@@ -235,6 +338,7 @@ def write_import(data: bytes, name: str, image: Path, mod_path: Path,
                  palette_mode: str = "original", force: bool = False) -> tuple[int, int]:
     mod_path = require_inside(mod_path, paths.REPO_ROOT / "patches", "mod output")
     entry, changed = import_image(data, name, image, palette_mode)
+    replacements = prepare_entry(data, entry)
     body = format_mod(entry, mod_path.parent.name)
     if mod_path.exists() and not force:
         raise GfxError(f"output already exists: {mod_path}; use --force to replace it")
@@ -248,4 +352,14 @@ def write_import(data: bytes, name: str, image: Path, mod_path: Path,
     for kind, compressed in (("tiles", changed.compressed_tiles), ("palette", changed.compressed_palette)):
         destination = require_inside(local / f"{name}.{kind}.lz", paths.EXTRACTED_DIR / "gfx", "compressed export")
         destination.write_bytes(compressed)
+    metadata = {
+        **asset_metadata(name), "schema": 1, "rom_sha1": rom.sha1(data),
+        "tiles_sha1": entry["expect_tiles_sha1"], "palette_sha1": entry["expect_palette_sha1"],
+        "imported_tiles_sha1": rom.sha1(changed.compressed_tiles),
+        "imported_palette_sha1": rom.sha1(changed.compressed_palette),
+        "changed_pixels": len(entry["pixels"]), "changed_colors": len(entry["colors"]),
+        "changed_streams": [replacement.kind for replacement in replacements],
+    }
+    sidecar = require_inside(local / f"{name}.json", paths.EXTRACTED_DIR / "gfx", "import metadata")
+    sidecar.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     return len(entry["pixels"]), len(entry["colors"])

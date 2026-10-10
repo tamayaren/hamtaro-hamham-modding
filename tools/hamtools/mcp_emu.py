@@ -42,6 +42,7 @@ _emu = Emu()
 _search: RamSearch | None = None
 
 _NAME = re.compile(r"^[A-Za-z0-9_.-]{1,80}$")
+_STATE_SUFFIX = re.compile(r"\.ss[0-9]?$", re.IGNORECASE)
 _FORMATS = {"u8": (1, False), "s8": (1, True), "u16": (2, False), "s16": (2, True),
             "u32": (4, False), "s32": (4, True)}
 
@@ -50,10 +51,17 @@ def _addr(text: str | int) -> int:
     return text if isinstance(text, int) else int(str(text), 0)
 
 
-def _state_path(name: str) -> Path:
-    if not _NAME.match(name):
+def _state_path(name: str, *, for_load: bool = False) -> Path:
+    if not _NAME.fullmatch(name):
         raise EmuError("state names may use letters, digits, '_', '-', '.' only")
-    return (paths.STATES_DIR / (name if name.endswith(".ss") else f"{name}.ss")).resolve()
+    if _STATE_SUFFIX.search(name):
+        return (paths.STATES_DIR / name).resolve()
+    path = (paths.STATES_DIR / f"{name}.ss0").resolve()
+    if for_load and not path.is_file():
+        legacy = (paths.STATES_DIR / f"{name}.ss").resolve()
+        if legacy.is_file():
+            return legacy
+    return path
 
 
 def _shot(label: str = "shot") -> Image:
@@ -69,7 +77,7 @@ def emu_launch(rom: str = "original", savestate: str | None = None) -> dict:
     rom: "original" or a path to a built ROM (e.g. build/hamtaro-mod.gba).
     savestate: optional name of a state in states/ to load at boot."""
     rom_file = None if rom == "original" else (paths.REPO_ROOT / rom).resolve()
-    state = _state_path(savestate) if savestate else None
+    state = _state_path(savestate, for_load=True) if savestate else None
     info = _emu.launch(rom_file, state)
     if info.get("reused") and state:
         _emu.call("load_state", state)
@@ -169,7 +177,7 @@ def emu_regs() -> dict:
 
 @tool
 def emu_save_state(name: str) -> str:
-    """Save a savestate to states/<name>.ss."""
+    """Save states/<name>.ss0 for mGBA's file picker; explicit .ss/.ss0..9 names are kept."""
     _emu.ensure()
     path = _state_path(name)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -179,9 +187,9 @@ def emu_save_state(name: str) -> str:
 
 @tool
 def emu_load_state(name: str, screenshot: bool = True):
-    """Load states/<name>.ss (the human makes these at interesting spots)."""
+    """Load a filename or bare name in states/; bare names prefer .ss0, then legacy .ss."""
     _emu.ensure()
-    path = _state_path(name)
+    path = _state_path(name, for_load=True)
     if not path.exists():
         raise EmuError(f"no state {path.name}; available: {emu_list_states()}")
     frame = _emu.call("load_state", path)
@@ -191,10 +199,11 @@ def emu_load_state(name: str, screenshot: bool = True):
 
 @tool
 def emu_list_states() -> list[str]:
-    """Savestates available in states/."""
+    """Savestate filenames in states/ (.ss and .ss0 through .ss9)."""
     if not paths.STATES_DIR.exists():
         return []
-    return sorted(p.stem for p in paths.STATES_DIR.iterdir() if p.is_file())
+    return sorted(p.name for p in paths.STATES_DIR.iterdir()
+                  if p.is_file() and _STATE_SUFFIX.search(p.name))
 
 
 @tool

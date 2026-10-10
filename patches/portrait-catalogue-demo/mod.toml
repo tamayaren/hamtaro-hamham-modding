@@ -1,0 +1,26 @@
+name = "portrait-catalogue-demo"
+description = "Authored dialogue portrait image/palette edits."
+enabled = false
+
+# Generated changed-only graphics recipe. No game image or original bytes are embedded.
+# The builder reconstructs it from your verified original ROM, then allocates and repoints.
+[[gfx]]
+asset = "hamtaro-portrait"
+expect_tiles_sha1 = "2f3ee9fd3c035b923ce79785e5b627001dcc42b9"
+expect_palette_sha1 = "6d9ee66f2e80b244d9f876d9074b26745fae0a8b"
+colors = [
+  { index = 4, bgr555 = 0x6da8 },
+  { index = 5, bgr555 = 0x48e4 },
+]
+pixels = [
+  { offset = 392, index = 4 },
+]
+
+[[gfx]]
+asset = "bijou-portrait"
+expect_tiles_sha1 = "ba9e34caf48637ee1e1db1533e1db4e2506c4cd7"
+expect_palette_sha1 = "c6f51ba810b8abf771c8920952bd751298aec317"
+colors = [
+  { index = 4, bgr555 = 0x03e0 },
+  { index = 5, bgr555 = 0x0220 },
+]

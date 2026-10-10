@@ -1,5 +1,15 @@
 # RAM map
 
+## Shared dialogue portrait buffers — 2026-10-10
+
+The former Boss-specific left-buffer symbols now use shared-slot names.
+Hamtaro/Boss use tiles at `0x02007710` and palette at `0x0201bbf0`, uploaded to
+`0x06003b80` and `0x05000060`. Bijou's right slot uses `0x02007290` / `0x0201bbd0`,
+uploaded to `0x06003700` / `0x05000040`. All four buffer mappings are confirmed
+by exact decoded matches; the right DMA source/destination/counts were watched.
+See [portraits.md](portraits.md) for scene-specific BG3 geometry and the
+temporary companion-flag test condition.
+
 Addresses refer to the verified USA AH3E ROM, SHA1
 `2525cc23524068dfb3a2b4e0ce7b736f95023e82`. Confidence is recorded per variable.
 
@@ -25,8 +35,8 @@ Hamtaro index 10 → entity `0x02022c1c`, so:
 
 | Address | Size | Name | Meaning | Confidence |
 |---|---|---|---|---|
-| `0x02007710` | `0x480` | `gBossDialoguePortraitTileShadow` | Decoded BG portrait; copied to `0x06003b80` | confirmed |
-| `0x0201bbf0` | `0x20` | `gBossDialoguePortraitPaletteShadow` | Decoded BG palette; copied to bank 3 at `0x05000060` | confirmed |
+| `0x02007710` | `0x480` | `gDialoguePortraitLeftTileShadow` | Shared left BG portrait; copied to `0x06003b80` | confirmed |
+| `0x0201bbf0` | `0x20` | `gDialoguePortraitLeftPaletteShadow` | Shared left BG palette; copied to bank 3 at `0x05000060` | confirmed |
 | `0x0201d2b0` | `0x480` | `gRoomHeadTilesSlot2` | Separate room-head frame buffer; OBJ row copies begin `0x06010e20` | confirmed |
 
 The dialogue face uses a BG tilemap; room heads use OAM. See

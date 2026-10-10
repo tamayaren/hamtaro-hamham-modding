@@ -1,0 +1,137 @@
+name,tiles,palette,left_loader,right_loader,reached_slots,roots,name_confidence,context_text,speaker_guess,left_roots,right_roots
+hamtaro-portrait,0x080e9e38,0x080f4224,0x084b1c65,0x084b1c78,left,1.1 1.2 1.3 1.4 1.5 1.6 10.10 2.1 2.10 2.11 2.12 2.13 2.14 2.15 2.17 2.18 2.19 2.2 2.20 2.23 2.24 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.1 3.10 3.11 3.12 3.14 3.16 3.17 3.18 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.1 4.10 4.11 4.12 4.13 4.14 4.15 4.2 4.3 4.4 4.5 4.6 4.7 4.8 4.9 5.1 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 5.19 5.2 5.20 5.21 5.23 5.24 5.25 5.26 5.27 5.28 5.29 5.3 5.30 5.31 5.32 5.33 5.34 5.37 5.4 5.5 5.6 5.7 5.9 6.1 6.10 6.11 6.12 6.13 6.14 6.15 6.16 6.17 6.18 6.19 6.2 6.4 6.5 6.6 6.7 6.8 6.9 7.1 7.2 7.3 9.1 9.2 9.3 9.4,confirmed,0x0846c6cb 0x0846c6d4 0x0846c51b,hamtaro,1.1 1.2 1.3 1.4 1.5 1.6 10.10 2.1 2.10 2.11 2.12 2.13 2.14 2.15 2.17 2.18 2.19 2.2 2.20 2.23 2.24 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.1 3.10 3.11 3.12 3.14 3.16 3.17 3.18 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.1 4.10 4.11 4.12 4.13 4.14 4.15 4.2 4.3 4.4 4.5 4.6 4.7 4.8 4.9 5.1 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 5.19 5.2 5.20 5.21 5.23 5.24 5.25 5.26 5.27 5.28 5.29 5.3 5.30 5.31 5.32 5.33 5.34 5.37 5.4 5.5 5.6 5.7 5.9 6.1 6.10 6.11 6.12 6.13 6.14 6.15 6.16 6.17 6.18 6.19 6.2 6.4 6.5 6.6 6.7 6.8 6.9 7.1 7.2 7.3 9.1 9.2 9.3 9.4,
+bijou-portrait,0x080ea110,0x080f4244,0x084b1c8b,0x084b1c9e,left right,1.1 1.2 1.3 1.4 1.5 1.6 10.10 10.12 10.13 2.1 2.10 2.11 2.12 2.13 2.14 2.15 2.17 2.18 2.19 2.2 2.20 2.23 2.24 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.1 3.10 3.11 3.12 3.14 3.15 3.16 3.17 3.18 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.1 4.10 4.11 4.12 4.13 4.14 4.15 4.2 4.3 4.4 4.5 4.6 4.7 4.8 4.9 5.1 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 5.19 5.2 5.20 5.21 5.23 5.24 5.25 5.26 5.27 5.28 5.29 5.3 5.30 5.31 5.32 5.33 5.34 5.37 5.4 5.5 5.6 5.7 5.9 6.1 6.10 6.11 6.12 6.13 6.14 6.15 6.16 6.17 6.18 6.19 6.2 6.3 6.4 6.5 6.6 6.7 6.8 6.9 7.1 7.2 7.3 9.1 9.2 9.3 9.4,confirmed,0x0846cc2e 0x08470151 0x084701b8,bijou,1.1 1.2 10.12 10.13 2.1 2.10 2.11 2.12 2.14 2.17 2.19 2.2 2.23 2.4 2.5 2.6 2.7 2.8 2.9 3.11 3.12 3.15 3.17 3.2 3.7 4.10 4.11 4.12 4.13 4.14 4.15 4.2 4.4 4.5 4.6 4.8 4.9 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 5.19 5.20 5.21 5.23 5.24 5.27 5.3 5.30 5.31 5.33 5.37 5.4 5.5 5.6 5.7 5.9 6.11 6.12 6.13 6.14 6.15 6.17 6.18 6.19 6.3 6.5 6.7 6.9 7.1 7.2 7.3 9.1 9.2 9.4,1.1 1.2 1.3 1.4 1.5 1.6 10.10 2.1 2.10 2.11 2.12 2.13 2.14 2.15 2.17 2.18 2.19 2.2 2.20 2.23 2.24 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.1 3.10 3.11 3.12 3.14 3.16 3.17 3.18 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.1 4.10 4.11 4.12 4.13 4.14 4.15 4.2 4.3 4.4 4.5 4.6 4.7 4.8 4.9 5.1 5.10 5.11 5.12 5.13 5.14 5.15 5.16 5.17 5.18 5.19 5.2 5.20 5.21 5.23 5.24 5.25 5.26 5.27 5.28 5.29 5.3 5.30 5.31 5.32 5.33 5.34 5.37 5.4 5.5 5.6 5.7 5.9 6.1 6.10 6.11 6.12 6.13 6.14 6.15 6.16 6.17 6.18 6.19 6.2 6.4 6.5 6.6 6.7 6.8 6.9 7.1 7.2 7.3 9.1 9.2 9.3 9.4
+oxnard-portrait,0x080ea3e0,0x080f4268,0x084b1cb1,0x084b1cc4,left,10.12 2.2,guess,0x08471a2c 0x08471b03 0x08471b79,oxnard,10.12 2.2,
+maxwell-portrait,0x080ea6ec,0x080f428c,0x084b1cd7,0x084b1cea,left right,6.13 6.15 6.9,guess,0x0849ba50 0x0849ba82 0x0849bac6,maxwell,6.15 6.9,6.13
+pashmina-portrait,0x080eaa68,0x080f42b4,0x084b1cfd,0x084b1d10,left right,10.12 2.2 2.6,guess,0x08471e73 0x08471c08 0x08471cd3,pashmina,2.6,10.12 2.2
+cappy-portrait,0x080ead9c,0x080f42dc,0x084b1d23,0x084b1d36,left,10.12 2.5 6.19,guess,0x08473812,cappy,10.12 2.5 6.19,
+jingle-portrait,0x080eb068,0x080f4304,0x084b1d49,0x084b1d5c,left,6.17 6.19,guess,,jingle,6.17 6.19,
+panda-portrait,0x080eb388,0x080f432c,0x084b1d6f,0x084b1d82,left,2.14,guess,,panda,2.14,
+dexter-portrait,0x080eb674,0x080f4354,0x084b1d95,0x084b1da8,left right,10.12 5.11 5.16 5.21,guess,0x08492677 0x084926d4 0x084927a1,dexter,5.11 5.16 5.21,10.12 5.11 5.16
+boss-portrait,0x080eb9bc,0x080f437c,0x084b1dbb,0x084b1dce,left,1.1 10.10 10.13 4.14,confirmed,0x0846db38 0x0846db3f 0x0846dc22,boss,1.1 10.10 10.13 4.14,
+howdy-portrait,0x080ebcf8,0x080f43a4,0x084b1de1,0x084b1df4,left,10.12 5.11 5.14 5.16,guess,0x08492438 0x08492541 0x08492588,howdy,10.12 5.11 5.14 5.16,
+sandy-portrait,0x080ebf98,0x080f43c8,0x084b1e07,0x084b1e1a,left right,10.12 3.10 3.12,guess,0x0847ee9e 0x0848147a 0x08481bd5,sandy,3.10 3.12,10.12 3.12
+stan-portrait,0x080ec2bc,0x080f43f0,0x084b1e2d,0x084b1e40,left right,3.10 3.12,guess,0x0847eeaf 0x0848085b 0x0848088e,stan,3.10 3.12,3.12
+snoozer-portrait,0x080ec5c8,0x080f4418,0x084b1e53,0x084b1e66,,,guess,,snoozer,,
+spat-portrait,0x080ec874,0x080f4440,0x084b1e79,0x084b1e8c,left,2.14 2.2 2.4 3.17 4.1 4.12 4.5 5.2 5.30 6.14 6.9 7.2 7.3,guess,0x084720a8 0x08472e44 0x08472ee7,spat,2.14 2.2 2.4 3.17 4.1 4.12 4.5 5.2 5.30 6.14 6.9 7.2 7.3,
+harmony-portrait,0x080ecbc4,0x080f4468,0x084b1e9f,0x084b1eb2,left,7.3,guess,0x084a12c4,harmony,7.3,
+elder-ham-portrait,0x080ecf10,0x080f4490,0x084b1ec5,0x084b1ed8,left right,10.12 2.4 2.5,guess,0x08472a68 0x08472ab1 0x08472b3d,elder-ham,2.4 2.5,10.12 2.5
+hot-spring-hamster-portrait,0x080ed1f4,0x080f44b4,0x084b1eeb,0x084b1efe,left right,2.4 2.5,guess,0x08472fd1 0x0847393e 0x084739ec,hot-spring-hamster,2.4 2.5,2.5
+barrette-portrait,0x080ed4e4,0x080f44dc,0x084b1f11,0x084b1f24,left right,10.12 4.10 4.12 4.14 4.9,guess,0x0848c893 0x0848c8f1 0x0848c919,barrette,10.12 4.10 4.12 4.14 4.9,4.12
+penelope-portrait,0x080ed840,0x080f4504,0x084b1f37,0x084b1f4a,left right,10.12 4.10 4.12 4.9,guess,0x0848c167 0x0848c197 0x0848c215,penelope,4.12 4.9,10.12 4.10 4.12 4.9
+unidentified-020-portrait,0x080edb10,0x080f4528,0x084b1f5d,0x084b1f70,left,10.12 3.12 3.9,guess,0x0847e1e4 0x0847e302 0x0847e35b,unidentified-020,10.12 3.12 3.9,
+unidentified-021-portrait,0x080ede14,0x080f454c,0x084b1f83,0x084b1f96,left,1.1,guess,,unidentified-021,1.1,
+broski-rival-portrait,0x080ee108,0x080f4574,0x084b1fa9,0x084b1fbc,left,1.1 1.3 10.12 2.11 4.5,guess,0x0846dab0 0x0846dc3f 0x0846dd5a,broski-rival,1.1 1.3 10.12 2.11 4.5,
+harmony-variant-portrait,0x080ee414,0x080f459c,0x084b1fcf,0x084b1fe2,left right,1.1 1.2 10.12 10.13 4.14 7.3,guess,0x0846cbac 0x0846cbe4 0x0846d2d1,harmony-variant,1.1 1.2 10.12 10.13 7.3,1.1 4.14
+sweethearts-portrait,0x080ee76c,0x080f45c4,0x084b1ff5,0x084b2008,left right,1.3 10.12 4.5,guess,0x0847082b 0x084708dd 0x08470866,sweethearts,1.3 4.5,1.3 10.12 4.5
+broski-portrait,0x080eea80,0x080f45ec,0x084b201b,0x084b202e,left,4.4,guess,0x08488dac 0x08488f00 0x08488e3c,broski,4.4,
+business-hamster-portrait,0x080eed40,0x080f4610,0x084b2041,0x084b2054,left,1.1,guess,,business-hamster,1.1,
+reporter-portrait,0x080eefb4,0x080f4638,0x084b2067,0x084b207a,left,7.3,guess,0x084a15d8 0x084a17f1 0x084a181b,reporter,7.3,
+dark-hamster-portrait,0x080ef268,0x080f4660,0x084b208d,0x084b20a0,left,7.2,guess,0x084a08b6 0x084a08e7 0x084a0916,dark-hamster,7.2,
+turn-taking-hamster-portrait,0x080ef53c,0x080f4684,0x084b20b3,0x084b20c6,left right,10.12 2.20,guess,0x08478563 0x084785a7 0x0847860c,turn-taking-hamster,2.20,10.12 2.20
+rope-helper-portrait,0x080ef53c,0x080f46a4,0x084b20d9,0x084b20ec,left,10.12 2.14 2.20,guess,0x08476b5e 0x08478520 0x084785c2,rope-helper,10.12 2.14 2.20,
+rough-hamster-portrait,0x080ef7cc,0x080f46c4,0x084b20ff,0x084b2112,left,10.12 5.3 5.32,guess,0x08497169 0x0849742b 0x084971a7,rough-hamster,10.12 5.3 5.32,
+unidentified-032-portrait,0x080ef7cc,0x080f46e4,0x084b2125,0x084b2138,left,5.2,guess,,unidentified-032,5.2,
+unidentified-033-portrait,0x080ef53c,0x080f470c,0x084b214b,0x084b215e,,,guess,,unidentified-033,,
+embarrassed-hamster-portrait,0x080ef7cc,0x080f472c,0x084b2171,0x084b2184,left right,10.12 3.10 3.16 3.7 3.8 3.9,guess,0x0847d6b5 0x0847d317 0x0847f1d9,embarrassed-hamster,3.10 3.16 3.7 3.8 3.9,10.12 3.7
+unidentified-035-portrait,0x080ef7cc,0x080f4754,0x084b2197,0x084b21aa,left,2.17,guess,,unidentified-035,2.17,
+laughing-hamster-portrait,0x080ef53c,0x080f4778,0x084b21bd,0x084b21d0,left right,10.12 4.1 4.2 5.33,guess,0x084857f8 0x084857f8 0x08485868,laughing-hamster,10.12 4.1 4.2 5.33,4.2
+shy-hamster-portrait,0x080ef7cc,0x080f4798,0x084b21e3,0x084b21f6,left,2.11,guess,0x08475415 0x0847541f 0x08475432,shy-hamster,2.11,
+ham-o-matic-operator-portrait,0x080ef7cc,0x080f47c0,0x084b2209,0x084b221c,left right,10.12 3.17 3.2,guess,0x08483992 0x08483bd3 0x084839b3,ham-o-matic-operator,3.17 3.2,10.12
+control-room-operator-portrait,0x080ef7cc,0x080f47e8,0x084b222f,0x084b2242,left,3.17,guess,0x08483254 0x084832a6 0x08483ffa,control-room-operator,3.17,
+unidentified-040-portrait,0x080ef7cc,0x080f4810,0x084b2255,0x084b2268,left,3.4,guess,,unidentified-040,3.4,
+unidentified-041-portrait,0x080ef7cc,0x080f4838,0x084b227b,0x084b228e,left,3.8,guess,,unidentified-041,3.8,
+unidentified-042-portrait,0x080ef7cc,0x080f4860,0x084b22a1,0x084b22b4,left,3.11,guess,,unidentified-042,3.11,
+surprised-hamster-portrait,0x080ef7cc,0x080f4888,0x084b22c7,0x084b22da,left,3.1,guess,0x08479b8a,surprised-hamster,3.1,
+unidentified-044-portrait,0x080ef7cc,0x080f48b0,0x084b22ed,0x084b2300,,,guess,,unidentified-044,,
+researcher-portrait,0x080ef7cc,0x080f48d8,0x084b2313,0x084b2326,left right,10.12 6.6 7.1,guess,0x08499b4c 0x08499b8f 0x08499c73,researcher,6.6 7.1,10.12 6.6
+wedding-hamster-portrait,0x080ef7cc,0x080f48fc,0x084b2339,0x084b234c,left right,10.12 6.12 6.4 6.9,guess,0x0849b5d1 0x0849b633 0x0849b698,wedding-hamster,10.12 6.12 6.4 6.9,6.12
+unidentified-047-portrait,0x080ef53c,0x080f4920,0x084b235f,0x084b2372,left,6.8,guess,,unidentified-047,6.8,
+unidentified-048-portrait,0x080ef53c,0x080f4940,0x084b2385,0x084b2398,left,6.9,guess,,unidentified-048,6.9,
+beach-tanner-portrait,0x080f095c,0x080f4960,0x084b23ab,0x084b23be,left,4.6,guess,0x08489fd4 0x0848a140 0x0848a1ba,beach-tanner,4.6,
+unidentified-050-portrait,0x080ef7cc,0x080f4988,0x084b23d1,0x084b23e4,,,guess,,unidentified-050,,
+unidentified-051-portrait,0x080ef53c,0x080f49ac,0x084b23f7,0x084b240a,left,5.17,guess,,unidentified-051,5.17,
+tower-painter-portrait,0x080ef7cc,0x080f49cc,0x084b241d,0x084b2430,left,10.12 7.2 9.4,guess,0x0849fc23 0x0849fc7f 0x0849fd6f,tower-painter,10.12 7.2 9.4,
+accessory-clerk-portrait,0x080f0c2c,0x080f49f0,0x084b2443,0x084b2456,left,1.6 9.3,guess,0x084710c0 0x084712c4 0x08471466,accessory-clerk,1.6 9.3,
+game-explainer-portrait,0x080f0c2c,0x080f4a18,0x084b2469,0x084b247c,left,3.4 3.6,guess,0x0847abec 0x0847acff,game-explainer,3.4 3.6,
+final-test-host-portrait,0x080f0c2c,0x080f4a40,0x084b248f,0x084b24a2,left,5.30,guess,0x08495af4 0x08495b25 0x08495ba6,final-test-host,5.30,
+test-host-portrait,0x080f0c2c,0x080f4a68,0x084b24b5,0x084b24c8,left,5.7,guess,0x0849205d 0x08492167 0x084920f2,test-host,5.7,
+coaster-clerk-portrait,0x080f0c2c,0x080f4a90,0x084b24db,0x084b24ee,left,3.10,guess,0x0847eec0 0x0847eff7 0x0847f065,coaster-clerk,3.10,
+tea-cups-clerk-portrait,0x080f0c2c,0x080f4ab8,0x084b2501,0x084b2514,left,3.12,guess,0x0848025f 0x08480550 0x084805c8,tea-cups-clerk,3.12,
+ferris-wheel-clerk-portrait,0x080f0c2c,0x080f4ae0,0x084b2527,0x084b253a,left,3.14,guess,0x084820b7 0x08482311 0x0848236e,ferris-wheel-clerk,3.14,
+ham-ranger-recruiter-portrait,0x080f0c2c,0x080f4b08,0x084b254d,0x084b2560,left,3.11,guess,0x0847f352 0x0847f99f 0x0847fccb,ham-ranger-recruiter,3.11,
+popcorn-vendor-portrait,0x080f0c2c,0x080f4b30,0x084b2573,0x084b2586,left,3.7,guess,0x0847dce0 0x0847dd5e 0x0847dd73,popcorn-vendor,3.7,
+test-host-variant-portrait,0x080f0c2c,0x080f4b58,0x084b2599,0x084b25ac,left,5.22,guess,0x08494e4b 0x08494d5a 0x08494e2e,test-host-variant,5.22,
+unidentified-063-portrait,0x080f0c2c,0x080f4b80,0x084b25bf,0x084b25d2,left,1.5,guess,,unidentified-063,1.5,
+handkerchief-hamster-portrait,0x080f0ef4,0x080f4ba8,0x084b25e5,0x084b25f8,left,2.3,guess,0x08472663 0x08472692 0x084726f1,handkerchief-hamster,2.3,
+soccer-hamster-portrait,0x080f0ef4,0x080f4bcc,0x084b260b,0x084b261e,left right,4.1,guess,0x08484c20 0x08484c8c 0x08484d3d,soccer-hamster,4.1,4.1
+sweetheart-portrait,0x080f11a4,0x080f4bf0,0x084b2631,0x084b2644,right,10.12 4.1,guess,0x084857e3 0x08485a41 0x08485872,sweetheart,,10.12 4.1
+shouting-hamster-portrait,0x080f0ef4,0x080f4c10,0x084b2657,0x084b266a,left right,10.12 5.3 5.32 5.7,guess,0x084971d3,shouting-hamster,5.3 5.7,10.12 5.32
+unidentified-068-portrait,0x080f1428,0x080f4c34,0x084b267d,0x084b2690,left,5.27,guess,,unidentified-068,5.27,
+restroom-date-portrait,0x080f0ef4,0x080f4c50,0x084b26a3,0x084b26b6,left right,10.12 3.14 3.15,guess,0x08481ff5 0x08482226 0x084822c6,restroom-date,3.14,10.12 3.14 3.15
+unidentified-070-portrait,0x080f0ef4,0x080f4c74,0x084b26c9,0x084b26dc,,,guess,,unidentified-070,,
+bossy-hamster-portrait,0x080f0ef4,0x080f4c98,0x084b26ef,0x084b2702,left right,10.12 3.7,guess,0x0847d417 0x0847d501 0x0847d5f1,bossy-hamster,10.12 3.7,3.7
+unidentified-072-portrait,0x080f0ef4,0x080f4cbc,0x084b2715,0x084b2728,left,3.1 3.12,guess,,unidentified-072,3.1 3.12,
+persistent-hamster-portrait,0x080f0ef4,0x080f4ce0,0x084b273b,0x084b274e,left,4.15 4.7,guess,0x0848b42c 0x0848b543 0x0848b59f,persistent-hamster,4.15 4.7,
+shop-clerk-portrait,0x080f0ef4,0x080f4d04,0x084b2761,0x084b2774,left,4.11,guess,0x0848cb9c 0x0848cbd8,shop-clerk,4.11,
+wife-portrait,0x080f0ef4,0x080f4d28,0x084b2787,0x084b279a,left,6.2,guess,0x08497ae2 0x08497b26 0x08497dbe,wife,6.2,
+frightened-hamster-portrait,0x080f0ef4,0x080f4d4c,0x084b27ad,0x084b27c0,left right,10.12 6.12 6.4 6.9,guess,0x0849b5c8 0x0849b6a9 0x0849bf3e,frightened-hamster,6.12 6.4 6.9,10.12 6.9
+big-brother-portrait,0x080f16c0,0x080f4d6c,0x084b27d3,0x084b27e6,left right,10.12 2.10 2.18 2.7,guess,0x0847411d 0x084741bd 0x0847503d,big-brother,2.10 2.18 2.7,10.12 2.10 2.7
+worried-parent-portrait,0x080f16c0,0x080f4d90,0x084b27f9,0x084b280c,left right,10.12 3.11 5.23,guess,0x0847fe49 0x0847fe8f 0x08494fcf,worried-parent,10.12 3.11 5.23,3.11
+ham-red-mother-portrait,0x080f193c,0x080f4db0,0x084b281f,0x084b2832,left right,3.11 5.23,guess,0x0847fde2 0x08495423,ham-red-mother,3.11 5.23,3.11
+work-supervisor-portrait,0x080f16c0,0x080f4dd8,0x084b2845,0x084b2858,left,4.3,guess,0x08487ce0 0x084884db 0x084885d1,work-supervisor,4.3,
+drowning-hamster-portrait,0x080f16c0,0x080f4dfc,0x084b286b,0x084b287e,right,4.3,guess,0x08487e5f 0x084880e7 0x084881e9,drowning-hamster,,4.3
+sad-wife-portrait,0x080f16c0,0x080f4e20,0x084b2891,0x084b28a4,left,10.12 4.6,guess,0x0848a6dd 0x0848a7b7 0x0848a989,sad-wife,10.12 4.6,
+researchers-wife-portrait,0x080f16c0,0x080f4e44,0x084b28b7,0x084b28ca,left,10.12 6.6,guess,0x08499c01 0x08499cdd,researchers-wife,10.12 6.6,
+home-guard-portrait,0x080f16c0,0x080f4e64,0x084b28dd,0x084b28f0,left,6.1,guess,0x084978c8 0x08497925 0x0849797b,home-guard,6.1,
+georges-partner-portrait,0x080f16c0,0x080f4e84,0x084b2903,0x084b2916,right,10.12 9.4,guess,0x084a1e2a 0x084a1ef5 0x084a1f6a,georges-partner,,10.12 9.4
+arnies-friend-portrait,0x080f1bec,0x080f4ea4,0x084b2929,0x084b293c,left right,10.12 2.10 2.12 2.13 2.7 2.9 9.1,guess,0x08473f0c 0x08473fcf 0x0847409d,arnies-friend,10.12 2.10 2.12 2.13 2.7 2.9 9.1,2.7 2.9
+ham-red-son-portrait,0x080f1e94,0x080f4ec4,0x084b294f,0x084b2962,left right,10.12 3.11 5.23,guess,0x0847fdfc 0x0847fe79 0x0847feb2,ham-red-son,3.11,10.12 5.23
+piano-teacher-portrait,0x080f1bec,0x080f4ee0,0x084b2975,0x084b2988,left,5.31,guess,0x08496a9a 0x08496a9a 0x08496b84,piano-teacher,5.31,
+gem-digger-portrait,0x080f1e94,0x080f4f00,0x084b299b,0x084b29ae,left right,1.4,guess,0x08470a99 0x08470af1 0x08470b84,gem-digger,1.4,1.4
+gem-digger-variant-portrait,0x080f1e94,0x080f4f1c,0x084b29c1,0x084b29d4,left,1.4,guess,0x08470a99 0x08470af1 0x08470b84,gem-digger-variant,1.4,
+unidentified-091-portrait,0x080f1bec,0x080f4f38,0x084b29e7,0x084b29fa,left,2.23,guess,,unidentified-091,2.23,
+secret-room-hamster-portrait,0x080f1bec,0x080f4f58,0x084b2a0d,0x084b2a20,left right,2.23,guess,0x08478ac2 0x08478bbe,secret-room-hamster,2.23,2.23
+daughter-portrait,0x080f1bec,0x080f4f78,0x084b2a33,0x084b2a46,left right,10.12 3.7,guess,0x0847d8e7 0x0847d74a,daughter,10.12 3.7,3.7
+nyuh-hamster-portrait,0x080f2118,0x080f4f98,0x084b2a59,0x084b2a6c,left,6.10 6.13,guess,0x0849c61d,nyuh-hamster,6.10 6.13,
+unidentified-095-portrait,0x080f1e94,0x080f4fb4,0x084b2a7f,0x084b2a92,left,6.8,guess,,unidentified-095,6.8,
+letter-recipient-portrait,0x080f23d4,0x080f4fd0,0x084b2aa5,0x084b2ab8,left,4.1 4.2,guess,0x084851e2 0x08485337 0x08485386,letter-recipient,4.1 4.2,
+heidis-admirer-portrait,0x080f23d4,0x080f4ff0,0x084b2acb,0x084b2ade,left,10.12 3.14 3.15 3.18,guess,0x08481f85 0x08481f9c 0x084827eb,heidis-admirer,10.12 3.14 3.15 3.18,
+bold-hamster-portrait,0x080f23d4,0x080f500c,0x084b2af1,0x084b2b04,left right,10.12 5.14 5.19,guess,0x08492c40 0x08492c7b 0x08492c7b,bold-hamster,10.12 5.14 5.19,5.14
+dance-floor-hamster-portrait,0x080f23d4,0x080f502c,0x084b2b17,0x084b2b2a,left,4.11 4.13,guess,0x0848cbfc,dance-floor-hamster,4.11 4.13,
+unidentified-100-portrait,0x080f23d4,0x080f5048,0x084b2b3d,0x084b2b50,left,4.13,guess,,unidentified-100,4.13,
+dance-greeter-portrait,0x080f23d4,0x080f5064,0x084b2b63,0x084b2b76,left,4.11,guess,0x0848cc40 0x0848cc40 0x0848cc40,dance-greeter,4.11,
+dance-host-portrait,0x080f23d4,0x080f5080,0x084b2b89,0x084b2b9c,left,4.13,guess,0x0848db96,dance-host,4.13,
+hula-judge-portrait,0x080f23d4,0x080f509c,0x084b2baf,0x084b2bc2,left,4.13,guess,0x0848d7cc 0x0848d8cd 0x0848db43,hula-judge,4.13,
+originality-judge-portrait,0x080f23d4,0x080f50b8,0x084b2bd5,0x084b2be8,left,4.13,guess,0x0848d7e1 0x0848d900 0x0848d822,originality-judge,4.13,
+unidentified-105-portrait,0x080f23d4,0x080f50d4,0x084b2bfb,0x084b2c0e,left,4.10,guess,,unidentified-105,4.10,
+timing-judge-portrait,0x080f23d4,0x080f50f0,0x084b2c21,0x084b2c34,left,4.13,guess,0x0848d7f4 0x0848d94c 0x0848d838,timing-judge,4.13,
+performance-host-portrait,0x080f23d4,0x080f510c,0x084b2c47,0x084b2c5a,left,4.14,guess,0x0848f9f1 0x0848f837 0x0848f8ff,performance-host,4.14,
+emotional-hamster-portrait,0x080f23d4,0x080f5128,0x084b2c6d,0x084b2c80,left right,10.12 5.14 5.19,guess,0x08492d2a 0x08492ef8 0x08492ddc,emotional-hamster,5.14 5.19,10.12 5.14 5.19
+woods-native-portrait,0x080f23d4,0x080f5148,0x084b2c93,0x084b2ca6,left right,10.12 6.11 6.12 6.13 6.14 6.15 6.16 6.17 6.18 6.19 6.6 6.7,guess,0x0849af23 0x0849af41 0x0849af95,woods-native,10.12 6.11 6.12 6.13 6.14 6.15 6.17 6.18 6.19 6.6 6.7,6.11 6.12 6.13 6.15 6.16 6.17 6.18 6.19
+mansion-guard-one-portrait,0x080f23d4,0x080f5164,0x084b2cb9,0x084b2ccc,left,6.10,guess,0x0849c734 0x0849c7b2 0x0849c7d9,mansion-guard-one,6.10,
+mansion-guard-two-portrait,0x080f23d4,0x080f5180,0x084b2cdf,0x084b2cf2,left right,6.10,guess,0x0849c84d 0x0849c8ba 0x0849c8fc,mansion-guard-two,6.10,6.10
+robot-portrait,0x080f267c,0x080f519c,0x084b2d05,0x084b2d18,left,10.12 3.17 3.2,guess,0x0847a090 0x0847a09e,robot,10.12 3.17 3.2,
+accessory-clerk-variant-portrait,0x080f2c14,0x080f51c4,0x084b2d2b,0x084b2d3e,left,1.6,guess,0x084714cc 0x0847183a 0x0847150e,accessory-clerk-variant,1.6,
+shouting-elder-portrait,0x080f2c14,0x080f51e8,0x084b2d51,0x084b2d64,left,5.4,guess,0x08491a37,shouting-elder,5.4,
+unidentified-115-portrait,0x080f2944,0x080f520c,0x084b2d77,0x084b2d8a,left,4.13,guess,,unidentified-115,4.13,
+warm-hamster-portrait,0x080f2c14,0x080f5234,0x084b2d9d,0x084b2db0,left,5.15,guess,0x0849324a 0x08493259 0x084933ff,warm-hamster,5.15,
+ghost-portrait,0x080f2c14,0x080f5258,0x084b2dc3,0x084b2dd6,left,5.15,guess,0x084932e1 0x084935c1 0x0849336c,ghost,5.15,
+wedding-officiant-portrait,0x080f2c14,0x080f527c,0x084b2de9,0x084b2dfc,left,6.13 6.9,guess,0x0849b51c 0x0849b57b 0x0849b6c3,wedding-officiant,6.13 6.9,
+deal-vendor-portrait,0x080f2ea0,0x080f52a0,0x084b2e0f,0x084b2e22,left,2.13 2.9,guess,0x084746d9 0x08474755 0x084748c4,deal-vendor,2.13 2.9,
+ham-swap-clerk-portrait,0x080f2ea0,0x080f52c4,0x084b2e35,0x084b2e48,left,5.1,guess,0x0849075c 0x0849080f 0x08490d71,ham-swap-clerk,5.1,
+unidentified-121-portrait,0x080f2ea0,0x080f52e8,0x084b2e5b,0x084b2e6e,left,6.2,guess,,unidentified-121,6.2,
+dig-game-host-portrait,0x080f319c,0x080f530c,0x084b2e81,0x084b2e94,left,3.5,guess,0x0847b7f1 0x0847b82f 0x0847bc44,dig-game-host,3.5,
+husband-portrait,0x080f319c,0x080f532c,0x084b2ea7,0x084b2eba,left right,10.12 4.15 4.4 4.6 4.8,guess,0x08488a58 0x0848af36 0x0848af9c,husband,4.15 4.4 4.6 4.8,10.12
+heyhoo-hamster-portrait,0x080f319c,0x080f534c,0x084b2ecd,0x084b2ee0,left,2.2,guess,0x0847228e 0x084722c2 0x084722d0,heyhoo-hamster,2.2,
+hungry-monkey-portrait,0x080f3430,0x080f536c,0x084b2ef3,0x084b2f06,left right,10.12 2.12 6.18,guess,0x08475962 0x08475805 0x084759c2,hungry-monkey,2.12 6.18,10.12 6.18
+riddle-author-portrait,0x080f375c,0x080f5390,0x084b2f19,0x084b2f2c,left,6.5,guess,0x084983b1 0x0849840a 0x08498617,riddle-author,6.5,
+village-elder-portrait,0x080f3a7c,0x080f53b4,0x084b2f3f,0x084b2f52,left right,6.9,guess,0x0849bb67 0x0849bb83 0x0849bbb4,village-elder,6.9,6.9
+ghost-variant-portrait,0x080f3db8,0x080f53dc,0x084b2f65,0x084b2f78,left,5.17 5.30,guess,,ghost-variant,5.17 5.30,
+chick-portrait,0x080f4090,0x080f5400,0x084b2f8b,0x084b2f9e,left,6.18,guess,,chick,6.18,
+monkey-variant-portrait,0x080f3430,0x080f536c,0x084b2fb1,0x084b2fc4,,,guess,,monkey-variant,,
+ham-blue-portrait,0x080efa90,0x080f4810,0x084b2fd7,0x084b2fea,right,3.4,guess,0x0847b3c9,ham-blue,,3.4
+ham-green-portrait,0x080efda0,0x080f4838,0x084b2ffd,0x084b3010,right,3.8,guess,0x0847e119,ham-green,,3.8
+ham-yellow-portrait,0x080f008c,0x080f4860,0x084b3023,0x084b3036,right,3.11,guess,0x0847f74a,ham-yellow,,3.11
+ham-pink-portrait,0x080f0388,0x080f4888,0x084b3049,0x084b305c,right,3.1,guess,0x08479eeb,ham-pink,,3.1
+ham-red-portrait,0x080f0670,0x080f48b0,0x084b306f,0x084b3082,left,3.18 3.3,guess,0x08484567 0x084845fb,ham-red,3.18 3.3,

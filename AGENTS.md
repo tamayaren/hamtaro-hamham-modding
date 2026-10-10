@@ -56,7 +56,7 @@ gba/ states/ build/ extracted/ screenshots/ ghidra/projects/ .cache/   local onl
 | authored dialogue C helper | ready | `patches/include/dialogue.h`; literal `DIALOGUE_TEXT(...)` encoding during `hamtools patch build`; see `patches/sunflower-dialogue/` |
 | `hamtools text ...` | ready | dump, show, edits: rooted dialogue + separate candidate/variant/native inventories; lossless tags and changed-only mod export; dumps → `extracted/text/` (never commit); see `kb/text_dump.md` |
 | text re-insertion | ready | `[[text]]` replacements checked by original-stream SHA1; safe in-place edits or automatic free-space relocation and direct-reference repointing |
-| `hamtools gfx ...` | ready (Boss dialogue portrait) | PNG export to `extracted/gfx/`; original/new palette import as changed-only `[[gfx]]` recipes; LZ77, 48x48 4bpp layout, shared free-space allocation and checked repoints; other assets need mapping. See `kb/graphics.md` |
+| `hamtools gfx ...` | ready (136 dialogue portrait definitions) | Named PNG export/import under `extracted/gfx/`; changed-only `[[gfx]]` recipes; 48x48 4bpp LZ77; shared-source repoints and unknown-reference refusal; speaker names mostly guesses. See `kb/graphics.md` |
 
 In the Codex sandbox the default uv cache may be denied; set `UV_CACHE_DIR=.cache/uv`
 (gitignored) before `uv run`.

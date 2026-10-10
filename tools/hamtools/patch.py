@@ -149,17 +149,16 @@ def compile_code(mods: list[Mod], workdir: Path, root: Path = PATCHES_DIR) -> tu
         objs.append(obj)
 
     ld_script = workdir / "mod.ld"
+    # Keep growing KB symbol definitions out of Windows' bounded command line.
+    game_symbols = "".join(f"{name} = {value:#x};\n" for name, value in _game_symbols())
     ld_script.write_text(
-        "SECTIONS {\n"
+        game_symbols + "SECTIONS {\n"
         f"  . = {FREE_BASE:#x};\n"
         "  .text : { *(.text*) *(.rodata*) *(.data*) }\n"
         "  /DISCARD/ : { *(.bss*) *(COMMON) *(.ARM.attributes) *(.comment) }\n"
         "}\n", encoding="utf-8")
-    defsyms = []
-    for name, value in _game_symbols():
-        defsyms.append(f"-Wl,--defsym={name}={value:#x}")
     elf = workdir / "mod.elf"
-    _run([gcc, *CFLAGS, "-T", ld_script, *objs, *defsyms,
+    _run([gcc, *CFLAGS, "-T", ld_script, *objs,
           "-Wl,-Map=" + str(workdir / "mod.map"), "-o", elf, "-lgcc"], "link")
     blob_path = workdir / "mod.bin"
     _run([objcopy, "-O", "binary", "-j", ".text", elf, blob_path], "objcopy")
@@ -401,7 +400,7 @@ def _build_gfx(original: bytes, mods: list[Mod], claimed: list[tuple[int, int, s
                put, cursor: int, log: list[str]) -> None:
     from . import gfx
 
-    selected: set[tuple[int, str]] = set()
+    selected: dict[int, str] = {}
     for mod in mods:
         for index, entry in enumerate(mod.graphics):
             who = f"{mod.name}.gfx[{index}]"
@@ -412,10 +411,13 @@ def _build_gfx(original: bytes, mods: list[Mod], claimed: list[tuple[int, int, s
             if not replacements:
                 log.append(f"gfx    {entry['asset']} unchanged")
             for replacement in replacements:
-                key = (replacement.source_address, replacement.kind)
+                key = replacement.source_address
                 if key in selected:
-                    raise PatchError(f"{who}: duplicate graphics replacement for {replacement.kind}")
-                selected.add(key)
+                    affected = ", ".join(asset.name for asset in gfx.source_assets(key))
+                    raise PatchError(f"{who}: duplicate graphics replacement for shared "
+                                     f"{replacement.kind} source {key:#010x}; already changed by {selected[key]}; "
+                                     f"affected entries: {affected}")
+                selected[key] = who
                 # Editing a source that this recipe supersedes is ambiguous even
                 # though the new copy is elsewhere. Fail instead of masking edits.
                 start = rom.to_offset(replacement.source_address)
@@ -443,8 +445,10 @@ def _build_gfx(original: bytes, mods: list[Mod], claimed: list[tuple[int, int, s
                 for reference in replacement.references:
                     put(reference, target.to_bytes(4, "little"), replacement.source_address.to_bytes(4, "little"),
                         f"{who}.{replacement.kind}.ref[{reference:#010x}]")
-                log.append(f"gfx    {entry['asset']} {replacement.kind} -> {target:#010x} "
-                           f"({len(raw)} bytes; {len(replacement.references)} checked reference(s))")
+                affected = ", ".join(asset.name for asset in gfx.source_assets(replacement.source_address))
+                log.append(f"gfx    {entry['asset']} {replacement.kind} {replacement.source_address:#010x} "
+                           f"-> {target:#010x} ({len(raw)} bytes; "
+                           f"{len(replacement.references)} checked reference(s); affects {affected})")
 
 
 def _required(who: str):

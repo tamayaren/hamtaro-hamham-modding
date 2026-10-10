@@ -22,10 +22,14 @@
   belongs to learned word Rubrub (ID 0x38, likely complete word mapping),
   rather than an unnamed chapter flag. The other word flags it tests must
   retain their dictionary meaning. See [gameplay.md](gameplay.md).
-- Map other dialogue portraits and expression changes in later scenes, plus the
-  remaining room-head pose/animation commands. Boss's dialogue image, palette,
-  BG tilemap and upload are now editable; the old Entity assets are room heads.
-  See [portraits.md](portraits.md) and [graphics.md](graphics.md).
+- Confirm the guessed speaker/role names and expression meanings in the 136-entry
+  [portrait catalogue](portraits.md), especially shared-image palette variants.
+  Every standard-bank definition and every reached `0x06` portrait load is mapped;
+  Hamtaro's left slot and Bijou's right slot have exact live comparisons and
+  imported-edit tests. Boss's specific right routine remains likely. Six definitions
+  have no reached root; their existence is static evidence, not runtime reachability.
+  Native/computed portrait loads outside this evidence, other window geometry, later
+  scenes, and remaining room-head pose/animation commands still need mapping.
 - Complete the main-loop interpretation around `0x080001a4`: input call,
   normal updates and RNG call `0x08000250` are mapped, but this does not
   complete every callback/interrupt scheduling detail.
