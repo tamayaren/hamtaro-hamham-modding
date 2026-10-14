@@ -35,6 +35,17 @@ Developer: AlphaDream (same studio as *Mario & Luigi: Superstar Saga*).
 Most of the ROM remains unmapped. [dialogue.md](dialogue.md) also lists heuristic
 text-region candidates; their bank boundaries are not established.
 
+## Clubhouse room graphics — 2026-10-11
+
+[screen_graphics.md](screen_graphics.md) records the source spans and decoded
+sizes for Hamtaro's back frame `0x0811de38`, the bed hamster frame
+`0x0817bdf0`, background tiles `0x0824258c`, scenery OBJ banks `0x08244d54`
+and `0x08245260`, palette packs `0x08245970` and `0x08245a38`, and map pieces
+`0x08245a7c` and `0x08245fa8`. These new ROM origins remain likely: entire
+decoded buffers match live memory and static scene loaders corroborate
+them, but new loader executions were not recorded. The screen geometry,
+live palette use and reconstructed pixels are confirmed separately.
+
 ## Dialogue portrait bank audit — 2026-10-10
 
 See [portraits.md](portraits.md) and the address-only

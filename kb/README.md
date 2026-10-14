@@ -14,6 +14,9 @@ the `kb-update` skill (`.agents/skills/kb-update/SKILL.md`).
 - [save.md](save.md) — SRAM banks, checksums, packed RAM mappings and RNG arithmetic
 - [gameplay_event_flags.csv](gameplay_event_flags.csv) — reached-script flags mapped to RAM bytes/masks and sites
 - [dialogue.md](dialogue.md) — dialogue locations, live text state, encoding, and a verified text mod
+- [graphics.md](graphics.md) — dialogue portrait PNG export/import and authored graphics patches
+- [portraits.md](portraits.md) — portrait catalogue and room-head animation graphics
+- [screen_graphics.md](screen_graphics.md) — live/saved screen sprites, backgrounds, palettes and ROM source matches
 - [glyphs.md](glyphs.md) — full one-byte text glyph table with per-row confidence
 - [text_controls.md](text_controls.md) — text control bytes `0xe0`–`0xff` and prefixes, verified byte lengths, colours
 - [text_dump.md](text_dump.md) — `hamtools text dump`: extracting all script text, and the tag notation

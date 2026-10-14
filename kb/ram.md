@@ -1,5 +1,31 @@
 # RAM map
 
+## Clubhouse screen graphics — 2026-10-11
+
+A fresh original-ROM state near Boss was decoded and reconstructed with
+zero differing pixels against the emulator screenshot. These mappings are
+confirmed for that captured screen; see [screen_graphics.md](screen_graphics.md).
+
+| Address | Size | Meaning |
+|---|---|---|
+| `0x02002590` | `0x480` | slot 0 Hamtaro room-head source frame |
+| `0x0201dab0` | `0x480` | slot 3 bed hamster room-head source frame |
+| `0x05000120` | `0xe0` | seven loaded room BG palette banks 9..15 |
+| `0x05000240` | `0x20` | slot 0 OBJ palette bank 2 |
+| `0x05000280` | `0x20` | slot 2 Boss OBJ palette bank 4 |
+| `0x050002a0` | `0x20` | slot 3 bed hamster OBJ palette bank 5 |
+| `0x050003c0` | `0x40` | scenery OBJ palette banks 14/15 |
+| `0x06004000` | `0x4f00` | loaded room BG1 tile bank |
+| `0x0600e000` | `0x2000` | complete 512 x 512 BG1 map, four screen blocks |
+| `0x06010c20` | six strided rows | slot 0 first room-head VRAM row |
+| `0x06010f20` | six strided rows | slot 3 first room-head VRAM row |
+| `0x06012800` | `0xec0` | additional loaded OBJ tile bank; individual roles incomplete |
+| `0x06015000` | `0x1000` | scenery OBJ tile bank used for doors/furniture pieces |
+
+Head rows contain `0xc0` bytes each and have stride `0x400`; their buffers
+exactly match the gathered uploads. Palette banks and tile sources can be
+reused for other scenes, so these descriptions do not imply global ownership.
+
 ## Shared dialogue portrait buffers — 2026-10-10
 
 The former Boss-specific left-buffer symbols now use shared-slot names.

@@ -165,9 +165,15 @@ def _verified_rom() -> bytes:
 
 
 def _add_gfx(sub) -> None:
-    g = sub.add_parser("gfx", help="export/import supported portrait PNGs and authored patch deltas").add_subparsers(
+    g = sub.add_parser("gfx", help="export screen graphics or edit supported portrait PNGs").add_subparsers(
         dest="cmd", required=True)
     g.add_parser("list", help="list mapped image assets").set_defaults(func=cmd_gfx_list)
+    p = g.add_parser("screen", help="export sprites, palettes and text backgrounds from a live/saved screen")
+    p.add_argument("--state", type=Path, help="mGBA version-11 savestate; omit to capture the live emulator")
+    p.add_argument("--out", type=Path, help="output directory under extracted/gfx/")
+    p.add_argument("--no-rom-scan", action="store_true", help="skip exact ROM source matching")
+    p.add_argument("--force", action="store_true", help="replace this directory's prior screen export")
+    p.set_defaults(func=cmd_gfx_screen)
     p = g.add_parser("export", help="export a portrait PNG under extracted/gfx/")
     p.add_argument("asset")
     p.add_argument("--out", type=Path, help="PNG path (must remain under extracted/gfx/)")
@@ -183,6 +189,44 @@ def _add_gfx(sub) -> None:
     p.add_argument("--out", type=Path, help="mod.toml path under patches/ (default: patches/<asset>-import/mod.toml)")
     p.add_argument("--force", action="store_true", help="replace an existing mod source")
     p.set_defaults(func=cmd_gfx_import)
+
+
+def cmd_gfx_screen(args: argparse.Namespace) -> int:
+    from datetime import datetime
+    from . import gfx, paths, screen_gfx
+    from .emu import Emu
+
+    data = rom.load_rom()
+    if rom.sha1(data) != rom.EXPECTED_SHA1 or len(data) != rom.EXPECTED_SIZE:
+        raise gfx.GfxError("original ROM does not match expected AH3E SHA1")
+    out = gfx.require_inside(args.out or paths.EXTRACTED_DIR / "gfx" / "screens" / datetime.now().strftime("%Y%m%d-%H%M%S"),
+                             paths.EXTRACTED_DIR / "gfx", "screen graphics output")
+    if (out / "manifest.json").exists() and not args.force:
+        raise gfx.GfxError("screen export already exists; use --force or choose a new directory")
+    state = args.state
+    if state is None:
+        emu = Emu()
+        try:
+            emu.ensure()
+            if emu.call("ping")["code"] != "AH3E":
+                raise gfx.GfxError("live emulator is not Hamtaro USA (AH3E)")
+            out.mkdir(parents=True, exist_ok=True)
+            state = out / "capture.ss0"
+            emu.call("save_state", state)
+        finally:
+            emu.close()
+    snapshot = screen_gfx.Snapshot.load(state)
+    print("Exporting frozen screen graphics" + (" and matching original ROM sources..."
+                                               if not args.no_rom_scan else "..."), flush=True)
+    manifest = screen_gfx.export_screen(data, snapshot, out, scan_rom=not args.no_rom_scan, force=args.force)
+    print(f"{out}: {len(manifest['sprites'])} visible OAM sprites, "
+          f"{len(manifest['backgrounds'])} backgrounds, 32 palette banks")
+    print(f"preview: {out / 'overview.png'}")
+    if manifest["comparison"]:
+        print(f"reconstruction: {manifest['comparison']['different_pixels']} / 38400 pixels differ")
+    for warning in manifest["warnings"]:
+        print(f"note: {warning}")
+    return 0
 
 
 def cmd_gfx_list(args: argparse.Namespace) -> int:

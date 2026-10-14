@@ -1,5 +1,10 @@
 # Graphics editing: dialogue portrait catalogue
 
+For sprites, backgrounds and palettes from a whole live or saved screen,
+use `uv run hamtools gfx screen`. The clubhouse export and source addresses
+are documented in [screen_graphics.md](screen_graphics.md). Screen assets are
+export-only; the portrait import workflow below remains separate.
+
 All 136 definitions in the standard dialogue portrait bank are named assets.
 See [portraits.md](portraits.md) for the catalogue, exact script roots, honest
 name confidence, and the distinction between BG faces and room-head OBJ animation.

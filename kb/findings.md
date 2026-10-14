@@ -2,6 +2,35 @@
 
 Newest first. See the `kb-update` skill for the entry format.
 
+## 2026-10-11 — Export clubhouse screen sprites, backgrounds and palettes (Codex; Faraday re-scout)
+
+- Verified the expected original ROM and used the human-selected gameplay
+  scene near Boss. A new original-ROM capture at frame 100565 has matching
+  ROM CRC32; the older supplied state and original ROM were preserved.
+- Exported 25 visible OAM pieces, three complete 48 x 48 room frames, two
+  text backgrounds and all 32 palette banks under
+  `extracted/gfx/screen-hunt/boss-gameplay/`. Combining the decoded tiles,
+  palettes, maps and sprite priorities reproduces all 38,400 screen pixels
+  exactly. Frozen raw memory and native tile/palette files accompany PNGs.
+- Confirmed slot 0 frame buffer `0x02002590` / VRAM rows `0x06010c20`
+  (Hamtaro), and slot 3 `0x0201dab0` / `0x06010f20` (hamster in bed),
+  alongside the known Boss slot 2. All upload six `0xc0`-byte rows at
+  `0x400` stride; full frame buffers match. Bijou's Entity 13 is inactive.
+- Found likely ROM origins by exact LZ77 matches: Hamtaro `0x0811de38`,
+  bed hamster `0x0817bdf0`, room tiles `0x0824258c`, scenery tile banks
+  `0x08244d54` / `0x08245260`, BG/OBJ palette packs `0x08245970` /
+  `0x08245a38`, map pieces `0x08245a7c` / `0x08245fa8`. Faraday's static
+  scene setup walk independently identified the load sites. Content copies
+  remain candidates; no new ROM loader execution is claimed.
+- Added reusable `hamtools gfx screen` for live capture or saved-state
+  export, with verified-ROM checks, bounded state decoding, address metadata,
+  lossless native assets and exact ROM candidate matching. See
+  [screen_graphics.md](screen_graphics.md) for scope and reproduction.
+- Validation: all 444 tests passed. All 28 delivered sprite/frame PNGs
+  round-trip exactly to their native tile files; all 129 local PNGs passed
+  integrity checks. The original ROM still verifies, the diff check passes,
+  and exported game data remains ignored by Git.
+
 ## 2026-10-11 — Integrate completed branches into main (Codex)
 
 - Fast-forwarded main to gameplay-values and merged text-edit-helper plus

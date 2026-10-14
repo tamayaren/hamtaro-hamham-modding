@@ -37,6 +37,19 @@
   universally unused. The startup end-bound and pointer-window audit are recorded
   in [rom_map.md](rom_map.md#free-space-audit-2026-10-10).
 
+## Screen graphics follow-up after the 2026-10-11 export
+
+- Observe actual source loader execution before promoting the new clubhouse
+  ROM origins from likely to confirmed. The frozen screen matches exactly,
+  but reused palette content has multiple ROM candidates. See
+  [screen_graphics.md](screen_graphics.md).
+- Map the remaining room-head poses/frames and identify the bed hamster by
+  an in-game name. Slot 1 is loaded but inactive in the tested screen.
+- Trace the other BG1 map blocks and individual extra OBJ pieces, then design
+  sprite/map import recipes with mapped reference coverage. Current screen
+  exports preserve native bytes; only registered dialogue portraits have
+  supported PNG import/mod builds.
+
 ## Gameplay follow-up after the 2026-10-10/11 hunt
 
 - Confirm natural gain/spend paths and ROM caps: seeds 999, acorns 50,
